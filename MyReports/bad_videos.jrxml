@@ -34,7 +34,8 @@
 			<rightPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
-	<queryString>
+	<parameter name="exclude_publishers" class="java.util.ArrayList"/>
+	<queryString language="SQL">
 		<![CDATA[select o.name as publisher, case when u.fname = 'null' then u.email else u.fname || ' ' || u.lname end as editor,
 m.title as minireel,c.title as slide_title,c.card_index + 1 as slide_number, 
 coalesce(v.title,'unknown') as video_title,coalesce(v.channel,'unknown') as video_channel,
@@ -46,7 +47,7 @@ inner join dim.minireel_card c on c.video_client_id = v.video_client_id
 inner join dim.minireel m on c.minireel_key = m.minireel_key AND m.end_ts = dim.sp_end_of_time()
 inner join dim.org o on m.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
 inner join dim.user u on m.created_by = u.user_id and u.end_ts = dim.sp_end_of_time()
-WHERE v.status <> 'ok' AND v.end_ts = dim.sp_end_of_time()
+WHERE v.status <> 'ok' AND v.end_ts = dim.sp_end_of_time() AND $X{NOTIN,o.name,exclude_publishers}
 order by o.name,m.title]]>
 	</queryString>
 	<field name="publisher" class="java.lang.String"/>
