@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version last-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Invalid Video Links" pageWidth="1280" pageHeight="960" orientation="Landscape" columnWidth="1240" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="1e22caee-b9eb-408c-8046-65270a2e7a2b">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/Invalid_Video_Links_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/Invalid_Video_Links"/>
+	<style name="Table_CH" mode="Opaque" backcolor="#D4D4D4">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+		<paragraph leftIndent="4" rightIndent="4"/>
+	</style>
+	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<queryString>
+		<![CDATA[select o.name as publisher, case when u.fname = 'null' then u.email else u.fname || ' ' || u.lname end as editor,
+m.title as minireel,c.title as slide_title,c.card_index + 1 as slide_number, 
+coalesce(v.title,'unknown') as video_title,coalesce(v.channel,'unknown') as video_channel,
+case v.source when 'YouTube' then 'https://www.youtube.com/watch?v=' || v.video_id else null end as video_url,
+v.source as video_source, v.status as video_status, 
+v.start_ts as status_date
+from dim.video v
+inner join dim.minireel_card c on c.video_client_id = v.video_client_id
+inner join dim.minireel m on c.minireel_key = m.minireel_key AND m.end_ts = dim.sp_end_of_time()
+inner join dim.org o on m.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
+inner join dim.user u on m.created_by = u.user_id and u.end_ts = dim.sp_end_of_time()
+WHERE v.status <> 'ok' AND v.end_ts = dim.sp_end_of_time()
+order by o.name,m.title]]>
+	</queryString>
+	<field name="publisher" class="java.lang.String"/>
+	<field name="editor" class="java.lang.String"/>
+	<field name="minireel" class="java.lang.String"/>
+	<field name="slide_title" class="java.lang.String"/>
+	<field name="slide_number" class="java.lang.Integer"/>
+	<field name="video_title" class="java.lang.String"/>
+	<field name="video_channel" class="java.lang.String"/>
+	<field name="video_url" class="java.lang.String"/>
+	<field name="video_source" class="java.lang.String">
+		<fieldDescription><![CDATA[Source of video, if a video.]]></fieldDescription>
+	</field>
+	<field name="video_status" class="java.lang.String"/>
+	<field name="status_date" class="java.sql.Timestamp"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="20" width="1240" height="30" uuid="cbfba3d0-d68a-4d92-b4ba-307048cadfe4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="24"/>
+				</textElement>
+				<text><![CDATA[Missing or Invalid Videos]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<staticText>
+				<reportElement style="Table_CH" x="0" y="0" width="100" height="30" uuid="3bfebd18-d712-4766-a1e9-8510f2db4df4">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Publisher]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="100" y="0" width="100" height="30" uuid="28fee590-fbf0-4a43-8f2b-b8bf85dd0147">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Editor]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="200" y="0" width="220" height="30" uuid="57120005-b4f8-4219-b520-470afbe33e24">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[MiniReel]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="420" y="0" width="260" height="30" uuid="930f4c85-5a08-45ef-b033-eb8a8bb67b8f">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Slide]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="680" y="0" width="150" height="30" uuid="62cd8013-b35e-4a92-a0bf-606d060af846">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Video]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="830" y="0" width="160" height="30" uuid="44a661ab-b6a0-426b-a008-fca46e91091a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Channel]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="990" y="0" width="80" height="30" uuid="a823c13f-8929-47af-b910-b904f4fc4a2d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Source]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="1070" y="0" width="90" height="30" uuid="79379c31-7540-4cce-9c18-d81616a3291b">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement style="Table_CH" x="1160" y="0" width="80" height="30" uuid="283e0925-6b3d-49ce-99f9-8d25e7621701">
+					<property name="local_mesure_unitheight" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<text><![CDATA[Status Date]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="24" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<textField>
+				<reportElement x="0" y="0" width="100" height="24" uuid="70f5c7e8-7317-428e-a9cf-97da53b3a4bb">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{publisher}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="100" y="0" width="100" height="24" uuid="e781531d-d7c3-43f3-8fc6-4e2368709a55">
+					<property name="local_mesure_unitheight" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{editor}.length() > 14) ? $F{editor}.substring(0,13) + ".." : $F{editor}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="200" y="0" width="220" height="24" uuid="79f12680-db35-45a8-8f83-8da0493e5d6d">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{minireel}]]></textFieldExpression>
+			</textField>
+			<textField hyperlinkType="Reference" hyperlinkTarget="Blank">
+				<reportElement x="680" y="0" width="150" height="24" forecolor="#181AA8" uuid="46948112-27c4-4805-b3e7-ea6cf1c43475">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($F{video_title}.length() > 20) ? $F{video_title}.substring(0,19) + ".." : $F{video_title}]]></textFieldExpression>
+				<hyperlinkReferenceExpression><![CDATA[$F{video_url}]]></hyperlinkReferenceExpression>
+				<hyperlinkAnchorExpression><![CDATA[$F{video_title}]]></hyperlinkAnchorExpression>
+			</textField>
+			<textField>
+				<reportElement x="830" y="0" width="160" height="24" uuid="0d51807d-ffe2-449a-bacc-55f1cdf2e9ec">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{video_channel}.length() > 14) ? $F{video_channel}.substring(0,13) + ".." : $F{video_channel}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="990" y="0" width="80" height="24" uuid="18b9ec15-0f47-4d55-a73e-5edf0c9283bf">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{video_source}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="1070" y="0" width="90" height="24" uuid="3053956e-137f-48f0-a9be-f0570c882a70">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{video_status}]]></textFieldExpression>
+			</textField>
+			<textField pattern="M/d/yy">
+				<reportElement x="1160" y="0" width="80" height="24" uuid="7d2cef60-3871-4054-9fb4-2cdcc14208e6">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{status_date}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="420" y="0" width="260" height="24" uuid="27db176e-429c-44f8-bb30-a10be003168a">
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA["(" + $F{slide_number} + ") " + $F{slide_title}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

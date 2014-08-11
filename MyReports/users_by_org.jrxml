@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version last-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="users_by_org" pageWidth="1920" pageHeight="1200" orientation="Landscape" columnWidth="1880" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="5d9df7af-372d-4029-91c8-26e0834e3d24">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="ireport.jasperserver.url" value="http://33.33.33.10:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/users_by_org_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/users_by_org"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="publishers" class="java.util.List">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[SELECT dim.org.name AS publisher,
+	dim.user.fname AS first_name,
+	dim.user.lname AS last_name,
+	dim.user.email AS email
+FROM dim.user
+	 inner join dim.org ON 
+	 dim.user.org_id = dim.org.org_id 
+	 AND dim.user.end_ts = dim.org.end_ts 
+WHERE 
+	 dim.org.org_key > 0 
+	 AND dim.user.end_ts = '9999-12-31 23:59:59.999+00' 
+	 AND $X{IN,dim.org.name,publishers} 
+ORDER BY dim.org.name ASC,
+	dim.user.fname ASC]]>
+	</queryString>
+	<field name="publisher" class="java.lang.String"/>
+	<field name="first_name" class="java.lang.String"/>
+	<field name="last_name" class="java.lang.String"/>
+	<field name="email" class="java.lang.String">
+		<fieldDescription><![CDATA[User email address.]]></fieldDescription>
+	</field>
+	<group name="publisher">
+		<groupExpression><![CDATA[$F{publisher}]]></groupExpression>
+		<groupHeader>
+			<band height="50">
+				<textField>
+					<reportElement x="0" y="15" width="100" height="20" uuid="f109a707-2c0f-46cf-ac28-d2f676287f5a"/>
+					<textFieldExpression><![CDATA[$F{publisher}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="31" splitType="Stretch"/>
+	</title>
+	<columnHeader>
+		<band height="25" splitType="Stretch">
+			<staticText>
+				<reportElement x="110" y="0" width="100" height="20" uuid="aef8507e-1c58-4ac7-abaa-d8e9d7575afc"/>
+				<text><![CDATA[Name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="340" y="2" width="100" height="20" uuid="5bd5b967-5f65-4a27-ab05-8ac9b0b50ae1"/>
+				<text><![CDATA[email]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="28" splitType="Stretch">
+			<textField>
+				<reportElement x="110" y="0" width="200" height="20" uuid="6b7ae4d4-23de-44f9-b35a-0e5f1dbdb738"/>
+				<textFieldExpression><![CDATA[$F{first_name} + " " + $F{last_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="340" y="0" width="100" height="20" uuid="84b0e2af-29d3-47ab-a28e-4298224b164c"/>
+				<textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
