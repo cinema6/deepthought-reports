@@ -42,9 +42,14 @@
 		<parameter name="start_date" class="java.util.Date"/>
 		<parameter name="end_date" class="java.util.Date"/>
 		<queryString language="SQL">
-			<![CDATA[select publisher,date,sum(splash_page_views) as splash_page_views,sum(launches) as launches
+			<![CDATA[select publisher,date,sum(splash_page_loads) as splash_page_loads,
+sum(splash_page_views) as splash_page_views,
+sum(launches) as launches
 from (
-	select d.date, o.publisher, e.experience_id,coalesce(e.splash_sessions,0) as splash_page_views,coalesce(v.mr_total_sessions,0) as launches
+	select d.date, o.publisher, e.experience_id,
+	coalesce(e.splash_sessions,0) as splash_page_loads,
+	coalesce(ee.splash_views,0) as splash_page_views,
+	coalesce(v.mr_total_sessions,0) as launches
 	from dim.dates d
 	left join (
 		select date_key,experience_id,sum(sessions) as splash_sessions
@@ -52,6 +57,12 @@ from (
 		where NOT hostname like 'consideringthings.com'
 		group by date_key,experience_id
 	) e on d.date_key = e.date_key
+	left join (
+		select date_key,experience_id,  sum(coalesce(unique_events,0)) as splash_views
+		from fct.mr_embed_events_by_device
+		where NOT hostname like 'consideringthings.com' and event_type = 'Visible'
+		group by  date_key,experience_id
+	) ee on  e.experience_id = ee.experience_id and e.date_key = ee.date_key
 	left join (
 		select date_key,experience_id,  sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions
 		from fct.mr_views_by_device
@@ -75,8 +86,9 @@ order by publisher,date]]>
 		<field name="date" class="java.sql.Date">
 			<fieldDescription><![CDATA[Date as a date.]]></fieldDescription>
 		</field>
-		<field name="splash_page_views" class="java.math.BigDecimal"/>
-		<field name="launches" class="java.math.BigDecimal"/>
+		<field name="splash_page_views" class="java.lang.Long"/>
+		<field name="launches" class="java.lang.Long"/>
+		<field name="splash_page_loads" class="java.lang.Long"/>
 	</subDataset>
 	<subDataset name="publisher_mr_aggregate" uuid="3e9e3761-612f-4242-9065-548202b6d65d">
 		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -85,7 +97,7 @@ order by publisher,date]]>
 		<parameter name="end_date" class="java.util.Date"/>
 		<queryString language="SQL">
 			<![CDATA[select o.name as publisher,m.title as minireel,coalesce(days.count_of_days,0) as days_run,
-coalesce(e.splash_sessions,0) as views,coalesce(v.mr_total_sessions,0) as launches,
+coalesce(e.splash_sessions,0) as loads,coalesce(ee.splash_views,0) as views,coalesce(v.mr_total_sessions,0) as launches,
 coalesce(v.mr_sessions,0) as non_bounce_sessions,coalesce(v.mr_bounce_sessions,0) as bounce_sessions,
 coalesce(v.mr_session_duration,0) as time_in_minireel
 from dim.minireel m
@@ -95,9 +107,16 @@ left join (
 	from fct.mr_embeds_by_device 
 	inner join dim.dates d on  fct.mr_embeds_by_device.date_key = d.date_key
 	where d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	
 	group by experience_id
 ) e on m.experience_id = e.experience_id
+left join (
+		select experience_id,  sum(coalesce(unique_events,0)) as splash_views
+		from fct.mr_embed_events_by_device
+		inner join dim.dates d on fct.mr_embed_events_by_device.date_key = d.date_key
+		where  d.date between $P{start_date} and $P{end_date} and event_type = 'Visible' 
+		and NOT hostname like 'consideringthings.com'
+		group by  experience_id
+	) ee on  e.experience_id = ee.experience_id
 left join (
 	select experience_id, sum(coalesce(sessions,0)) as mr_sessions, 
 	sum(coalesce(session_duration,0)) as mr_session_duration,sum(coalesce(bounce_sessions,0)) as mr_bounce_sessions, sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions
@@ -130,6 +149,7 @@ order by o.name,m.title;]]>
 			<fieldDescription><![CDATA[Number of session bounces from the miniReel Splash page.]]></fieldDescription>
 		</field>
 		<field name="time_in_minireel" class="java.lang.Long"/>
+		<field name="loads" class="java.lang.Long"/>
 	</subDataset>
 	<subDataset name="minireel_by_device" uuid="6163fa23-0951-4a14-93e7-ade9a1756a7a">
 		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -138,7 +158,9 @@ order by o.name,m.title;]]>
 		<parameter name="end_date" class="java.util.Date"/>
 		<queryString language="SQL">
 			<![CDATA[select e.device_category as device,
-e.splash_sessions as views,v.mr_total_sessions as launches,
+e.splash_sessions as loads,
+ee.splash_views as views,
+v.mr_total_sessions as launches,
 v.mr_sessions,v.mr_bounce_sessions,v.mr_session_duration
 from dim.minireel m
 left join (
@@ -149,6 +171,14 @@ left join (
 	and NOT hostname like 'consideringthings.com'
 	group by experience_id,device_category
 ) e on m.experience_id = e.experience_id
+left join (
+		select experience_id, device_category, sum(coalesce(unique_events,0)) as splash_views
+		from fct.mr_embed_events_by_device
+		inner join dim.dates d on fct.mr_embed_events_by_device.date_key = d.date_key
+		where  experience_id = $P{experience_id} and d.date between $P{start_date} and $P{end_date} and event_type = 'Visible' 
+		and NOT hostname like 'consideringthings.com'
+		group by  experience_id, device_category
+	) ee on  e.experience_id = ee.experience_id and e.device_category = ee.device_category
 left join (
 	select experience_id, device_category,sum(coalesce(sessions,0)) as mr_sessions, 
 	sum(coalesce(session_duration,0)) as mr_session_duration,sum(coalesce(bounce_sessions,0)) as mr_bounce_sessions, sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions
@@ -167,6 +197,7 @@ order by e.device_category]]>
 		<field name="mr_sessions" class="java.lang.Long"/>
 		<field name="mr_bounce_sessions" class="java.lang.Long"/>
 		<field name="mr_session_duration" class="java.lang.Long"/>
+		<field name="loads" class="java.lang.Long"/>
 		<variable name="sum_of_views" class="java.lang.Long">
 			<variableExpression><![CDATA[$V{sum_of_views} + $F{views}]]></variableExpression>
 			<initialValueExpression><![CDATA[new java.lang.Long(0)]]></initialValueExpression>
@@ -194,7 +225,10 @@ order by e.device_category]]>
 		<parameter name="start_date" class="java.util.Date"/>
 		<parameter name="end_date" class="java.util.Date"/>
 		<queryString language="SQL">
-			<![CDATA[select d.date, coalesce(e.splash_sessions,0) as splash_page_views,coalesce(v.mr_total_sessions,0) as launches,
+			<![CDATA[select d.date, 
+coalesce(e.splash_sessions,0) as splash_page_loads,
+coalesce(ee.splash_views,0) as splash_page_views,
+coalesce(v.mr_total_sessions,0) as launches,
 sessions,bounce_sessions,session_duration,coalesce(users,0) as users
 from dim.dates d
 left join (
@@ -202,6 +236,12 @@ left join (
 	from fct.mr_embeds_by_device where NOT hostname like 'consideringthings.com'
 	group by date_key,experience_id
 ) e on d.date_key = e.date_key
+left join (
+	select date_key,experience_id,  sum(coalesce(unique_events,0)) as splash_views
+	from fct.mr_embed_events_by_device
+	where NOT hostname like 'consideringthings.com' and event_type = 'Visible'
+	group by  date_key,experience_id
+) ee on  e.experience_id = ee.experience_id and e.date_key = ee.date_key
 left join (
 	select date_key,experience_id,  sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions,
 	sum(coalesce(sessions,0)) as sessions, sum(coalesce(bounce_sessions,0)) as bounce_sessions,
@@ -223,6 +263,7 @@ order by d.date]]>
 		</field>
 		<field name="session_duration" class="java.lang.Long"/>
 		<field name="users" class="java.lang.Long"/>
+		<field name="splash_page_loads" class="java.lang.Long"/>
 	</subDataset>
 	<parameter name="publisher" class="java.lang.String">
 		<parameterDescription><![CDATA[]]></parameterDescription>
@@ -255,7 +296,7 @@ inner JOIN (
 ) as vw on vw.experience_id = m.experience_id
 LEFT OUTER JOIN dim.video v on c.video_client_id = v.video_client_id AND v.end_ts = dim.sp_end_of_time()
 LEFT OUTER JOIN (
-	SELECT experience_id,card_id,sum(unique_pageviews) as pageviews, sum(exits) as exits, 
+	SELECT experience_id,card_id,sum(pageviews) as pageviews, sum(exits) as exits, 
 	round( (case when (sum(pageviews) - sum(exits) ) > 0 then sum(time_on_page)::numeric / (sum(pageviews) - sum(exits) )::numeric else 0::numeric end),2 ) as avg_time_on_page
 	FROM fct.mr_card_views_by_device
 	inner join dim.dates d on fct.mr_card_views_by_device.date_key = d.date_key
@@ -790,7 +831,7 @@ order by m.title,c.card_index]]>
 		<band splitType="Stretch"/>
 	</background>
 	<title>
-		<band height="236" splitType="Stretch">
+		<band height="218" splitType="Stretch">
 			<textField>
 				<reportElement x="-1" y="0" width="450" height="30" uuid="22f3edeb-b3e0-451d-b939-a48fb8c8c5a0">
 					<property name="net.sf.jasperreports.export.xls.sheet.name" value="Summary"/>
@@ -831,19 +872,21 @@ order by m.title,c.card_index]]>
 					<jr:column width="66" uuid="d9305e8f-84ed-487b-aac6-0983e9257955">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement key="" x="10" y="5" width="50" height="30" uuid="e13a76a3-876d-43e3-8800-ea1d5dce3ab1"/>
+								<reportElement key="" x="0" y="0" width="66" height="40" uuid="e13a76a3-876d-43e3-8800-ea1d5dce3ab1"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[Date]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="M/d/yy">
-								<reportElement x="10" y="0" width="50" height="24" uuid="1aa3a9b7-1362-4d72-9ae8-00f734f6bc79">
+								<reportElement x="0" y="0" width="66" height="24" uuid="1aa3a9b7-1362-4d72-9ae8-00f734f6bc79">
 									<property name="local_mesure_unity" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.y" value="px"/>
 									<property name="local_mesure_unitheight" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.height" value="px"/>
 								</reportElement>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
 							</textField>
@@ -852,20 +895,22 @@ order by m.title,c.card_index]]>
 					<jr:column width="74" uuid="7b3b6fe3-3202-4d03-8b22-1019f411cc7f">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement x="10" y="5" width="56" height="30" uuid="db8dfc9d-35c7-43b2-a21f-6a4c653773da">
+								<reportElement x="0" y="0" width="74" height="40" uuid="db8dfc9d-35c7-43b2-a21f-6a4c653773da">
 									<property name="local_mesure_unity" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.y" value="px"/>
 								</reportElement>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[Splash Page Views]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,###">
-								<reportElement x="14" y="0" width="46" height="24" uuid="7f933fff-63f6-4a0d-82cd-234fe4eb03f2">
+								<reportElement x="0" y="0" width="74" height="24" uuid="7f933fff-63f6-4a0d-82cd-234fe4eb03f2">
 									<property name="com.jaspersoft.studio.unit.y" value="px"/>
 									<property name="com.jaspersoft.studio.unit.height" value="px"/>
 								</reportElement>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{splash_page_views}]]></textFieldExpression>
 							</textField>
@@ -874,19 +919,21 @@ order by m.title,c.card_index]]>
 					<jr:column width="74" uuid="c992c5a6-5ec6-4daf-8fac-197b7c51c544">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement key="" x="12" y="5" width="50" height="30" uuid="cdfc7e7e-e699-46b5-97af-9a842d78e7bc"/>
+								<reportElement key="" x="0" y="0" width="74" height="40" uuid="cdfc7e7e-e699-46b5-97af-9a842d78e7bc"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[MiniReel Launches]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,###">
-								<reportElement x="12" y="0" width="48" height="24" uuid="608a16ee-94c8-4859-a37a-07848b5b31e1">
+								<reportElement x="0" y="0" width="74" height="24" uuid="608a16ee-94c8-4859-a37a-07848b5b31e1">
 									<property name="local_mesure_unity" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.y" value="px"/>
 									<property name="local_mesure_unitheight" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.height" value="px"/>
 								</reportElement>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
 							</textField>
@@ -915,14 +962,16 @@ order by m.title,c.card_index]]>
 					<jr:column width="320" uuid="942e9e2f-c147-4c74-9b87-d00386266e97">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement x="11" y="5" width="229" height="30" uuid="7fc040c9-4554-44f9-8b20-089a54bca6ce"/>
+								<reportElement x="0" y="0" width="320" height="40" uuid="7fc040c9-4554-44f9-8b20-089a54bca6ce"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement verticalAlignment="Middle"/>
 								<text><![CDATA[MiniReel]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField>
-								<reportElement x="11" y="0" width="229" height="24" uuid="6c155e11-df07-4318-bdef-e9a75e9dab79"/>
+								<reportElement x="0" y="0" width="320" height="24" uuid="6c155e11-df07-4318-bdef-e9a75e9dab79"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{minireel}]]></textFieldExpression>
 							</textField>
@@ -931,14 +980,15 @@ order by m.title,c.card_index]]>
 					<jr:column width="90" uuid="5b826771-cc63-4696-b2d6-8f3e3e2a6cfd">
 						<jr:columnHeader style="Table_CH" height="40">
 							<textField>
-								<reportElement x="11" y="5" width="59" height="30" uuid="89951c04-8e11-42e2-8490-48bc3fe25cbf"/>
+								<reportElement x="0" y="0" width="90" height="40" uuid="89951c04-8e11-42e2-8490-48bc3fe25cbf"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA["Days Active"]]></textFieldExpression>
 							</textField>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,###">
-								<reportElement x="11" y="0" width="69" height="24" uuid="911d7c16-d717-4275-a8eb-e7d97762027c"/>
+								<reportElement x="0" y="0" width="90" height="24" uuid="911d7c16-d717-4275-a8eb-e7d97762027c"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{days_run}]]></textFieldExpression>
 							</textField>
@@ -947,14 +997,15 @@ order by m.title,c.card_index]]>
 					<jr:column width="80" uuid="5638e13a-9fd9-43b8-b645-aa4d4a0c9815">
 						<jr:columnHeader style="Table_CH" height="40">
 							<textField>
-								<reportElement x="10" y="5" width="60" height="30" uuid="fd8fccec-6c94-432c-8bb0-76772a18bf4d"/>
+								<reportElement x="0" y="0" width="80" height="40" uuid="fd8fccec-6c94-432c-8bb0-76772a18bf4d"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA["Splash Page Views"]]></textFieldExpression>
 							</textField>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,###">
-								<reportElement x="10" y="0" width="60" height="24" uuid="ad9153d6-23f8-4838-97c6-c3916d2fe135"/>
+								<reportElement x="0" y="0" width="80" height="24" uuid="ad9153d6-23f8-4838-97c6-c3916d2fe135"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
 							</textField>
@@ -963,14 +1014,15 @@ order by m.title,c.card_index]]>
 					<jr:column width="80" uuid="62e7386e-46b1-401e-87f1-b7cfa299afe6">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement x="11" y="5" width="59" height="30" uuid="42fc33ed-4845-48fb-8d20-4e0ff3194007"/>
+								<reportElement x="0" y="0" width="80" height="40" uuid="42fc33ed-4845-48fb-8d20-4e0ff3194007"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[Launches]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,###">
-								<reportElement x="11" y="0" width="59" height="24" uuid="88711afc-5398-4fce-aabf-8150d7f0c636"/>
+								<reportElement x="0" y="0" width="80" height="24" uuid="88711afc-5398-4fce-aabf-8150d7f0c636"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
 							</textField>
@@ -979,14 +1031,15 @@ order by m.title,c.card_index]]>
 					<jr:column width="80" uuid="78d36b54-2b3a-4b5e-bd8c-21ce126cc9a2">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement x="11" y="5" width="59" height="30" uuid="57624fcf-1428-457a-9857-0623ca9781df"/>
+								<reportElement x="0" y="0" width="80" height="40" uuid="57624fcf-1428-457a-9857-0623ca9781df"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[Launch Rate]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,###%">
-								<reportElement x="11" y="0" width="59" height="24" uuid="9f001181-d722-4280-a718-e3266ad1180c"/>
+								<reportElement x="0" y="0" width="80" height="24" uuid="9f001181-d722-4280-a718-e3266ad1180c"/>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[IF(($F{views} > 0) && ($F{launches} > 0),(float)$F{launches} / (float)$F{views},"")]]></textFieldExpression>
 							</textField>
@@ -995,19 +1048,20 @@ order by m.title,c.card_index]]>
 					<jr:column width="80" uuid="3ec200aa-2fd2-4d0d-9ca8-f92cb943dfad">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement x="11" y="5" width="59" height="30" uuid="53bfd20b-f5a0-4621-8fe2-83ae565162aa"/>
+								<reportElement x="0" y="0" width="80" height="40" uuid="53bfd20b-f5a0-4621-8fe2-83ae565162aa"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[Bounce Rate]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,##0.00%">
-								<reportElement x="11" y="0" width="59" height="24" uuid="592d1504-8b03-4744-a214-17b0f698c6ad">
+								<reportElement x="0" y="0" width="80" height="24" uuid="592d1504-8b03-4744-a214-17b0f698c6ad">
 									<property name="local_mesure_unity" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.y" value="px"/>
 									<property name="local_mesure_unitheight" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.height" value="px"/>
 								</reportElement>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[IF($F{launches} > 0,(float)$F{bounce_sessions} / (float)$F{launches},"")]]></textFieldExpression>
 							</textField>
@@ -1016,20 +1070,21 @@ order by m.title,c.card_index]]>
 					<jr:column width="80" uuid="603b6110-f0c0-4ff4-8744-2932ee7b28e7">
 						<jr:columnHeader style="Table_CH" height="40">
 							<staticText>
-								<reportElement x="11" y="5" width="59" height="30" uuid="69411716-9729-48a2-af9e-1ac083b0ee74"/>
+								<reportElement x="0" y="0" width="80" height="40" uuid="69411716-9729-48a2-af9e-1ac083b0ee74"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<text><![CDATA[Avg Session Length]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table_TD" height="24">
 							<textField pattern="#,##0.00#;#,##0.00#-">
-								<reportElement x="12" y="0" width="59" height="24" uuid="a11d9c94-dc0b-4808-8b86-076ef3c45728">
+								<reportElement x="0" y="0" width="80" height="24" uuid="a11d9c94-dc0b-4808-8b86-076ef3c45728">
 									<property name="local_mesure_unity" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.y" value="px"/>
 									<property name="local_mesure_unitheight" value="pixel"/>
 									<property name="com.jaspersoft.studio.unit.height" value="px"/>
 									<property name="local_mesure_unitwidth" value="pixel"/>
 								</reportElement>
+								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Right" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[IF($F{non_bounce_sessions} > 0,(float)$F{time_in_minireel} / (float)$F{non_bounce_sessions},"")]]></textFieldExpression>
 							</textField>
@@ -1180,7 +1235,7 @@ order by m.title,c.card_index]]>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<paragraph leftIndent="0" rightIndent="0"/>
 				</textElement>
-				<textFieldExpression><![CDATA[((($F{total_views} > 0) && ($F{views} > 0)) ? (float)($F{total_views} - $F{views})/(float)$F{total_views} : (float)0)]]></textFieldExpression>
+				<textFieldExpression><![CDATA[((($F{total_views} > 0) && ($F{views} > 0)) && (($F{slide_index}) > 1) ? (float)($F{total_views} - $F{views})/(float)$F{total_views} : (float)0)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,###%" isBlankWhenNull="true">
 				<reportElement key="" style="Table_TD" x="1040" y="0" width="60" height="24" uuid="24fcf4c4-b72f-4bb2-8aa9-8471990f8903">
