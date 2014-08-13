@@ -88,9 +88,9 @@ order by o.name,u.fname,m.title;]]>
 	<title>
 		<band height="83" splitType="Stretch">
 			<staticText>
-				<reportElement x="30" y="31" width="610" height="30" uuid="e757682a-0f90-495e-b239-5b4823c8856f"/>
-				<textElement verticalAlignment="Middle">
-					<font size="18"/>
+				<reportElement x="30" y="40" width="610" height="40" uuid="e757682a-0f90-495e-b239-5b4823c8856f"/>
+				<textElement verticalAlignment="Top">
+					<font size="20" isBold="true"/>
 				</textElement>
 				<text><![CDATA[MiniReel Catalog]]></text>
 			</staticText>
@@ -101,9 +101,11 @@ order by o.name,u.fname,m.title;]]>
 			<property name="local_mesure_unitheight" value="pixel"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<staticText>
-				<reportElement x="30" y="1" width="350" height="30" uuid="c6188e58-3f3d-4d8c-b4a3-64e29aec4db2">
+				<reportElement x="30" y="0" width="350" height="30" uuid="c6188e58-3f3d-4d8c-b4a3-64e29aec4db2">
 					<property name="local_mesure_unitheight" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					<property name="local_mesure_unity" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
 				</reportElement>
 				<box>
 					<bottomPen lineWidth="2.0"/>
@@ -194,7 +196,7 @@ order by o.name,u.fname,m.title;]]>
 					<font size="12" isUnderline="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Preview"]]></textFieldExpression>
-				<hyperlinkReferenceExpression><![CDATA["http://www.cinema6.com/preview/minireel?exp=" + $F{minireel_id} + "&title=" + java.net.URLEncoder.encode($F{minireel},"UTF-8").replaceAll("\\+","%20") + "&splash=" + $F{splash_theme} + ":" + $F{splash_ratio}]]></hyperlinkReferenceExpression>
+				<hyperlinkReferenceExpression><![CDATA["http://www.cinema6.com/preview/minireel?exp=" + $F{minireel_id} + "&title=" + java.net.URLEncoder.encode($F{minireel},"UTF-8").replaceAll("\\+","%20") + "&splash=" + $F{splash_theme} + ":" + $F{splash_ratio} + "&preload"]]></hyperlinkReferenceExpression>
 			</textField>
 			<textField>
 				<reportElement x="400" y="0" width="110" height="28" uuid="b830cbff-35a9-4f4e-9bc0-f532f9a2dc9b">
