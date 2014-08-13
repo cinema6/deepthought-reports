@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version last-->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Available Content" pageWidth="768" pageHeight="1024" columnWidth="728" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="ea6e9ba7-f282-407d-b741-0e9231d2cc37">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="MiniReel Catalog" pageWidth="768" pageHeight="1024" columnWidth="728" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="ea6e9ba7-f282-407d-b741-0e9231d2cc37">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
-	<property name="ireport.jasperserver.report.resource" value="/Reports/Available_Content_files/main_jrxml"/>
-	<property name="ireport.jasperserver.reportUnit" value="/Reports/Available_Content"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/MiniReel_Catalog_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/MiniReel_Catalog"/>
 	<queryString language="SQL">
 		<![CDATA[select o.name as content_publisher,
 case when (u.fname is not null AND u.lname is not null) then u.fname || ' ' || u.lname else u.email end as editor,
@@ -15,7 +15,7 @@ v.category,
 c.slide_count,
 (c.has_ballots = 1)::boolean as has_survey,
 coalesce(m.access_type,'private') as access_type,
-'3-2' as splash_ratio,
+'3/2' as splash_ratio,
 'img-text-overlay' as splash_theme
 from dim.user u
 inner join dim.minireel m on m.created_by = u.user_id AND m.end_ts = u.end_ts
@@ -37,7 +37,7 @@ left join (
 	order by minireel_key,rank() OVER (partition by minireel_key  order by category_count desc)
 ) v on v.minireel_key = m.minireel_key AND v.rank = 1
 inner join dim.org o on o.org_id = m.org_id AND o.end_ts = m.end_ts
-where u.end_ts = dim.sp_end_of_time()
+where u.end_ts = dim.sp_end_of_time() and u.user_type = 'ContentProvider' and m.access_type = 'public' and m.status = 'active'
 order by o.name,u.fname,m.title;]]>
 	</queryString>
 	<field name="content_publisher" class="java.lang.String"/>
@@ -127,7 +127,7 @@ order by o.name,u.fname,m.title;]]>
 				<text><![CDATA[Slides]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="585" y="0" width="40" height="30" uuid="4516fba1-319c-4577-97e7-1389d5fba838">
+				<reportElement x="578" y="0" width="55" height="30" uuid="4516fba1-319c-4577-97e7-1389d5fba838">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -194,7 +194,7 @@ order by o.name,u.fname,m.title;]]>
 					<font size="12" isUnderline="true"/>
 				</textElement>
 				<textFieldExpression><![CDATA["Preview"]]></textFieldExpression>
-				<hyperlinkReferenceExpression><![CDATA["http://www.cinema6.com/#/preview/minireel?exp=" + $F{minireel_id} + "&&title=" + java.net.URLEncoder.encode($F{minireel},"UTF-8").replaceAll("\\+","%20") + "&&splash=" + java.net.URLEncoder.encode($F{splash_theme} + ":" + $F{splash_ratio},"UTF-8")]]></hyperlinkReferenceExpression>
+				<hyperlinkReferenceExpression><![CDATA["http://www.cinema6.com/preview/minireel?exp=" + $F{minireel_id} + "&title=" + java.net.URLEncoder.encode($F{minireel},"UTF-8").replaceAll("\\+","%20") + "&splash=" + $F{splash_theme} + ":" + $F{splash_ratio}]]></hyperlinkReferenceExpression>
 			</textField>
 			<textField>
 				<reportElement x="400" y="0" width="110" height="28" uuid="b830cbff-35a9-4f4e-9bc0-f532f9a2dc9b">
