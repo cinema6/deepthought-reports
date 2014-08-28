@@ -296,7 +296,7 @@ inner JOIN (
 ) as vw on vw.experience_id = m.experience_id
 LEFT OUTER JOIN dim.video v on c.video_client_id = v.video_client_id AND v.end_ts = dim.sp_end_of_time()
 LEFT OUTER JOIN (
-	SELECT experience_id,card_id,sum(pageviews) as pageviews, sum(exits) as exits, 
+	SELECT experience_id,card_id,sum(unique_pageviews) as pageviews, sum(exits) as exits, 
 	round( (case when (sum(pageviews) - sum(exits) ) > 0 then sum(time_on_page)::numeric / (sum(pageviews) - sum(exits) )::numeric else 0::numeric end),2 ) as avg_time_on_page
 	FROM fct.mr_card_views_by_device
 	inner join dim.dates d on fct.mr_card_views_by_device.date_key = d.date_key
