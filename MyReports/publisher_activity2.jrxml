@@ -159,7 +159,7 @@ order by o.name,m.title;]]>
 		<queryString language="SQL">
 			<![CDATA[select e.device_category as device,
 e.splash_sessions as loads,
-ee.splash_views as views,
+coalesce(ee.splash_views,0) as views,
 v.mr_total_sessions as launches,
 v.mr_sessions,v.mr_bounce_sessions,v.mr_session_duration
 from dim.minireel m
@@ -346,7 +346,7 @@ LEFT OUTER JOIN (
 ) as vq4 ON  vq4.experience_id = m.experience_id AND  vq4.card_id = c.card_id
 INNER JOIN dim.org o ON m.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
 WHERE m.end_ts = dim.sp_end_of_time() and o.name = $P{publisher}
-order by m.title,c.card_index]]>
+order by m.title,m.experience_id,c.card_index]]>
 	</queryString>
 	<field name="publisher" class="java.lang.String"/>
 	<field name="minireel" class="java.lang.String"/>
@@ -363,7 +363,7 @@ order by m.title,c.card_index]]>
 	<field name="quartile_4" class="java.lang.Long"/>
 	<field name="experience_id" class="java.lang.String"/>
 	<group name="minireel">
-		<groupExpression><![CDATA[$F{minireel}]]></groupExpression>
+		<groupExpression><![CDATA[$F{experience_id}]]></groupExpression>
 		<groupHeader>
 			<band height="100">
 				<property name="local_mesure_unitheight" value="pixel"/>
@@ -480,12 +480,19 @@ order by m.title,c.card_index]]>
 					<textElement textAlignment="Center" verticalAlignment="Middle"/>
 					<text><![CDATA[Play to Q4]]></text>
 				</staticText>
+				<textField>
+					<reportElement positionType="FixRelativeToBottom" x="0" y="40" width="100" height="20" uuid="60c1d02b-0bc5-4ff0-b1f9-34bb6db407fd"/>
+					<textElement verticalAlignment="Middle">
+						<font size="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{experience_id}]]></textFieldExpression>
+				</textField>
 			</band>
 		</groupHeader>
 		<groupFooter>
 			<band height="330">
 				<componentElement>
-					<reportElement x="660" y="80" width="440" height="200" uuid="dda5f010-a96f-477a-8345-9ec2e4418bdf"/>
+					<reportElement x="660" y="80" width="430" height="100" uuid="dda5f010-a96f-477a-8345-9ec2e4418bdf"/>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
 						<datasetRun subDataset="minireel_daily_performance" uuid="d563a721-b30b-46ae-b892-c5cf7627925a">
 							<datasetParameter name="experience_id">
@@ -610,7 +617,7 @@ order by m.title,c.card_index]]>
 					</jr:table>
 				</componentElement>
 				<componentElement>
-					<reportElement x="0" y="80" width="440" height="140" uuid="592cce03-0cb4-4e5a-a9fb-118bcefb9312"/>
+					<reportElement x="0" y="80" width="440" height="110" uuid="592cce03-0cb4-4e5a-a9fb-118bcefb9312"/>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
 						<datasetRun subDataset="minireel_by_device" uuid="2ff56ac1-757e-4b37-b26b-40d55ba79e61">
 							<datasetParameter name="experience_id">
@@ -808,7 +815,7 @@ order by m.title,c.card_index]]>
 					</jr:table>
 				</componentElement>
 				<staticText>
-					<reportElement x="0" y="10" width="425" height="56" uuid="0ce19742-361f-42f5-bb90-85afe37fdfaa">
+					<reportElement x="0" y="30" width="425" height="36" uuid="0ce19742-361f-42f5-bb90-85afe37fdfaa">
 						<property name="local_mesure_unitx" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.x" value="px"/>
 					</reportElement>
@@ -818,7 +825,7 @@ order by m.title,c.card_index]]>
 					<text><![CDATA[MiniReel Activity by Device]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="660" y="10" width="415" height="56" uuid="1e386391-ea21-45ad-b7c4-047991752239"/>
+					<reportElement x="660" y="30" width="415" height="36" uuid="1e386391-ea21-45ad-b7c4-047991752239"/>
 					<textElement verticalAlignment="Bottom">
 						<font size="18"/>
 					</textElement>
