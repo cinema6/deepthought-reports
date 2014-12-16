@@ -123,6 +123,7 @@ left join (
 	from fct.mr_locations
 	inner join dim.dates d on fct.mr_locations.date_key = d.date_key
 	where $X{EQUAL,d.date,report_date} and NOT hostname like 'consideringthings.com'
+	group by experience_id,hostname,url,pageviews
 	order by experience_id,rank
 ) l on e.experience_id = l.experience_id and l.rank = 1
 inner join dim.minireel m on m.experience_id = e.experience_id and m.end_ts = dim.sp_end_of_time()
