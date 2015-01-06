@@ -1,0 +1,11 @@
+{
+    "ids"           : "94956205,94952818,94946513,94953114,94949414,94955511,94948904,94945220,94957016,94941518,94953909,94957017,94941416,94952417,94955805,94948614,94956014,94944718,94956816,94955807,94943318,94952919,94935025,94956209,94942817",
+    "max-results"   : "1000",
+    "start-index"   : "1",
+    "start-date"    : "2014-12-13",
+    "end-date"      : "2014-12-14",
+    "dimensions"    : "ga:date,ga:hour,ga:hostname,ga:pagePath,ga:deviceCategory,ga:operatingSystem,ga:browser",
+    "metrics"       : "ga:sessions,ga:pageviews,ga:uniquePageviews,ga:users,ga:newUsers",
+    "filters"       : "ga:pagePath=~^/embed/e-ff36bf5a876f10/$"
+}
+
