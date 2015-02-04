@@ -121,7 +121,7 @@ left join (
 	select experience_id,hostname,url,pageviews,
 	rank() OVER (PARTITION BY experience_id ORDER BY pageviews desc,url asc)
 	from fct.mr_locations
-	inner join dim.dates d on fct.mr_locations.date_key = d.date_key
+	inner join dim.dates d on fct.mr_locations.rec_ts::date = d.date
 	where $X{EQUAL,d.date,report_date} and NOT hostname like 'consideringthings.com'
 	group by experience_id,hostname,url,pageviews
 	order by experience_id,rank
