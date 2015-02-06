@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version last-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="sponsored_card_activity" pageWidth="1200" pageHeight="900" orientation="Landscape" columnWidth="1160" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="2ce4c813-65b2-441f-856e-188d47cd9367">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
+	<parameter name="start_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="end_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+	</parameter>
+	<parameter name="min_loads" class="java.lang.Long">
+		<parameterDescription><![CDATA[Minimum mini_reel_loads for report.]]></parameterDescription>
+		<defaultValueExpression><![CDATA[0]]></defaultValueExpression>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[select c.site,c.date,c.sponsor,c.minireel_title,c.card_title,c.device_category,
+	e.events as minireel_loads,v.events as minireel_views,c.cardviews,c.autoplay,c.play,c.q1,c.q2,c.q3,c.q4,c.completed_view,c.errors,c.completion_rate
+from (
+select sc.host_id as site,sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id,sc.device_category,
+	sum(sc.cardviews) as cardviews,sum(sc.autoplay) as autoplay,sum(sc.play) as play,
+	sum(sc.q1) as q1,sum(sc.q2) as q2,sum(sc.q3) as q3,sum(sc.q4) as q4,
+	sum(sc.adcount) as completed_view,sum(sc.err) as errors,
+	sum(sc.adcount)/sum(sc.cardviews) as completion_rate
+from fct.v_sponsored_card_activity sc
+group by sc.host_id,sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id,sc.device_category
+) as c
+left join (
+	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,ve.device_category,sum(events) as events
+	from fct.mr_embed_events_by_device ve
+	where ve.experience_id in ( select distinct experience_id from dim.v_sponsored_card)  and ve.event_type ='Visible'
+	group by ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,ve.device_category
+) as v on v.date_key = c.date_key AND v.experience_id = c.experience_id AND v.hostname = c.hostname AND v.mr_container = c.container and v.device_category = c.device_category
+left join (
+	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,ve.device_Category,sum(pageviews) as events
+	from fct.mr_embeds_by_device ve
+	where ve.experience_id in ( select distinct experience_id from dim.v_sponsored_card) 
+	group by ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,ve.device_category
+) as e on e.date_key = c.date_key AND e.experience_id = c.experience_id AND e.hostname = c.hostname AND e.mr_container = c.container and e.device_category = c.device_category
+where e.events >= $P{min_loads}
+order by c.site,c.date,c.sponsor,c.minireel_title,c.card_title]]>
+	</queryString>
+	<field name="site" class="java.lang.String"/>
+	<field name="date" class="java.sql.Date">
+		<fieldDescription><![CDATA[Date as a date.]]></fieldDescription>
+	</field>
+	<field name="sponsor" class="java.lang.String">
+		<fieldDescription><![CDATA[Sponsor of card.]]></fieldDescription>
+	</field>
+	<field name="minireel_title" class="java.lang.String"/>
+	<field name="card_title" class="java.lang.String"/>
+	<field name="device_category" class="java.lang.String"/>
+	<field name="minireel_loads" class="java.lang.Long"/>
+	<field name="minireel_views" class="java.lang.Long"/>
+	<field name="cardviews" class="java.lang.Long"/>
+	<field name="completed_view" class="java.lang.Long"/>
+	<sortField name="site"/>
+	<sortField name="sponsor"/>
+	<sortField name="card_title"/>
+	<sortField name="date"/>
+	<sortField name="minireel_title"/>
+	<sortField name="device_category"/>
+	<variable name="total_minireel_loads" class="java.lang.Long" resetType="Group" resetGroup="date and minireel" calculation="Sum">
+		<variableExpression><![CDATA[$F{minireel_loads}]]></variableExpression>
+	</variable>
+	<variable name="total_minireel_views" class="java.lang.Long" resetType="Group" resetGroup="date and minireel" calculation="Sum">
+		<variableExpression><![CDATA[$F{minireel_views}]]></variableExpression>
+	</variable>
+	<variable name="total_cardviews" class="java.lang.Long" resetType="Group" resetGroup="date and minireel" calculation="Sum">
+		<variableExpression><![CDATA[$F{cardviews}]]></variableExpression>
+	</variable>
+	<variable name="total_completed_views" class="java.lang.Long" resetType="Group" resetGroup="date and minireel" calculation="Sum">
+		<variableExpression><![CDATA[$F{completed_view}]]></variableExpression>
+	</variable>
+	<group name="site" isStartNewPage="true" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{site}]]></groupExpression>
+		<groupHeader>
+			<band height="31">
+				<property name="net.sf.jasperreports.export.xls.sheet.name" value="$F{site}"/>
+				<textField>
+					<reportElement x="80" y="0" width="200" height="20" uuid="93c8945b-ff73-405f-8f40-c73198dcc7b5"/>
+					<textFieldExpression><![CDATA[$F{site}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="0" width="80" height="20" uuid="56220b88-98a8-446c-9667-a9e0412caaaa"/>
+					<text><![CDATA[Publisher:]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="sponsored card" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{sponsor}+$F{card_title}]]></groupExpression>
+		<groupHeader>
+			<band height="100">
+				<textField pattern="M/d/yy">
+					<reportElement x="80" y="0" width="100" height="20" uuid="7d8e0862-ab7e-4187-b946-1d3cc39495ca"/>
+					<textFieldExpression><![CDATA[$F{sponsor}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="80" y="20" width="100" height="20" uuid="dbb3ffac-bdf1-4930-9f19-fcd85d17799c"/>
+					<textFieldExpression><![CDATA[$F{card_title}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="380" y="70" width="100" height="30" uuid="0bf4396b-5d53-4ae2-a564-1f81f0ab2583"/>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[Viewable MiniReel Impressions]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="280" y="70" width="100" height="30" uuid="f0ca6a08-dac5-4120-b214-04f38040b0c9"/>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[MiniReel Impressions]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="880" y="70" width="100" height="30" uuid="ace0c0e1-6cc8-41ac-90a9-6dd778b62650"/>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[Completed Views]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="720" y="70" width="100" height="29" uuid="781c5a26-2db0-4d7d-a01c-94f2ac749739"/>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[Click Rate (Viewable Impressions)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="620" y="70" width="100" height="29" uuid="fafa9b97-4439-4036-80fb-81d32414108f">
+						<property name="local_mesure_unity" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[Click Rate (Impressions)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="180" y="70" width="100" height="30" uuid="ddcecb79-fc59-4f37-b817-e44e26ac58da"/>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[Device]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="480" y="70" width="100" height="30" uuid="aba393bd-524b-4e2e-b2eb-99c7c75aaa5f"/>
+					<textElement textAlignment="Center"/>
+					<text><![CDATA[Clicks]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="0" width="80" height="20" uuid="176c242e-b27f-4a8e-b1bc-78dcf8a1e5b9"/>
+					<text><![CDATA[Sponsor:]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="20" width="80" height="20" uuid="d91b42e4-070b-436f-9eb7-3aded2976a5d"/>
+					<text><![CDATA[Card:]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="date and minireel">
+		<groupExpression><![CDATA[$F{date} + $F{minireel_title}]]></groupExpression>
+		<groupHeader>
+			<band height="52">
+				<textField pattern="M/d/yy">
+					<reportElement x="0" y="23" width="89" height="20" uuid="2a5043b9-0a8f-4c4b-a8db-e11cfa25c257"/>
+					<textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="100" y="23" width="380" height="20" uuid="7992f847-0fe1-48c5-b5ca-cbe28d29814f"/>
+					<textFieldExpression><![CDATA[$F{minireel_title}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="25">
+				<textField pattern="#,##0.###">
+					<reportElement x="305" y="4" width="50" height="20" uuid="83177e4a-b5b1-4205-b9e9-f7a2ace7d671">
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[$V{total_minireel_loads}]]></textFieldExpression>
+				</textField>
+				<line>
+					<reportElement x="180" y="0" width="820" height="2" uuid="7c765e2f-1be0-46e5-ac67-f28d30809db8">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+				</line>
+				<textField pattern="#,##0.###">
+					<reportElement x="405" y="4" width="50" height="20" uuid="87eca8cf-d892-4281-a6b2-b15c4e15d549">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[$V{total_minireel_views}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.##%">
+					<reportElement x="645" y="4" width="50" height="20" uuid="6a551b05-40f1-4b4e-885a-b7b8e0795dd6">
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[(double)$V{total_cardviews}/(double)$V{total_minireel_loads}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.##%">
+					<reportElement x="745" y="4" width="50" height="20" uuid="811aee80-bac4-451c-bc2d-7d199268ba86">
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="local_mesure_unity" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[(double)$V{total_cardviews}/(double)$V{total_minireel_views}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.###;(#,##0.###-)">
+					<reportElement x="505" y="4" width="50" height="20" uuid="30616b31-478b-4eae-bfe8-a30d352d3146">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[$V{total_cardviews}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.###;(#,##0.###-)">
+					<reportElement x="905" y="4" width="50" height="20" uuid="4c78ac41-0e70-40d2-98d9-efa827bdc56d"/>
+					<textElement textAlignment="Right"/>
+					<textFieldExpression><![CDATA[$V{total_completed_views}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<pageHeader>
+		<band height="28" splitType="Stretch"/>
+	</pageHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField pattern="#,##0.###;(#,##0.###-)" isBlankWhenNull="true">
+				<reportElement x="305" y="0" width="50" height="20" uuid="f687595f-8e9c-49ba-882d-bea1ebc57ac3">
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{minireel_loads}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###-)" isBlankWhenNull="true">
+				<reportElement x="405" y="0" width="50" height="20" uuid="2b436404-42cd-4840-8dc8-6c0cb61a3c37">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{minireel_views}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="645" y="0" width="50" height="20" uuid="a5c73550-ce5c-471c-b541-584c22a7ecd6">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[(double)$F{cardviews}/(double)$F{minireel_loads}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="745" y="0" width="50" height="20" uuid="4869e29c-b44a-46de-83b7-6fea7749dfbb">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[(double)$F{cardviews}/(double)$F{minireel_views}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###-)" isBlankWhenNull="true">
+				<reportElement x="905" y="0" width="50" height="20" uuid="0fffe0ba-8f8e-460d-9dd0-2de2c5824d16">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="local_mesure_unity" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{completed_view}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="180" y="0" width="100" height="20" uuid="b0fd0222-f60b-43d3-b2b0-f0ab579c1126">
+					<property name="local_mesure_unity" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Center"/>
+				<textFieldExpression><![CDATA[$F{device_category}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###;(#,##0.###-)">
+				<reportElement x="505" y="0" width="50" height="20" uuid="0c3635b2-9429-40eb-a85b-5d4236eeb28c">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="com.jaspersoft.studio.unit.y" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{cardviews}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="29" splitType="Stretch"/>
+	</pageFooter>
+</jasperReport>
