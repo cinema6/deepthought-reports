@@ -1,22 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version last-->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Site Activity" pageWidth="1200" pageHeight="900" orientation="Landscape" whenNoDataType="AllSectionsNoDetail" columnWidth="1160" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="2752a2ba-a6be-4115-a392-1fb5c2e1e99d">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
-	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
-	<property name="ireport.jasperserver.report.resource" value="/Reports/Publisher_Activity_files/main_jrxml"/>
-	<property name="ireport.jasperserver.reportUnit" value="/Reports/Publisher_Activity"/>
-	<property name="net.sf.jasperreports.page.break.no.pagination" value="apply"/>
-	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="site_activity" pageWidth="1200" pageHeight="1600" columnWidth="1160" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6561c92a-97f2-41df-bb3a-9034e0aad5c1">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
-	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
-		<box>
-			<pen lineWidth="0.5" lineColor="#000000"/>
-			<topPen lineWidth="0.5" lineColor="#000000"/>
-			<leftPen lineWidth="0.5" lineColor="#000000"/>
-			<bottomPen lineWidth="0.5" lineColor="#000000"/>
-			<rightPen lineWidth="0.5" lineColor="#000000"/>
-		</box>
-	</style>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -26,7 +12,7 @@
 			<rightPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
-	<style name="Table_CH" mode="Opaque" backcolor="#D4D4D4">
+	<style name="Table_CH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
 			<topPen lineWidth="0.5" lineColor="#000000"/>
@@ -34,469 +20,384 @@
 			<bottomPen lineWidth="0.5" lineColor="#000000"/>
 			<rightPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
-		<paragraph leftIndent="4" rightIndent="4"/>
 	</style>
-	<subDataset name="publisher_daily_aggregate" whenResourceMissingType="Empty" uuid="5a7ceafb-856b-471c-bd17-79f57d2e39ff">
-		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
-		<parameter name="publisher" class="java.lang.String"/>
-		<parameter name="start_date" class="java.util.Date"/>
-		<parameter name="end_date" class="java.util.Date"/>
-		<queryString language="SQL">
-			<![CDATA[select publisher,date,sum(splash_page_loads) as splash_page_loads,
-sum(splash_page_views) as splash_page_views,
-sum(launches) as launches
-from (
-	select d.date, o.publisher, e.experience_id,
-	coalesce(e.splash_sessions,0) as splash_page_loads,
-	coalesce(ee.splash_views,0) as splash_page_views,
-	coalesce(v.mr_total_sessions,0) as launches
-	from dim.dates d
-	left join (
-		select date_key,experience_id,sum(sessions) as splash_sessions
-		from fct.mr_embeds_by_device
-		where NOT hostname like 'consideringthings.com'
-		group by date_key,experience_id
-	) e on d.date_key = e.date_key
-	left join (
-		select date_key,experience_id,  sum(coalesce(unique_events,0)) as splash_views
-		from fct.mr_embed_events_by_device
-		where NOT hostname like 'consideringthings.com' and event_type = 'Visible'
-		group by  date_key,experience_id
-	) ee on  e.experience_id = ee.experience_id and e.date_key = ee.date_key
-	left join (
-		select date_key,experience_id,  sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions
-		from fct.mr_views_by_device
-		where NOT hostname like 'consideringthings.com'
-		group by date_key, experience_id
-	) v on e.date_key = v.date_key and e.experience_id = v.experience_id
-	inner join (
-		select m.experience_id,o.name as publisher
-		from dim.minireel m
-		inner join dim.org o on m.org_id = o.org_id and m.end_ts = o.end_ts
-		where m.end_ts = dim.sp_end_of_time()
-	) o on o.experience_id = e.experience_id
-	WHERE d.date between $P{start_date} and $P{end_date}
-	order by d.date,o.publisher,e.experience_id
-) as sub
-where publisher = $P{publisher}
-group by publisher,date
-order by publisher,date]]>
-		</queryString>
-		<field name="publisher" class="java.lang.String"/>
-		<field name="date" class="java.sql.Date">
-			<fieldDescription><![CDATA[Date as a date.]]></fieldDescription>
-		</field>
-		<field name="splash_page_views" class="java.lang.Long"/>
-		<field name="launches" class="java.lang.Long"/>
-		<field name="splash_page_loads" class="java.lang.Long"/>
-	</subDataset>
-	<subDataset name="publisher_mr_aggregate" uuid="3e9e3761-612f-4242-9065-548202b6d65d">
-		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
-		<parameter name="publisher" class="java.lang.String"/>
-		<parameter name="start_date" class="java.util.Date"/>
-		<parameter name="end_date" class="java.util.Date"/>
-		<queryString language="SQL">
-			<![CDATA[select o.name as publisher,m.title as minireel,coalesce(days.count_of_days,0) as days_run,
-coalesce(e.splash_sessions,0) as loads,coalesce(ee.splash_views,0) as views,coalesce(v.mr_total_sessions,0) as launches,
-coalesce(v.mr_sessions,0) as non_bounce_sessions,coalesce(v.mr_bounce_sessions,0) as bounce_sessions,
-coalesce(v.mr_session_duration,0) as time_in_minireel
-from dim.minireel m
-inner join dim.org o on m.org_id = o.org_id and m.end_ts = o.end_ts
-left join (
-	select experience_id,sum(sessions) as splash_sessions
-	from fct.mr_embeds_by_device 
-	inner join dim.dates d on  fct.mr_embeds_by_device.date_key = d.date_key
-	where d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	group by experience_id
-) e on m.experience_id = e.experience_id
-left join (
-		select experience_id,  sum(coalesce(unique_events,0)) as splash_views
-		from fct.mr_embed_events_by_device
-		inner join dim.dates d on fct.mr_embed_events_by_device.date_key = d.date_key
-		where  d.date between $P{start_date} and $P{end_date} and event_type = 'Visible' 
-		and NOT hostname like 'consideringthings.com'
-		group by  experience_id
-	) ee on  e.experience_id = ee.experience_id
-left join (
-	select experience_id, sum(coalesce(sessions,0)) as mr_sessions, 
-	sum(coalesce(session_duration,0)) as mr_session_duration,sum(coalesce(bounce_sessions,0)) as mr_bounce_sessions, sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions
-	from fct.mr_views_by_device
-	inner join dim.dates d on fct.mr_views_by_device.date_key = d.date_key
-	where d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	group by experience_id
-) v on e.experience_id = v.experience_id 
-left join (
-	select experience_id,sum(count) as count_of_days
-	from (
-		select d.date_key,experience_id,1 as count 
-		from fct.mr_embeds_by_device 
-		inner join dim.dates d on fct.mr_embeds_by_device.date_key = d.date_key
-	    where d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-		group by d.date_key,experience_id
-	) as exdays
-	group by experience_id
-) days on e.experience_id = days.experience_id
-WHERE m.end_ts = dim.sp_end_of_time() and o.name = $P{publisher} and coalesce(days.count_of_days,0) > 0
-order by o.name,m.title;]]>
-		</queryString>
-		<field name="publisher" class="java.lang.String"/>
-		<field name="minireel" class="java.lang.String"/>
-		<field name="days_run" class="java.lang.Long"/>
-		<field name="views" class="java.lang.Long"/>
-		<field name="launches" class="java.lang.Long"/>
-		<field name="non_bounce_sessions" class="java.lang.Long"/>
-		<field name="bounce_sessions" class="java.lang.Long">
-			<fieldDescription><![CDATA[Number of session bounces from the miniReel Splash page.]]></fieldDescription>
-		</field>
-		<field name="time_in_minireel" class="java.lang.Long"/>
-		<field name="loads" class="java.lang.Long"/>
-	</subDataset>
-	<subDataset name="minireel_by_device" uuid="6163fa23-0951-4a14-93e7-ade9a1756a7a">
-		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TH" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_CH" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="minireel activity by device" uuid="2346fc20-a3c6-4784-806b-e3cea16f6322">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
+		<parameter name="site" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<parameter name="start_date" class="java.util.Date">
+			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+		</parameter>
+		<parameter name="end_date" class="java.util.Date">
+			<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+		</parameter>
 		<parameter name="experience_id" class="java.lang.String"/>
-		<parameter name="start_date" class="java.util.Date"/>
-		<parameter name="end_date" class="java.util.Date"/>
 		<queryString language="SQL">
-			<![CDATA[select e.device_category as device,
-e.splash_sessions as loads,
-coalesce(ee.splash_views,0) as views,
-v.mr_total_sessions as launches,
-v.mr_sessions,v.mr_bounce_sessions,v.mr_session_duration
-from dim.minireel m
+			<![CDATA[select 
+  e.device_category as device,
+  e.splash_sessions as loads,
+  (sum(e.splash_sessions) over (PARTITION BY  e.experience_id))::bigint as total_loads,
+  coalesce(ee.splash_views,0) as views,
+  (sum(ee.splash_views) over (PARTITION BY  ee.experience_id))::bigint as total_views,
+   v.mr_total_sessions as launches,
+  (sum( v.mr_total_sessions) over (PARTITION BY  v.experience_id))::bigint as total_launches,
+   v.mr_sessions,v.mr_bounce_sessions,v.mr_session_duration
+from (
+	select e.experience_id,e.device_category,sum(e.sessions) as splash_sessions
+	from fct.mr_embeds_by_device e
+	inner join dim.dates d on d.date_key = e.date_key
+	inner join rpt.hostname_to_site hs ON e.hostname = hs.hostname AND e.mr_container = hs.container
+	where e.experience_id = $P{experience_id} and hs.site_name = $P{site} AND  d.date  BETWEEN $P{start_date} AND $P{end_date}
+	group by e.experience_id,e.device_category
+) e 
+inner join dim.minireel m ON m.experience_id = e.experience_id AND m.end_ts = dim.sp_end_of_time()
 left join (
-	select experience_id,device_category,sum(sessions) as splash_sessions
-	from fct.mr_embeds_by_device
-	inner join dim.dates d on d.date_key = fct.mr_embeds_by_device.date_key
-	where experience_id = $P{experience_id} and d.date  BETWEEN $P{start_date} AND $P{end_date} 
-	and NOT hostname like 'consideringthings.com'
-	group by experience_id,device_category
-) e on m.experience_id = e.experience_id
-left join (
-		select experience_id, device_category, sum(coalesce(unique_events,0)) as splash_views
-		from fct.mr_embed_events_by_device
-		inner join dim.dates d on fct.mr_embed_events_by_device.date_key = d.date_key
-		where  experience_id = $P{experience_id} and d.date between $P{start_date} and $P{end_date} and event_type = 'Visible' 
-		and NOT hostname like 'consideringthings.com'
-		group by  experience_id, device_category
+		select ee.experience_id, ee.device_category, sum(coalesce(ee.unique_events,0)) as splash_views
+		from fct.mr_embed_events_by_device ee
+		inner join dim.dates d on ee.date_key = d.date_key
+		inner join rpt.hostname_to_site hs ON ee.hostname = hs.hostname AND ee.mr_container = hs.container
+		where  ee.experience_id = $P{experience_id} and hs.site_name = $P{site}  and d.date between $P{start_date} AND $P{end_date} and ee.event_type = 'Visible' 
+		group by  ee.experience_id, ee.device_category
 	) ee on  e.experience_id = ee.experience_id and e.device_category = ee.device_category
 left join (
-	select experience_id, device_category,sum(coalesce(sessions,0)) as mr_sessions, 
-	sum(coalesce(session_duration,0)) as mr_session_duration,sum(coalesce(bounce_sessions,0)) as mr_bounce_sessions, sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions
-	from fct.mr_views_by_device
-	inner join dim.dates d on d.date_key = fct.mr_views_by_device.date_key
-	where experience_id = $P{experience_id} and d.date  BETWEEN $P{start_date} AND $P{end_date}  
-	and NOT hostname like 'consideringthings.com'
-	group by experience_id,device_category
+	select v.experience_id, v.device_category,sum(coalesce(v.sessions,0)) as mr_sessions, 
+	sum(coalesce(v.session_duration,0)) as mr_session_duration,
+	sum(coalesce(v.bounce_sessions,0)) as mr_bounce_sessions, 
+	sum(coalesce(v.sessions,0) + coalesce(v.bounce_sessions,0)) as mr_total_sessions
+	from fct.mr_views_by_device v
+	inner join dim.dates d on d.date_key = v.date_key
+	inner join rpt.hostname_to_site hs ON v.hostname = hs.hostname AND v.mr_container = hs.container
+	where v.experience_id = $P{experience_id} and hs.site_name = $P{site} and d.date  BETWEEN $P{start_date} AND $P{end_date} 
+	group by v.experience_id,v.device_category
 ) v on e.experience_id = v.experience_id and e.device_category = v.device_category
-WHERE m.end_ts = dim.sp_end_of_time() and m.experience_id = $P{experience_id}
 order by e.device_category]]>
 		</queryString>
 		<field name="device" class="java.lang.String"/>
+		<field name="loads" class="java.lang.Long"/>
 		<field name="views" class="java.lang.Long"/>
 		<field name="launches" class="java.lang.Long"/>
 		<field name="mr_sessions" class="java.lang.Long"/>
 		<field name="mr_bounce_sessions" class="java.lang.Long"/>
 		<field name="mr_session_duration" class="java.lang.Long"/>
-		<field name="loads" class="java.lang.Long"/>
-		<variable name="sum_of_views" class="java.lang.Long">
-			<variableExpression><![CDATA[$V{sum_of_views} + $F{views}]]></variableExpression>
-			<initialValueExpression><![CDATA[new java.lang.Long(0)]]></initialValueExpression>
-		</variable>
-		<variable name="sum_of_launches" class="java.lang.Long">
-			<variableExpression><![CDATA[$V{sum_of_launches} + (($F{launches} == null) ? 0 : $F{launches})]]></variableExpression>
-			<initialValueExpression><![CDATA[new java.lang.Long(0)]]></initialValueExpression>
-		</variable>
-		<variable name="sum_of_bounces" class="java.lang.Long">
-			<variableExpression><![CDATA[$V{sum_of_bounces} + (($F{mr_bounce_sessions} == null) ? 0 : $F{mr_bounce_sessions})]]></variableExpression>
-			<initialValueExpression><![CDATA[new java.lang.Long(0)]]></initialValueExpression>
-		</variable>
-		<variable name="sum_of_duration" class="java.lang.Long">
-			<variableExpression><![CDATA[$V{sum_of_duration} + (($F{mr_session_duration} == null) ? 0 : $F{mr_session_duration})]]></variableExpression>
-			<initialValueExpression><![CDATA[new java.lang.Long(0)]]></initialValueExpression>
-		</variable>
-		<variable name="sum_of_sessions" class="java.lang.Long">
-			<variableExpression><![CDATA[$V{sum_of_sessions} + (($F{mr_sessions} == null) ? 0 : $F{mr_sessions})]]></variableExpression>
-			<initialValueExpression><![CDATA[new java.lang.Long(0)]]></initialValueExpression>
-		</variable>
+		<field name="total_loads" class="java.lang.Long"/>
+		<field name="total_views" class="java.lang.Long"/>
+		<field name="total_launches" class="java.lang.Long"/>
 	</subDataset>
-	<subDataset name="minireel_daily_performance" uuid="20a2cb19-8961-4a06-a3ca-69f85c32b33c">
-		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<subDataset name="minireel activity by date" uuid="a9a6cba2-be31-459a-a471-1693e959e657">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
+		<parameter name="site" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<parameter name="start_date" class="java.util.Date">
+			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+		</parameter>
+		<parameter name="end_date" class="java.util.Date">
+			<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+		</parameter>
 		<parameter name="experience_id" class="java.lang.String"/>
-		<parameter name="start_date" class="java.util.Date"/>
-		<parameter name="end_date" class="java.util.Date"/>
 		<queryString language="SQL">
-			<![CDATA[select d.date, 
-coalesce(e.splash_sessions,0) as splash_page_loads,
-coalesce(ee.splash_views,0) as splash_page_views,
-coalesce(v.mr_total_sessions,0) as launches,
-sessions,bounce_sessions,session_duration,coalesce(users,0) as users
-from dim.dates d
+			<![CDATA[select 
+  d.date,
+  e.splash_sessions as loads,
+  (sum(e.splash_sessions) over (PARTITION BY  e.experience_id))::bigint as total_loads,
+  coalesce(ee.splash_views,0) as views,
+  (sum(ee.splash_views) over (PARTITION BY  ee.experience_id))::bigint as total_views,
+   v.mr_total_sessions as launches,
+  (sum( v.mr_total_sessions) over (PARTITION BY  v.experience_id))::bigint as total_launches,
+   v.mr_sessions,v.mr_bounce_sessions,v.mr_session_duration
+from (
+	select d.date,e.experience_id,sum(e.sessions) as splash_sessions
+	from fct.mr_embeds_by_device e
+	inner join dim.dates d on d.date_key = e.date_key
+	inner join rpt.hostname_to_site hs ON e.hostname = hs.hostname AND e.mr_container = hs.container
+	where e.experience_id = $P{experience_id} and hs.site_name = $P{site} AND  d.date  BETWEEN $P{start_date} AND $P{end_date}
+	group by e.experience_id,d.date
+) e 
+inner join dim.minireel m ON m.experience_id = e.experience_id AND m.end_ts = dim.sp_end_of_time()
 left join (
-	select date_key,experience_id,sum(sessions) as splash_sessions
-	from fct.mr_embeds_by_device where NOT hostname like 'consideringthings.com'
-	group by date_key,experience_id
-) e on d.date_key = e.date_key
+		select d.date,ee.experience_id,sum(coalesce(ee.unique_events,0)) as splash_views
+		from fct.mr_embed_events_by_device ee
+		inner join dim.dates d on ee.date_key = d.date_key
+		inner join rpt.hostname_to_site hs ON ee.hostname = hs.hostname AND ee.mr_container = hs.container
+		where  ee.experience_id = $P{experience_id} and hs.site_name = $P{site}  and d.date between $P{start_date} AND $P{end_date} and ee.event_type = 'Visible' 
+		group by  ee.experience_id, d.date
+	) ee on  e.experience_id = ee.experience_id and e.date = ee.date
 left join (
-	select date_key,experience_id,  sum(coalesce(unique_events,0)) as splash_views
-	from fct.mr_embed_events_by_device
-	where NOT hostname like 'consideringthings.com' and event_type = 'Visible'
-	group by  date_key,experience_id
-) ee on  e.experience_id = ee.experience_id and e.date_key = ee.date_key
-left join (
-	select date_key,experience_id,  sum(coalesce(sessions,0) + coalesce(bounce_sessions,0)) as mr_total_sessions,
-	sum(coalesce(sessions,0)) as sessions, sum(coalesce(bounce_sessions,0)) as bounce_sessions,
-	sum(coalesce(session_duration,0)) as session_duration, sum(coalesce(users,0)) as users
-	from fct.mr_views_by_device where NOT hostname like 'consideringthings.com'
-	group by date_key, experience_id
-) v on e.date_key = v.date_key and e.experience_id = v.experience_id
-WHERE d.date BETWEEN $P{start_date} and $P{end_date} and e.experience_id = $P{experience_id}
+	select d.date,v.experience_id,sum(coalesce(v.sessions,0)) as mr_sessions, 
+	sum(coalesce(v.session_duration,0)) as mr_session_duration,
+	sum(coalesce(v.bounce_sessions,0)) as mr_bounce_sessions, 
+	sum(coalesce(v.sessions,0) + coalesce(v.bounce_sessions,0)) as mr_total_sessions
+	from fct.mr_views_by_device v
+	inner join dim.dates d on d.date_key = v.date_key
+	inner join rpt.hostname_to_site hs ON v.hostname = hs.hostname AND v.mr_container = hs.container
+	where v.experience_id = $P{experience_id} and hs.site_name = $P{site} and d.date  BETWEEN $P{start_date} AND $P{end_date} 
+	group by v.experience_id,d.date
+) v on e.experience_id = v.experience_id and e.date = v.date
+right join dim.dates d ON d.date = e.date
+where d.date between $P{start_date} AND $P{end_date}
 order by d.date]]>
 		</queryString>
-		<field name="date" class="java.sql.Date">
-			<fieldDescription><![CDATA[Date as a date.]]></fieldDescription>
-		</field>
-		<field name="splash_page_views" class="java.lang.Long"/>
+		<field name="loads" class="java.lang.Long"/>
+		<field name="views" class="java.lang.Long"/>
 		<field name="launches" class="java.lang.Long"/>
-		<field name="sessions" class="java.lang.Long"/>
-		<field name="bounce_sessions" class="java.lang.Long">
-			<fieldDescription><![CDATA[Number of session bounces from the miniReel Splash page.]]></fieldDescription>
-		</field>
-		<field name="session_duration" class="java.lang.Long"/>
-		<field name="users" class="java.lang.Long"/>
-		<field name="splash_page_loads" class="java.lang.Long"/>
+		<field name="mr_sessions" class="java.lang.Long"/>
+		<field name="mr_bounce_sessions" class="java.lang.Long"/>
+		<field name="mr_session_duration" class="java.lang.Long"/>
+		<field name="total_loads" class="java.lang.Long"/>
+		<field name="total_views" class="java.lang.Long"/>
+		<field name="total_launches" class="java.lang.Long"/>
+		<field name="date" class="java.util.Date"/>
 	</subDataset>
-	<parameter name="publisher" class="java.lang.String">
-		<parameterDescription><![CDATA[]]></parameterDescription>
+	<parameter name="end_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
 	</parameter>
 	<parameter name="start_date" class="java.util.Date">
 		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 	</parameter>
-	<parameter name="end_date" class="java.util.Date">
-		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+	<parameter name="site" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
 	</parameter>
 	<queryString language="SQL">
-		<![CDATA[SELECT o.name as publisher,m.experience_id,m.title as minireel,(c.card_index + 1) as slide_index,c.title as slide, 
-case 
-when coalesce(c.video_start,0) < coalesce(c.video_end,0) then (coalesce(c.video_end,0) - coalesce(c.video_start,0))
-when not c.video_start is null AND c.video_end is null AND not v.duration is null then (v.duration - c.video_start)
-when not c.video_end is null AND c.video_start is null then c.video_end
-when not v.duration is null then v.duration
-end as video_length,
-pv.avg_time_on_page as avg_time_in_slide,
-pv.pageviews as views,vw.views as total_views,
-vp.events as plays,vq1.events as quartile_1,vq2.events as quartile_2,vq3.events as quartile_3,vq4.events as quartile_4
-FROM dim.minireel_card c
-INNER JOIN dim.minireel m ON c.minireel_key = m.minireel_key
-inner JOIN (
-	select experience_id,sum(sessions + bounce_sessions) as views
-	from fct.mr_views_by_device
-	inner join dim.dates d on fct.mr_views_by_device.date_key = d.date_key
-	where (sessions + bounce_sessions) > 0 and d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	group by experience_id
-) as vw on vw.experience_id = m.experience_id
-LEFT OUTER JOIN dim.video v on c.video_client_id = v.video_client_id AND v.end_ts = dim.sp_end_of_time()
-LEFT OUTER JOIN (
-	SELECT experience_id,card_id,sum(unique_pageviews) as pageviews, sum(exits) as exits, 
-	round( (case when (sum(pageviews) - sum(exits) ) > 0 then sum(time_on_page)::numeric / (sum(pageviews) - sum(exits) )::numeric else 0::numeric end),2 ) as avg_time_on_page
-	FROM fct.mr_card_views_by_device
-	inner join dim.dates d on fct.mr_card_views_by_device.date_key = d.date_key
-	where  d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	GROUP BY experience_id, card_id
-	ORDER BY experience_id, card_id
-) as pv ON pv.experience_id = m.experience_id AND pv.card_id = c.card_id
-LEFT OUTER JOIN (
-	SELECT 	experience_id, card_id, sum(unique_events) as events
-	FROM	fct.mr_video_events_by_device
-	inner join dim.dates d on fct.mr_video_events_by_device.date_key = d.date_key
-	WHERE	event_type = 'Play' and d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	GROUP BY experience_id, card_id
-	ORDER BY experience_id, card_id
-) as vp ON vp.experience_id = m.experience_id AND vp.card_id = c.card_id
-LEFT OUTER JOIN (
-	SELECT 	experience_id, card_id, sum(unique_events) as events
-	FROM	fct.mr_video_events_by_device
-	inner join dim.dates d on fct.mr_video_events_by_device.date_key = d.date_key
-	WHERE	event_type = 'Quartile 1' and d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	GROUP BY experience_id, card_id
-	ORDER BY experience_id, card_id
-) as vq1 ON  vq1.experience_id = m.experience_id AND  vq1.card_id = c.card_id
-LEFT OUTER JOIN (
-	SELECT 	experience_id, card_id, sum(unique_events) as events
-	FROM	fct.mr_video_events_by_device
-	inner join dim.dates d on fct.mr_video_events_by_device.date_key = d.date_key
-	WHERE	event_type = 'Quartile 2' and d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	GROUP BY experience_id, card_id
-	ORDER BY experience_id, card_id
-) as vq2 ON  vq2.experience_id = m.experience_id AND  vq2.card_id = c.card_id
-LEFT OUTER JOIN (
-	SELECT 	experience_id, card_id, sum(unique_events) as events
-	FROM	fct.mr_video_events_by_device
-	inner join dim.dates d on fct.mr_video_events_by_device.date_key = d.date_key
-	WHERE	event_type = 'Quartile 3' and d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	GROUP BY experience_id, card_id
-	ORDER BY experience_id, card_id
-) as vq3 ON  vq3.experience_id = m.experience_id AND  vq3.card_id = c.card_id
-LEFT OUTER JOIN (
-	SELECT 	experience_id, card_id, sum(unique_events) as events
-	FROM	fct.mr_video_events_by_device
-	inner join dim.dates d on fct.mr_video_events_by_device.date_key = d.date_key
-		WHERE	event_type = 'Quartile 4' and d.date between $P{start_date} and $P{end_date} and NOT hostname like 'consideringthings.com'
-	GROUP BY experience_id, card_id
-	ORDER BY experience_id, card_id
-) as vq4 ON  vq4.experience_id = m.experience_id AND  vq4.card_id = c.card_id
-INNER JOIN dim.org o ON m.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
-WHERE m.end_ts = dim.sp_end_of_time() and o.name = $P{publisher}
-order by m.title,m.experience_id,c.card_index]]>
+		<![CDATA[SELECT
+    dc.device_category,
+    dc.device_category_pretty,
+    e.experience_id,
+    o.name as publisher,
+    m.title as minireel,
+    c.card_index + 1 as slide_index,
+    c.title as slide,
+    c.sponsored,
+    coalesce(c.sponsor,'') as sponsor,
+    case when vast IS NOT NULL then 'VAST' else c.video_source end,
+    case 
+	when coalesce(c.video_start,0) < coalesce(c.video_end,0) then (coalesce(c.video_end,0) - coalesce(c.video_start,0))
+	when not c.video_start is null AND c.video_end is null AND not v.duration is null then (v.duration - c.video_start)
+	when not c.video_end is null AND c.video_start is null then c.video_end
+	when not v.duration is null then v.duration
+    end as video_length,
+    cv.avg_time_on_page as avg_time_on_slide,
+    case cv.pageviews when 0 then null else cv.pageviews end AS views,
+    (sum(cv.pageviews) over (PARTITION BY  cv.experience_id,cv.device_category))::bigint as total_views,
+    p.events AS plays,
+    q1.events AS quartile_1,
+    q2.events AS quartile_2,
+    q3.events AS quartile_3,
+    q4.events AS quartile_4,
+    ac.events AS adcount
+   FROM (
+	SELECT 
+		e.experience_id
+	FROM
+		fct.mr_embeds_by_device e
+	INNER JOIN
+		rpt.hostname_to_site hs ON e.hostname = hs.hostname AND e.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = e.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} 
+	GROUP BY e.experience_id
+   ) e 
+   INNER JOIN dim.minireel m ON e.experience_id = m.experience_id AND m.end_ts = dim.sp_end_of_time()
+   INNER JOIN dim.minireel_card c ON c.minireel_key = m.minireel_key
+   INNER JOIN dim.org o ON m.org_id = o.org_id AND o.end_ts = m.end_ts
+   CROSS JOIN (
+	SELECT device_category,device_category_pretty
+	from
+	(VALUES ('desktop','Desktop'),('mobile','Mobile'),('tablet','Tablet'))  as dc (device_category,device_category_pretty)
+   ) dc
+   LEFT OUTER JOIN dim.video v on c.video_client_id = v.video_client_id AND v.end_ts = dim.sp_end_of_time()
+   LEFT JOIN ( 
+	SELECT 
+		cv.experience_id,cv.card_id,cv.device_category,sum(coalesce(cv.unique_pageviews,0)) as pageviews, 
+		round( (case when (sum(cv.pageviews) - sum(cv.exits) ) > 0 then sum(cv.time_on_page)::numeric / (sum(cv.pageviews) - sum(cv.exits) )::numeric else null end),2 ) as avg_time_on_page
+	FROM
+		fct.mr_card_views_by_device cv
+	INNER JOIN
+		rpt.hostname_to_site hs ON cv.hostname = hs.hostname AND cv.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = cv.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT cv.card_index is null
+	GROUP BY cv.experience_id,cv.card_id,cv.device_category
+    )cv ON cv.experience_id = e.experience_id AND cv.card_id = c.card_id AND cv.device_category = dc.device_category
+    LEFT JOIN ( 
+	SELECT 
+		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
+	FROM 
+		fct.mr_video_events_by_device ve
+	INNER JOIN
+		rpt.hostname_to_site hs ON ve.hostname = hs.hostname AND ve.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = ve.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'AdCount'
+	GROUP BY ve.experience_id,ve.card_id,ve.device_category
+    ) ac ON ac.experience_id = cv.experience_id AND ac.card_id = cv.card_id  AND ac.device_category = cv.device_category
+    LEFT JOIN ( 
+	SELECT 
+		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
+	FROM 
+		fct.mr_video_events_by_device ve
+	INNER JOIN
+		rpt.hostname_to_site hs ON ve.hostname = hs.hostname AND ve.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = ve.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Play'
+	GROUP BY ve.experience_id,ve.card_id,ve.device_category
+    ) p ON p.experience_id = cv.experience_id AND p.card_id = cv.card_id  AND p.device_category = cv.device_category
+    LEFT JOIN ( 
+	SELECT 
+		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
+	FROM 
+		fct.mr_video_events_by_device ve
+	INNER JOIN
+		rpt.hostname_to_site hs ON ve.hostname = hs.hostname AND ve.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = ve.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Quartile 1'
+	GROUP BY ve.experience_id,ve.card_id,ve.device_category
+    ) q1 ON q1.experience_id = cv.experience_id AND q1.card_id = cv.card_id  AND q1.device_category = cv.device_category
+    LEFT JOIN ( 
+	SELECT 
+		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
+	FROM 
+		fct.mr_video_events_by_device ve
+	INNER JOIN
+		rpt.hostname_to_site hs ON ve.hostname = hs.hostname AND ve.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = ve.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Quartile 2'
+	GROUP BY ve.experience_id,ve.card_id,ve.device_category
+    ) q2 ON q2.experience_id = cv.experience_id AND q2.card_id = cv.card_id  AND q2.device_category = cv.device_category
+    LEFT JOIN ( 
+	SELECT 
+		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
+	FROM 
+		fct.mr_video_events_by_device ve
+	INNER JOIN
+		rpt.hostname_to_site hs ON ve.hostname = hs.hostname AND ve.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = ve.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Quartile 3'
+	GROUP BY ve.experience_id,ve.card_id,ve.device_category
+    ) q3 ON q3.experience_id = cv.experience_id AND q3.card_id = cv.card_id  AND q3.device_category = cv.device_category
+    LEFT JOIN ( 
+	SELECT 
+		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
+	FROM 
+		fct.mr_video_events_by_device ve
+	INNER JOIN
+		rpt.hostname_to_site hs ON ve.hostname = hs.hostname AND ve.mr_container = hs.container
+	INNER JOIN
+		dim.dates d ON d.date_key = ve.date_key
+	WHERE
+		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Quartile 4'
+	GROUP BY ve.experience_id,ve.card_id,ve.device_category
+    ) q4 ON q4.experience_id = cv.experience_id AND q4.card_id = cv.card_id  AND q4.device_category = cv.device_category
+    order by e.experience_id,dc.device_category,c.card_index]]>
 	</queryString>
+	<field name="device_category" class="java.lang.String"/>
+	<field name="experience_id" class="java.lang.String">
+		<fieldDescription><![CDATA[The uuid of the experience in the c6Db experiences collection.]]></fieldDescription>
+	</field>
 	<field name="publisher" class="java.lang.String"/>
 	<field name="minireel" class="java.lang.String"/>
 	<field name="slide_index" class="java.lang.Integer"/>
 	<field name="slide" class="java.lang.String"/>
+	<field name="sponsored" class="java.lang.Boolean">
+		<fieldDescription><![CDATA[Video is sponsored card.]]></fieldDescription>
+	</field>
+	<field name="video_source" class="java.lang.String">
+		<fieldDescription><![CDATA[Source of video, if a video.]]></fieldDescription>
+	</field>
 	<field name="video_length" class="java.lang.Integer"/>
-	<field name="avg_time_in_slide" class="java.math.BigDecimal"/>
 	<field name="views" class="java.lang.Long"/>
-	<field name="total_views" class="java.lang.Long"/>
 	<field name="plays" class="java.lang.Long"/>
 	<field name="quartile_1" class="java.lang.Long"/>
 	<field name="quartile_2" class="java.lang.Long"/>
 	<field name="quartile_3" class="java.lang.Long"/>
 	<field name="quartile_4" class="java.lang.Long"/>
-	<field name="experience_id" class="java.lang.String"/>
-	<group name="minireel">
+	<field name="adcount" class="java.lang.Long"/>
+	<field name="avg_time_on_slide" class="java.math.BigDecimal"/>
+	<field name="total_views" class="java.lang.Long"/>
+	<field name="sponsor" class="java.lang.String"/>
+	<field name="device_category_pretty" class="java.lang.String"/>
+	<sortField name="minireel"/>
+	<sortField name="device_category"/>
+	<sortField name="slide_index"/>
+	<group name="experience_id" isStartNewPage="true">
 		<groupExpression><![CDATA[$F{experience_id}]]></groupExpression>
 		<groupHeader>
-			<band height="100">
-				<property name="local_mesure_unitheight" value="pixel"/>
-				<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				<break>
-					<reportElement x="0" y="0" width="88" height="1" uuid="ac4e31bf-0327-45bd-b73b-2c2e0fb87db2"/>
-				</break>
+			<band height="77">
 				<textField>
-					<reportElement x="-1" y="10" width="880" height="30" uuid="3dd4774b-8b0c-411e-a297-4a021c847454">
-						<propertyExpression name="net.sf.jasperreports.export.xls.sheet.name"><![CDATA[$F{minireel}.replaceAll("[\\*\\[\\]!?:\\\\/']","").trim()]]></propertyExpression>
-					</reportElement>
+					<reportElement x="0" y="30" width="360" height="20" uuid="34d803f2-c3a6-4f3e-8378-b227ee5b7d68"/>
+					<textElement>
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{publisher}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="0" width="540" height="30" uuid="b83d42bd-8ce5-4c13-a50c-d4654b76943a"/>
 					<textElement>
 						<font size="18"/>
 					</textElement>
 					<textFieldExpression><![CDATA[$F{minireel}]]></textFieldExpression>
 				</textField>
-				<staticText>
-					<reportElement style="Table_CH" x="0" y="60" width="30" height="40" uuid="a226a01b-750e-4de8-a40b-025490a2f8c3">
-						<property name="com.jaspersoft.studio.unit.y" value="px"/>
-						<property name="local_mesure_unitwidth" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[#]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="30" y="60" width="300" height="40" uuid="392efd02-7d60-4a8f-a1b1-1d42b0785402">
-						<property name="local_mesure_unity" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.y" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Slide]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="330" y="60" width="70" height="40" uuid="8bb2c4bf-6a9e-4c87-b45c-7f7091c29120">
-						<property name="local_mesure_unitheight" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="local_mesure_unitwidth" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Video Length]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="400" y="60" width="100" height="40" uuid="878dee80-1ed1-4de7-bc85-c8315311f30b">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Avg Time on Slide]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="500" y="60" width="80" height="40" uuid="cc08723b-5b5c-4902-99ca-7730250dbd1d">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Views]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="640" y="60" width="80" height="40" uuid="fc5bbd8a-8362-4941-89fa-4d50518ab19a">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Plays]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="720" y="60" width="80" height="40" uuid="da074bd2-1c0d-4928-b0d0-eb8dbbb9d25b">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="local_mesure_unitwidth" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[1st Quartile]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="800" y="60" width="80" height="40" uuid="149e48c7-00d6-4ba6-a149-c856d01147ea">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[2nd Quartile]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="880" y="60" width="80" height="40" uuid="e027fcd7-6c76-4334-bf45-3cc118458ab7">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[3rd Quartile]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="960" y="60" width="80" height="40" uuid="ec763cb4-60e2-41c9-8a21-24c5d989cac9">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[4th Quartile]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="580" y="60" width="60" height="40" uuid="883535a5-92b1-4a8c-861d-c175ff4dbb6b">
-						<property name="local_mesure_unitheight" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="local_mesure_unity" value="pixel"/>
-						<property name="local_mesure_unitwidth" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Drop Off]]></text>
-				</staticText>
-				<staticText>
-					<reportElement style="Table_CH" x="1040" y="60" width="60" height="40" uuid="11826528-efe9-4683-886f-004d341951b0">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
-					</reportElement>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Play to Q4]]></text>
-				</staticText>
 				<textField>
-					<reportElement positionType="FixRelativeToBottom" x="0" y="40" width="100" height="20" uuid="60c1d02b-0bc5-4ff0-b1f9-34bb6db407fd"/>
-					<textElement verticalAlignment="Middle">
-						<font size="8"/>
-					</textElement>
+					<reportElement x="799" y="31" width="100" height="20" uuid="2fa8e37b-bf62-4f1f-8613-8ffa96070686"/>
 					<textFieldExpression><![CDATA[$F{experience_id}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="330">
+			<band height="462">
 				<componentElement>
-					<reportElement x="660" y="80" width="430" height="100" uuid="dda5f010-a96f-477a-8345-9ec2e4418bdf"/>
+					<reportElement x="205" y="60" width="750" height="140" uuid="f74491a9-43c3-4b18-bff8-c8a395dfe230"/>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
-						<datasetRun subDataset="minireel_daily_performance" uuid="d563a721-b30b-46ae-b892-c5cf7627925a">
-							<datasetParameter name="experience_id">
-								<datasetParameterExpression><![CDATA[$F{experience_id}]]></datasetParameterExpression>
+						<datasetRun subDataset="minireel activity by device" uuid="11caba85-0195-4aae-b694-4534fccf9ee5">
+							<datasetParameter name="site">
+								<datasetParameterExpression><![CDATA[$P{site}]]></datasetParameterExpression>
 							</datasetParameter>
 							<datasetParameter name="start_date">
 								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
@@ -504,758 +405,615 @@ order by m.title,m.experience_id,c.card_index]]>
 							<datasetParameter name="end_date">
 								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
 							</datasetParameter>
-							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-						</datasetRun>
-						<jr:column width="60" uuid="74189e49-aa03-4cf0-bbb5-055d4d790f3c">
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="60" height="40" uuid="9972484b-dc4c-4df5-a060-71de7d2b3275"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Date]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="M/d/yy">
-									<reportElement x="0" y="0" width="60" height="24" uuid="3926bec2-71e7-4e20-9f59-4c1634a25888"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="80" uuid="64f26878-0090-4b9a-929e-4d76f2f46c77">
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="40" uuid="ef7caeb6-8cd6-4edb-a6dc-e88b4b53f593"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Splash Page Views]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="24" uuid="feb7a711-cde2-4f44-9934-2c8a7e05eb20"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[$F{splash_page_views}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="80" uuid="c2cbdbf6-0be1-4162-ad7b-77710cd76980">
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="40" uuid="fbba427f-9e59-48f2-901a-07f705e47218"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Launches]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="24" uuid="cdcbcef1-48a2-4c99-9be7-60ba6d5a7a79"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="60" uuid="ed063cb8-86c4-4989-bd89-6b23454b76d2">
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="60" height="40" uuid="29fcaac6-f891-4c8f-bd4e-44ed59f3817a"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Launch Rate]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="60" height="24" uuid="8c5c8419-c088-487d-8aad-9a300e9a6192"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{splash_page_views} > 0) ? (float)$F{launches}/(float)$F{splash_page_views} : (float)0]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="60" uuid="18776a65-c771-482e-8822-dada8b3a2a85">
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="60" height="40" uuid="9eaeeec9-4c52-459b-b4bd-0752a2a235c4"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Bounce Rate]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="60" height="24" uuid="c463584c-ceec-4a06-adba-3f67d731df43"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{launches} > 0) ? (float)$F{bounce_sessions}/(float)$F{launches} : (float)0]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="100" uuid="a12407d0-31fc-48df-a3a5-79dfc3a21c79">
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="100" height="40" uuid="5e1b5554-052d-4d9a-9db3-946684055b85"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Avg Time in MiniReel]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,##0.00#;#,##0.00#-" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="100" height="24" uuid="4052ccd2-0a8a-403b-a2e2-049ef3812df5"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{sessions} > 0) ? (float)$F{session_duration}/(float)$F{sessions} : (float)0]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-					</jr:table>
-				</componentElement>
-				<componentElement>
-					<reportElement x="0" y="80" width="440" height="110" uuid="592cce03-0cb4-4e5a-a9fb-118bcefb9312"/>
-					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
-						<datasetRun subDataset="minireel_by_device" uuid="2ff56ac1-757e-4b37-b26b-40d55ba79e61">
 							<datasetParameter name="experience_id">
 								<datasetParameterExpression><![CDATA[$F{experience_id}]]></datasetParameterExpression>
 							</datasetParameter>
-							<datasetParameter name="start_date">
-								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="end_date">
-								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
-							</datasetParameter>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
-						<jr:column width="60" uuid="f067e197-11f1-450a-a9df-4298566699d4">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<property name="local_mesure_unitheight" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="40">
+						<jr:column width="78" uuid="ee6b04a9-017f-4590-af26-7fe2925da9df">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
 								<staticText>
-									<reportElement x="0" y="0" width="60" height="40" uuid="8c0b5353-c506-452f-bd2a-e747fb9383d5"/>
-									<box leftPadding="4" rightPadding="4"/>
+									<reportElement x="0" y="0" width="78" height="30" uuid="1b7652ca-d304-4acc-84cc-29badc0866f6"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Device Type]]></text>
+									<text><![CDATA[Device]]></text>
 								</staticText>
 							</jr:columnHeader>
-							<jr:columnFooter height="24">
-								<staticText>
-									<reportElement style="Table_TD" x="0" y="0" width="60" height="24" uuid="7e32f2ff-2b97-42f2-b808-34519e3757e9"/>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="78" height="30" uuid="52fe24a6-c456-4116-97f6-182e132bce6a"/>
 									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[All]]></text>
-								</staticText>
-							</jr:columnFooter>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="60" height="24" uuid="3181e5d4-99cb-416a-b994-6dc9717ddc96">
-										<property name="local_mesure_unitwidth" value="pixel"/>
-										<property name="com.jaspersoft.studio.unit.width" value="px"/>
-										<property name="local_mesure_unitheight" value="pixel"/>
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<textElement verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[$F{device}]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="80" uuid="a305ab33-492f-4448-8139-8a4bf514908f">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="40">
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="40" uuid="b9d30571-6925-4279-b2d3-abcba0d667fd"/>
+						<jr:column width="40" uuid="e3fada99-ca22-4bdd-9a1c-b0852e49c17d">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30"/>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0%" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="40" height="30" uuid="833e7741-c4d3-4343-a157-1c8c11722e69"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Views]]></text>
+									<textFieldExpression><![CDATA[$F{total_loads} > 0 ? (double)$F{loads} / (double)$F{total_loads} : null]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="78" uuid="545dda51-7aef-4225-8f00-60fb1709a35c">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="78" height="30" uuid="c80c9761-d00f-4e1c-9c35-218a36a3d2a2"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<text><![CDATA[MiniReel Impressions]]></text>
 								</staticText>
 							</jr:columnHeader>
-							<jr:columnFooter height="24">
-								<textField>
-									<reportElement style="Table_TD" x="0" y="0" width="80" height="24" uuid="33141f2b-b461-4aec-9547-8757a0521808">
-										<property name="local_mesure_unitheight" value="pixel"/>
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0.###" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="78" height="30" uuid="0abc5dab-7cd0-429d-be69-b0f84ee5580b"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[$V{sum_of_views}]]></textFieldExpression>
+									<textFieldExpression><![CDATA[$F{loads}]]></textFieldExpression>
 								</textField>
-							</jr:columnFooter>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="24" uuid="d28fbac4-bc0a-4404-a158-8acbf4a896b8">
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="78" uuid="74cfbc1e-9721-415b-a168-5cf690174e37">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="78" height="30" uuid="6164d774-fe26-4843-90b1-5bd242bf56aa"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<text><![CDATA[Viewable Impressions]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0.###" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="78" height="30" uuid="4a017d7e-a903-405c-8908-4b2b0a71debb"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="80" uuid="52349d2b-8517-48e9-af1f-2506d6e589ed">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="40">
+						<jr:column width="78" uuid="53ede4c8-5415-4576-83a3-e3fbfe08b1c3">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
 								<staticText>
-									<reportElement x="0" y="0" width="80" height="40" uuid="f11b3580-9cc5-496b-8777-d8ec864a407c"/>
-									<box leftPadding="4" rightPadding="4"/>
+									<reportElement x="0" y="0" width="78" height="30" uuid="e20841c5-e0d5-4fe0-8dab-43cabb2eb143"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<text><![CDATA[Launches]]></text>
 								</staticText>
 							</jr:columnHeader>
-							<jr:columnFooter height="24">
-								<textField>
-									<reportElement style="Table_TD" x="0" y="0" width="80" height="24" uuid="f3f20841-793f-4c11-81c0-383267fd2376"/>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[$V{sum_of_launches}]]></textFieldExpression>
-								</textField>
-							</jr:columnFooter>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="24" uuid="0445f038-f2a9-4e0d-b722-646fd678d206">
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0.###" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="78" height="30" uuid="b457916e-e764-486b-a54b-2ee4630c8199"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="60" uuid="e739c9ec-32ff-4d06-80a5-7421ce3635ad">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="40">
+						<jr:column width="78" uuid="c08c5470-2648-44b2-882a-2a4981ac657a">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
 								<staticText>
-									<reportElement x="0" y="0" width="60" height="40" uuid="447db20b-41f3-4d7b-a347-cb0d23c612b9"/>
-									<box leftPadding="4" rightPadding="4"/>
+									<reportElement x="0" y="0" width="78" height="30" uuid="2142b03f-c0be-4b9b-b28b-dd3595d0b06b"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Launch Rate]]></text>
+									<text><![CDATA[Launch
+Rate]]></text>
 								</staticText>
 							</jr:columnHeader>
-							<jr:columnFooter height="24">
-								<textField pattern="#,###%">
-									<reportElement style="Table_TD" x="0" y="0" width="60" height="24" uuid="122d2c08-82f2-427d-99c1-a9913d353724"/>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0%" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="78" height="30" uuid="b5fd7e6a-43ba-4189-9abd-861cb75915fd"/>
 									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($V{sum_of_views} > 0) ? (float)$V{sum_of_launches}/(float)$V{sum_of_views} : (float)0]]></textFieldExpression>
-								</textField>
-							</jr:columnFooter>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="60" height="24" uuid="2ceefacf-6e94-44f3-b4c5-02f669cd1e47">
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[($F{views} > 0) ? (float)$F{launches}/(float)$F{views} : (float)0]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="60" uuid="1657a9dc-0f9c-4159-ae5f-64b3da2d8dcb">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="40">
+						<jr:column width="78" uuid="db066421-6686-4bfe-abff-849776f78aa0">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
 								<staticText>
-									<reportElement x="0" y="0" width="60" height="40" uuid="f2ca21ef-3b24-47f9-929e-741777d6e336"/>
-									<box leftPadding="4" rightPadding="4"/>
+									<reportElement x="0" y="0" width="78" height="30" uuid="ad351079-e880-4f47-8e24-33a8061d10ba"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<text><![CDATA[Bounce Rate]]></text>
+									<text><![CDATA[Bounce
+Rate]]></text>
 								</staticText>
 							</jr:columnHeader>
-							<jr:columnFooter height="24">
-								<textField pattern="#,###%">
-									<reportElement style="Table_TD" x="0" y="0" width="60" height="24" uuid="e29f6fb8-ce1d-4116-87ff-b2fbf026d676"/>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0%" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="78" height="30" uuid="f3f55042-cbaa-4f38-9ac9-428b0077977a"/>
 									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($V{sum_of_launches} > 0) ? (float)$V{sum_of_bounces}/(float)$V{sum_of_launches} : (float)0]]></textFieldExpression>
-								</textField>
-							</jr:columnFooter>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,###%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="60" height="24" uuid="1271a05a-ea8f-4557-ad8b-5a4da52ed708">
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[($F{launches} > 0) ? (float)$F{mr_bounce_sessions}/(float)$F{launches} : (float)0]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="100" uuid="5665f40f-e74b-4e90-81a6-09eb76dc8322">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="40">
+						<jr:column width="78" uuid="365d9523-e1ee-40e6-9214-ee55f3ced19d">
+							<jr:tableFooter style="Table_TH" height="30"/>
+							<jr:columnHeader style="Table_CH" height="30">
 								<staticText>
-									<reportElement x="0" y="0" width="100" height="40" uuid="c2dac616-7a79-4e6f-b18c-34318b7895ce"/>
-									<box leftPadding="4" rightPadding="4"/>
+									<reportElement x="0" y="0" width="78" height="30" uuid="25963a03-3dad-4936-b242-9ffd2a577b02"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<text><![CDATA[Avg Time in MiniReel]]></text>
 								</staticText>
 							</jr:columnHeader>
-							<jr:columnFooter height="24">
-								<textField>
-									<reportElement style="Table_TD" x="0" y="0" width="100" height="24" uuid="54dfae69-4ada-4175-b4a0-6756193f7bd3"/>
+							<jr:detailCell style="Table_TD" height="30">
+								<textField pattern="#,##0s" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="78" height="30" uuid="fc66f6d6-0c67-4599-8471-676069099cb7"/>
 									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($V{sum_of_sessions} > 0 ?(float)$V{sum_of_duration} / (float)$V{sum_of_sessions}:0)]]></textFieldExpression>
-								</textField>
-							</jr:columnFooter>
-							<jr:detailCell style="Table_TD" height="24">
-								<textField pattern="#,##0.00#" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="100" height="24" uuid="b4b3eca2-dab4-41ac-bdf5-43dba019d73d">
-										<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									</reportElement>
-									<box leftPadding="4" rightPadding="4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[($F{mr_sessions} > 0) ? (float)$F{mr_session_duration}/(float)$F{mr_sessions} : (float)0]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
 					</jr:table>
 				</componentElement>
-				<staticText>
-					<reportElement x="0" y="30" width="425" height="36" uuid="0ce19742-361f-42f5-bb90-85afe37fdfaa">
-						<property name="local_mesure_unitx" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.x" value="px"/>
-					</reportElement>
-					<textElement verticalAlignment="Bottom">
-						<font size="18"/>
-					</textElement>
-					<text><![CDATA[MiniReel Activity by Device]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="660" y="30" width="415" height="36" uuid="1e386391-ea21-45ad-b7c4-047991752239"/>
-					<textElement verticalAlignment="Bottom">
-						<font size="18"/>
-					</textElement>
-					<text><![CDATA[Daily MiniReel Activity]]></text>
-				</staticText>
+				<componentElement>
+					<reportElement x="205" y="230" width="585" height="200" uuid="51f3ee71-39e2-408d-b5f9-b4585f59c48d"/>
+					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<datasetRun subDataset="minireel activity by date" uuid="d45a2fe9-b618-48e6-8407-bb91c201bd1d">
+							<datasetParameter name="start_date">
+								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_date">
+								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="site">
+								<datasetParameterExpression><![CDATA[$P{site}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="experience_id">
+								<datasetParameterExpression><![CDATA[$F{experience_id}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+						<jr:column width="82" uuid="353b0cc9-23ba-4a6d-8d40-de1e2cb4b68b">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="6deaad18-0f96-47f4-9472-4af8eb14d59c"/>
+									<text><![CDATA[date]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="b2742487-774e-4cf4-b663-b558ad54f63a"/>
+									<textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="82" uuid="f67e4806-fb03-40ce-93a3-e0ca8c96303b">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="ac7d9fbe-fc24-4ea7-aac6-01d14401d879"/>
+									<text><![CDATA[loads]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="f16f8808-44a3-48a6-8711-909419df79e3"/>
+									<textFieldExpression><![CDATA[$F{loads}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="82" uuid="d7220119-f3f3-419b-bce7-ac1caf2e4701">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="8533b7e4-1a32-4189-9030-7283f7520c57"/>
+									<text><![CDATA[views]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="bb3a18b5-e397-4a80-8359-5a482dfc02b3"/>
+									<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="82" uuid="7b6095ac-d5cc-4087-8f8f-42b004dd77aa">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="1bdc504c-c079-4e2c-ac67-58ed67af4bb3"/>
+									<text><![CDATA[launches]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="9ad7d423-6a27-483a-9a60-01e3a1f547c6"/>
+									<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="82" uuid="b84a9a52-e377-4295-8a41-292c9f577c22">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="65008957-6602-4b46-8e71-2b47e28b691c"/>
+									<text><![CDATA[mr_sessions]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="f6f7be69-e948-458c-bb01-4b62d7f23348"/>
+									<textFieldExpression><![CDATA[$F{mr_sessions}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="82" uuid="52db791c-2d5a-4adb-b928-1510f760ffd1">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="23f4e3c4-d56f-4ec9-8494-323678f07d93"/>
+									<text><![CDATA[mr_bounce_sessions]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="a36e364d-f40b-4556-9f6a-e268c5e528d8"/>
+									<textFieldExpression><![CDATA[$F{mr_bounce_sessions}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="82" uuid="226f63a0-f40c-4c88-9263-c00daf0ad431">
+							<jr:columnHeader style="Table 1_CH" height="30">
+								<staticText>
+									<reportElement x="0" y="0" width="28" height="30" uuid="6246232b-3231-4324-9da5-67209c8b6ec6"/>
+									<text><![CDATA[mr_session_duration]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="28" height="30" uuid="f0261054-7419-4e80-9553-3dc9d3f4f486"/>
+									<textFieldExpression><![CDATA[$F{mr_session_duration}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:table>
+				</componentElement>
 			</band>
 		</groupFooter>
+	</group>
+	<group name="device">
+		<groupExpression><![CDATA[$F{device_category}]]></groupExpression>
+		<groupHeader>
+			<band height="80">
+				<textField>
+					<reportElement x="29" y="20" width="171" height="20" uuid="ea79209b-d928-4164-b466-4cce1de89bd4"/>
+					<textElement textAlignment="Left">
+						<font size="14"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{device_category_pretty}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="650" y="40" width="60" height="40" uuid="dd4d88ad-d3cf-487b-80de-d5d87a28b1bf">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Drop-off]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="60" y="40" width="300" height="40" uuid="bd8613f9-1eea-49ff-a07c-266a296624d0">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Slide]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="360" y="40" width="100" height="40" uuid="f5787aea-f906-489a-8578-d82fe8460626">
+						<property name="local_mesure_unity" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Video
+Source]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="460" y="40" width="50" height="40" uuid="0808601f-ef68-46ac-bd84-f90f1537e7c1">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Video
+Length]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="510" y="40" width="70" height="40" uuid="00027272-f878-40e3-ac70-4281e2e80c8b">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Avg Time
+on Slide]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="580" y="40" width="70" height="40" uuid="69453858-4bb5-46f5-9d80-790051c15bdf">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Views]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="710" y="40" width="70" height="40" uuid="f5366a27-97e3-4877-ad50-0182c58ba241">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Plays]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="780" y="40" width="70" height="40" uuid="94eca6a7-aa25-41b5-bd16-3043b6de329f">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[1st Quartile]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="850" y="40" width="70" height="40" uuid="24e6b67b-2a7e-4d7a-9094-ce92e7cd034b">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[2nd Quartile]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="30" y="40" width="30" height="40" uuid="baa97a28-9ae9-427c-bc60-4a537b062009">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[#]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="920" y="40" width="70" height="40" uuid="52c85d97-a356-4646-beb7-01cff30699fd">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[3rd Quartile]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="990" y="40" width="70" height="40" uuid="31400815-9cfe-4b61-b9d9-3b06008e7856">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[4th Quartile]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1060" y="40" width="70" height="40" uuid="a9f2272c-3594-458d-a76e-81ce5d450ce8">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[AdCounts]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
 	</group>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
-	<title>
-		<band height="218" splitType="Stretch">
-			<textField>
-				<reportElement x="-1" y="0" width="450" height="30" uuid="22f3edeb-b3e0-451d-b939-a48fb8c8c5a0">
-					<property name="net.sf.jasperreports.export.xls.sheet.name" value="Summary"/>
-				</reportElement>
-				<textElement>
-					<font size="18"/>
-				</textElement>
-				<textFieldExpression><![CDATA["Report for " + $P{publisher}]]></textFieldExpression>
-			</textField>
-			<textField>
-				<reportElement x="-1" y="30" width="200" height="30" uuid="ca9d3ed7-2aef-476d-8d59-b416b1070ee1">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-				</reportElement>
-				<textElement>
-					<font size="14"/>
-				</textElement>
-				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"MM/dd/yyyy" ) + " - " + DATEFORMAT($P{end_date},"MM/dd/yyyy")]]></textFieldExpression>
-			</textField>
-			<componentElement>
-				<reportElement x="0" y="80" width="250" height="110" uuid="55a0d41a-4558-4bbd-879c-0b776a9d916c">
-					<property name="local_mesure_unity" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd" whenNoDataType="AllSectionsNoDetail">
-					<datasetRun subDataset="publisher_daily_aggregate" uuid="736c54c4-ba74-4011-b129-7afa4790cd14">
-						<datasetParameter name="publisher">
-							<datasetParameterExpression><![CDATA[$P{publisher}]]></datasetParameterExpression>
-						</datasetParameter>
-						<datasetParameter name="start_date">
-							<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
-						</datasetParameter>
-						<datasetParameter name="end_date">
-							<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
-						</datasetParameter>
-						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					</datasetRun>
-					<jr:column width="66" uuid="d9305e8f-84ed-487b-aac6-0983e9257955">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement key="" x="0" y="0" width="66" height="40" uuid="e13a76a3-876d-43e3-8800-ea1d5dce3ab1"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Date]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="M/d/yy">
-								<reportElement x="0" y="0" width="66" height="24" uuid="1aa3a9b7-1362-4d72-9ae8-00f734f6bc79">
-									<property name="local_mesure_unity" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.y" value="px"/>
-									<property name="local_mesure_unitheight" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.height" value="px"/>
-								</reportElement>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="74" uuid="7b3b6fe3-3202-4d03-8b22-1019f411cc7f">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement x="0" y="0" width="74" height="40" uuid="db8dfc9d-35c7-43b2-a21f-6a4c653773da">
-									<property name="local_mesure_unity" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.y" value="px"/>
-								</reportElement>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Splash Page Views]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,###">
-								<reportElement x="0" y="0" width="74" height="24" uuid="7f933fff-63f6-4a0d-82cd-234fe4eb03f2">
-									<property name="com.jaspersoft.studio.unit.y" value="px"/>
-									<property name="com.jaspersoft.studio.unit.height" value="px"/>
-								</reportElement>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{splash_page_views}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="74" uuid="c992c5a6-5ec6-4daf-8fac-197b7c51c544">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement key="" x="0" y="0" width="74" height="40" uuid="cdfc7e7e-e699-46b5-97af-9a842d78e7bc"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[MiniReel Launches]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,###">
-								<reportElement x="0" y="0" width="74" height="24" uuid="608a16ee-94c8-4859-a37a-07848b5b31e1">
-									<property name="local_mesure_unity" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.y" value="px"/>
-									<property name="local_mesure_unitheight" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.height" value="px"/>
-								</reportElement>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-				</jr:table>
-			</componentElement>
-			<componentElement>
-				<reportElement x="310" y="80" width="830" height="110" uuid="2c991c52-f87f-4789-884c-3b38ad77e283">
-					<property name="local_mesure_unity" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
-					<datasetRun subDataset="publisher_mr_aggregate" uuid="fbdebc6a-c9cb-4eda-a76b-72aa1b2306f7">
-						<datasetParameter name="publisher">
-							<datasetParameterExpression><![CDATA[$P{publisher}]]></datasetParameterExpression>
-						</datasetParameter>
-						<datasetParameter name="start_date">
-							<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
-						</datasetParameter>
-						<datasetParameter name="end_date">
-							<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
-						</datasetParameter>
-						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-					</datasetRun>
-					<jr:column width="320" uuid="942e9e2f-c147-4c74-9b87-d00386266e97">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement x="0" y="0" width="320" height="40" uuid="7fc040c9-4554-44f9-8b20-089a54bca6ce"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement verticalAlignment="Middle"/>
-								<text><![CDATA[MiniReel]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField>
-								<reportElement x="0" y="0" width="320" height="24" uuid="6c155e11-df07-4318-bdef-e9a75e9dab79"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{minireel}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="90" uuid="5b826771-cc63-4696-b2d6-8f3e3e2a6cfd">
-						<jr:columnHeader style="Table_CH" height="40">
-							<textField>
-								<reportElement x="0" y="0" width="90" height="40" uuid="89951c04-8e11-42e2-8490-48bc3fe25cbf"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA["Days Active"]]></textFieldExpression>
-							</textField>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,###">
-								<reportElement x="0" y="0" width="90" height="24" uuid="911d7c16-d717-4275-a8eb-e7d97762027c"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{days_run}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="80" uuid="5638e13a-9fd9-43b8-b645-aa4d4a0c9815">
-						<jr:columnHeader style="Table_CH" height="40">
-							<textField>
-								<reportElement x="0" y="0" width="80" height="40" uuid="fd8fccec-6c94-432c-8bb0-76772a18bf4d"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA["Splash Page Views"]]></textFieldExpression>
-							</textField>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,###">
-								<reportElement x="0" y="0" width="80" height="24" uuid="ad9153d6-23f8-4838-97c6-c3916d2fe135"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="80" uuid="62e7386e-46b1-401e-87f1-b7cfa299afe6">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement x="0" y="0" width="80" height="40" uuid="42fc33ed-4845-48fb-8d20-4e0ff3194007"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Launches]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,###">
-								<reportElement x="0" y="0" width="80" height="24" uuid="88711afc-5398-4fce-aabf-8150d7f0c636"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="80" uuid="78d36b54-2b3a-4b5e-bd8c-21ce126cc9a2">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement x="0" y="0" width="80" height="40" uuid="57624fcf-1428-457a-9857-0623ca9781df"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Launch Rate]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,###%">
-								<reportElement x="0" y="0" width="80" height="24" uuid="9f001181-d722-4280-a718-e3266ad1180c"/>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[IF(($F{views} > 0) && ($F{launches} > 0),(float)$F{launches} / (float)$F{views},"")]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="80" uuid="3ec200aa-2fd2-4d0d-9ca8-f92cb943dfad">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement x="0" y="0" width="80" height="40" uuid="53bfd20b-f5a0-4621-8fe2-83ae565162aa"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Bounce Rate]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,##0.00%">
-								<reportElement x="0" y="0" width="80" height="24" uuid="592d1504-8b03-4744-a214-17b0f698c6ad">
-									<property name="local_mesure_unity" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.y" value="px"/>
-									<property name="local_mesure_unitheight" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.height" value="px"/>
-								</reportElement>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[IF($F{launches} > 0,(float)$F{bounce_sessions} / (float)$F{launches},"")]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-					<jr:column width="80" uuid="603b6110-f0c0-4ff4-8744-2932ee7b28e7">
-						<jr:columnHeader style="Table_CH" height="40">
-							<staticText>
-								<reportElement x="0" y="0" width="80" height="40" uuid="69411716-9729-48a2-af9e-1ac083b0ee74"/>
-								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Avg Session Length]]></text>
-							</staticText>
-						</jr:columnHeader>
-						<jr:detailCell style="Table_TD" height="24">
-							<textField pattern="#,##0.00#;#,##0.00#-">
-								<reportElement x="0" y="0" width="80" height="24" uuid="a11d9c94-dc0b-4808-8b86-076ef3c45728">
-									<property name="local_mesure_unity" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.y" value="px"/>
-									<property name="local_mesure_unitheight" value="pixel"/>
-									<property name="com.jaspersoft.studio.unit.height" value="px"/>
-									<property name="local_mesure_unitwidth" value="pixel"/>
-								</reportElement>
-								<box leftPadding="4" rightPadding="4"/>
-								<textElement textAlignment="Right" verticalAlignment="Middle"/>
-								<textFieldExpression><![CDATA[IF($F{non_bounce_sessions} > 0,(float)$F{time_in_minireel} / (float)$F{non_bounce_sessions},"")]]></textFieldExpression>
-							</textField>
-						</jr:detailCell>
-					</jr:column>
-				</jr:table>
-			</componentElement>
-			<break>
-				<reportElement x="0" y="217" width="100" height="1" uuid="205a3a2f-6a96-4638-8bcb-c655836ecbb2"/>
-			</break>
-		</band>
-	</title>
 	<pageHeader>
-		<band height="46" splitType="Stretch"/>
+		<band height="50"/>
 	</pageHeader>
 	<detail>
-		<band height="24" splitType="Stretch">
+		<band height="20" splitType="Stretch">
 			<property name="local_mesure_unitheight" value="pixel"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
-			<textField pattern="">
-				<reportElement key="" style="Table_TD" x="0" y="0" width="30" height="24" uuid="5f4b18d6-b5dc-479a-99c3-18a29a560d27">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
+			<textField>
+				<reportElement x="30" y="0" width="30" height="20" uuid="700688f9-c63c-4f2a-a7bd-6031f65db219"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{slide_index}]]></textFieldExpression>
 			</textField>
-			<textField pattern="">
-				<reportElement key="" style="Table_TD" x="30" y="0" width="300" height="24" uuid="88a3ec91-ec38-45e6-a7ca-acd1f563567d">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="local_mesure_unity" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{slide}]]></textFieldExpression>
+			<textField>
+				<reportElement x="60" y="0" width="300" height="20" uuid="cab98ddd-3e64-4896-9c8e-410625ae44df"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{sponsored} ? "Sponsored" + ($F{sponsor}.equals("") ? "" : " by " + $F{sponsor}) + ": " : "") + $F{slide}]]></textFieldExpression>
 			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="330" y="0" width="70" height="24" uuid="420e660c-2f73-4212-86bc-e19ccb539963">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-					<property name="local_mesure_unitwidth" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
+			<textField isBlankWhenNull="true">
+				<reportElement x="360" y="0" width="100" height="20" uuid="8dd82a2d-97e8-4819-b353-e61ef99de98d"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{video_source}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="460" y="0" width="50" height="20" uuid="fc3cb702-107b-402e-abcd-8c72f8046277"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{video_length}]]></textFieldExpression>
 			</textField>
-			<textField pattern="" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="400" y="0" width="100" height="24" uuid="07cb19b0-dfe1-4175-a9df-fd359280cbcb">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{avg_time_in_slide}]]></textFieldExpression>
+			<textField isBlankWhenNull="true">
+				<reportElement x="510" y="0" width="70" height="20" uuid="b7bf918f-80db-4f6e-b345-1c21fca0fab7"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{avg_time_on_slide}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="500" y="0" width="80" height="24" uuid="40774e85-d7ab-44d8-9e5f-5a157f1163ce">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
+				<reportElement x="580" y="0" width="70" height="20" uuid="64ec4a36-2213-4fb0-a860-cacece2d4cb8"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="640" y="0" width="80" height="24" uuid="d0c50264-763b-4c67-aee2-1f4e7141c822">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{plays}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="720" y="0" width="80" height="24" uuid="cee28e38-b55e-4a53-bb7c-46df695a776a">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{quartile_1}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="800" y="0" width="80" height="24" uuid="4b98b8b6-144f-4f12-af54-0d6d1b677bbd">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{quartile_2}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="880" y="0" width="80" height="24" uuid="40331f52-ff79-42a6-b684-925d79abe8ed">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{quartile_3}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement style="Table_TD" x="960" y="0" width="80" height="24" uuid="d8d180fc-8039-459c-a2f5-703b6f4f5ccc">
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[$F{quartile_4}]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,###%" isBlankWhenNull="true">
-				<reportElement key="" style="Table_TD" x="580" y="0" width="60" height="24" uuid="6e6b1417-ab2e-45d9-99e6-ba6a25e37028">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="local_mesure_unitwidth" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="650" y="0" width="60" height="20" uuid="422284aa-997d-44a4-be6b-7ff4c2d53609"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[((($F{total_views} > 0) && ($F{views} > 0)) && (($F{slide_index}) > 1) ? (float)($F{total_views} - $F{views})/(float)$F{total_views} : (float)0)]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,###%" isBlankWhenNull="true">
-				<reportElement key="" style="Table_TD" x="1040" y="0" width="60" height="24" uuid="24fcf4c4-b72f-4bb2-8aa9-8471990f8903">
-					<property name="local_mesure_unitheight" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					<property name="local_mesure_unity" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.y" value="px"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4"/>
-				<textElement textAlignment="Right" verticalAlignment="Middle">
-					<paragraph leftIndent="0" rightIndent="0"/>
-				</textElement>
-				<textFieldExpression><![CDATA[((($F{views} > 0) && ($F{quartile_4} > 0)) ? (float)$F{quartile_4}/(float)$F{views} : (float)0)]]></textFieldExpression>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="710" y="0" width="70" height="20" uuid="b9e7ea12-0394-489e-8e84-f6196cc22bec"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{plays}/(double)$F{views} : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="780" y="0" width="70" height="20" uuid="67b5e2e9-285f-44e8-8908-7b4ad99e954f"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_1}/(double)$F{views} : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="850" y="0" width="70" height="20" uuid="3dc48661-8762-4e48-b51e-6cccef2d82fa"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_2}/(double)$F{views} : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="920" y="0" width="70" height="20" uuid="42284f54-447f-4dd7-a1ba-a238a4b06d17"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_3}/(double)$F{views} : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="990" y="0" width="70" height="20" uuid="544a28e0-3198-4df7-babe-37f2b428eabf"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_4}/(double)$F{views} : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="1060" y="0" width="70" height="20" uuid="700fde2c-84f8-4034-8c1b-61cdd6b3bad9"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{adcount}/(double)$F{views} : null]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
