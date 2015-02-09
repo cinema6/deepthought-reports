@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version last-->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="site_activity" pageWidth="1200" pageHeight="1600" columnWidth="1160" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="6561c92a-97f2-41df-bb3a-9034e0aad5c1">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
-	<property name="ireport.jasperserver.report.resource" value="/Reports/SiteMiniReelActivity_files/main_jrxml"/>
-	<property name="ireport.jasperserver.reportUnit" value="/Reports/SiteMiniReelActivity"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/MiniReelActivityBySite_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/MiniReelActivityBySite"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -588,7 +589,9 @@ order by m.title;]]>
 					<textFieldExpression><![CDATA[$F{publisher}]]></textFieldExpression>
 				</textField>
 				<textField>
-					<reportElement x="30" y="0" width="540" height="30" uuid="b83d42bd-8ce5-4c13-a50c-d4654b76943a"/>
+					<reportElement x="30" y="0" width="540" height="30" uuid="b83d42bd-8ce5-4c13-a50c-d4654b76943a">
+						<propertyExpression name="net.sf.jasperreports.export.xls.sheet.name"><![CDATA[$F{minireel}.replaceAll("[\\*\\[\\]!?:\\\\/']","").trim()]]></propertyExpression>
+					</reportElement>
 					<textElement>
 						<font size="20"/>
 					</textElement>
@@ -914,7 +917,7 @@ on Slide]]></text>
 									<reportElement mode="Opaque" x="0" y="0" width="78" height="30" backcolor="#31B0F5" uuid="ccab5a36-8a90-4c3d-bd3c-a91dff3cba93"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{total_views} > 0) ? (float)$F{total_launches}/(float)$F{total_views} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{total_views} > 0) , (float)$F{total_launches}/(float)$F{total_views} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:tableFooter>
 							<jr:columnHeader style="Table_CH" height="30">
@@ -930,7 +933,7 @@ Rate]]></text>
 									<reportElement x="0" y="0" width="78" height="30" uuid="b5fd7e6a-43ba-4189-9abd-861cb75915fd"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{views} > 0) ? (float)$F{launches}/(float)$F{views} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{views} > 0) , (float)$F{launches}/(float)$F{views} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -943,7 +946,7 @@ Rate]]></text>
 									<reportElement mode="Opaque" x="0" y="0" width="78" height="30" backcolor="#31B0F5" uuid="6e95d2e6-f6f5-4cd0-ba32-72cdcbe46d54"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{total_launches} > 0) ? (float)$F{total_bounce_sessions}/(float)$F{total_launches} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{total_launches} > 0) , (float)$F{total_bounce_sessions}/(float)$F{total_launches} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:tableFooter>
 							<jr:columnHeader style="Table_CH" height="30">
@@ -959,7 +962,7 @@ Rate]]></text>
 									<reportElement x="0" y="0" width="78" height="30" uuid="f3f55042-cbaa-4f38-9ac9-428b0077977a"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{launches} > 0) ? (float)$F{mr_bounce_sessions}/(float)$F{launches} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{launches} > 0) , (float)$F{mr_bounce_sessions}/(float)$F{launches} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -972,7 +975,7 @@ Rate]]></text>
 									<reportElement mode="Opaque" x="0" y="0" width="78" height="30" backcolor="#31B0F5" uuid="0e9478ea-7adf-4cb6-9c13-25a2aaf55256"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{total_sessions} > 0) ? (float)$F{total_session_duration}/(float)$F{total_sessions} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{total_sessions} > 0) , (float)$F{total_session_duration}/(float)$F{total_sessions} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:tableFooter>
 							<jr:columnHeader style="Table_CH" height="30">
@@ -987,7 +990,7 @@ Rate]]></text>
 									<reportElement x="0" y="0" width="78" height="30" uuid="fc66f6d6-0c67-4599-8471-676069099cb7"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{mr_sessions} > 0) ? (float)$F{mr_session_duration}/(float)$F{mr_sessions} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{mr_sessions} > 0) , (float)$F{mr_session_duration}/(float)$F{mr_sessions} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -1092,7 +1095,7 @@ Rate]]></text>
 									<reportElement x="0" y="0" width="78" height="20" uuid="f6f7be69-e948-458c-bb01-4b62d7f23348"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{views} > 0) ? (float)$F{launches}/(float)$F{views} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{views} > 0) , (float)$F{launches}/(float)$F{views} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -1110,7 +1113,7 @@ Rate]]></text>
 									<reportElement x="0" y="0" width="78" height="20" uuid="a36e364d-f40b-4556-9f6a-e268c5e528d8"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{launches} > 0) ? (float)$F{mr_bounce_sessions}/(float)$F{launches} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{launches} > 0) , (float)$F{mr_bounce_sessions}/(float)$F{launches} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -1127,7 +1130,7 @@ Rate]]></text>
 									<reportElement x="0" y="0" width="78" height="20" uuid="f0261054-7419-4e80-9553-3dc9d3f4f486"/>
 									<box leftPadding="4" rightPadding="4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
-									<textFieldExpression><![CDATA[($F{mr_sessions} > 0) ? (float)$F{mr_session_duration}/(float)$F{mr_sessions} : (float)0]]></textFieldExpression>
+									<textFieldExpression><![CDATA[IF(($F{mr_sessions} > 0) , (float)$F{mr_session_duration}/(float)$F{mr_sessions} , (float)0)]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -1135,7 +1138,7 @@ Rate]]></text>
 				</componentElement>
 				<pieChart>
 					<chart isShowLegend="false" evaluationTime="Group" evaluationGroup="experience_id">
-						<reportElement key="" x="660" y="350" width="450" height="300" uuid="725824d2-0393-4ac0-b248-b167ca70d1a1">
+						<reportElement key="" x="660" y="350" width="450" height="300" uuid="3407837b-d4bf-45d7-a1cc-89dfd8ca78f2">
 							<property name="local_mesure_unitwidth" value="pixel"/>
 							<property name="com.jaspersoft.studio.unit.width" value="px"/>
 							<property name="local_mesure_unitheight" value="pixel"/>
@@ -1156,7 +1159,7 @@ Rate]]></text>
 					</chart>
 					<pieDataset minPercentage="0.0">
 						<dataset>
-							<datasetRun subDataset="minireel activity by device" uuid="d9d6eaa9-113e-4301-8106-cf2b3c72b8ac">
+							<datasetRun subDataset="minireel activity by device" uuid="6f4d9da6-d4f5-4960-9708-66656c48debe">
 								<datasetParameter name="start_date">
 									<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
 								</datasetParameter>
@@ -1173,8 +1176,8 @@ Rate]]></text>
 							</datasetRun>
 						</dataset>
 						<keyExpression><![CDATA[$F{device}]]></keyExpression>
-						<valueExpression><![CDATA[$F{launches} == null ? 0 : $F{launches}]]></valueExpression>
-						<labelExpression><![CDATA[$F{device} + " " + ($F{total_launches} > 0 ? TEXT((double)$F{launches} / (double)$F{total_launches},"#,##0%") : "-")]]></labelExpression>
+						<valueExpression><![CDATA[IF($F{launches} == null , 0 , $F{launches})]]></valueExpression>
+						<labelExpression><![CDATA[$F{device} + " " + IF($F{total_launches} > 0 , TEXT((double)$F{launches} / (double)$F{total_launches},"#,##0%") , "-")]]></labelExpression>
 					</pieDataset>
 					<piePlot isShowLabels="true" labelFormat="">
 						<plot>
@@ -1187,7 +1190,7 @@ Rate]]></text>
 				</pieChart>
 				<pieChart>
 					<chart isShowLegend="false" evaluationTime="Group" evaluationGroup="experience_id">
-						<reportElement key="" x="660" y="40" width="450" height="300" uuid="f9fe0586-9000-4802-bcdc-4809df85c22b">
+						<reportElement key="" x="660" y="40" width="450" height="300" uuid="7951fbc5-4c4c-4d2c-bc1c-132bd6442483">
 							<property name="local_mesure_unitwidth" value="pixel"/>
 							<property name="com.jaspersoft.studio.unit.width" value="px"/>
 							<property name="local_mesure_unitheight" value="pixel"/>
@@ -1208,7 +1211,7 @@ Rate]]></text>
 					</chart>
 					<pieDataset minPercentage="0.0">
 						<dataset>
-							<datasetRun subDataset="minireel activity by device" uuid="47088483-9ca7-4190-b240-2bc65d0da606">
+							<datasetRun subDataset="minireel activity by device" uuid="2fd474cb-d28d-4262-86dc-a6ab323cfb44">
 								<datasetParameter name="start_date">
 									<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
 								</datasetParameter>
@@ -1225,8 +1228,8 @@ Rate]]></text>
 							</datasetRun>
 						</dataset>
 						<keyExpression><![CDATA[$F{device}]]></keyExpression>
-						<valueExpression><![CDATA[$F{loads} == null ? 0 : $F{loads}]]></valueExpression>
-						<labelExpression><![CDATA[$F{device} + " " + ($F{total_loads} > 0 ? TEXT((double)$F{loads} / (double)$F{total_loads},"#,##0%") : "-")]]></labelExpression>
+						<valueExpression><![CDATA[IF($F{loads} == null , 0 , $F{loads})]]></valueExpression>
+						<labelExpression><![CDATA[$F{device} + " " + IF($F{total_loads} > 0 , TEXT((double)$F{loads} / (double)$F{total_loads},"#,##0%") ,"-")]]></labelExpression>
 					</pieDataset>
 					<piePlot isShowLabels="true" labelFormat="">
 						<plot>
@@ -1643,7 +1646,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[($F{sponsored} ? "Sponsored" + ($F{sponsor}.equals("") ? "" : " by " + $F{sponsor}) + ": " : "") + $F{slide}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{sponsored} , "Sponsored" + IF($F{sponsor}.equals("") , "" , " by " + $F{sponsor}) + ": " , "") + $F{slide}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
 				<reportElement x="360" y="0" width="100" height="20" uuid="8dd82a2d-97e8-4819-b353-e61ef99de98d"/>
@@ -1698,7 +1701,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[((($F{total_views} > 0) && ($F{views} > 0)) && (($F{slide_index}) > 1) ? (float)($F{total_views} - $F{views})/(float)$F{total_views} : (float)0)]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF((($F{total_views} > 0) && ($F{views} > 0)) && (($F{slide_index}) > 1) , (float)($F{total_views} - $F{views})/(float)$F{total_views} , (float)0)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
 				<reportElement x="710" y="0" width="70" height="20" uuid="b9e7ea12-0394-489e-8e84-f6196cc22bec"/>
@@ -1709,7 +1712,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{plays}/(double)$F{views} : null]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{plays}/(double)$F{views} ,null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
 				<reportElement x="780" y="0" width="70" height="20" uuid="67b5e2e9-285f-44e8-8908-7b4ad99e954f"/>
@@ -1720,7 +1723,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_1}/(double)$F{views} : null]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_1}/(double)$F{views} , null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
 				<reportElement x="850" y="0" width="70" height="20" uuid="3dc48661-8762-4e48-b51e-6cccef2d82fa"/>
@@ -1731,7 +1734,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_2}/(double)$F{views} : null]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_2}/(double)$F{views} , null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
 				<reportElement x="920" y="0" width="70" height="20" uuid="42284f54-447f-4dd7-a1ba-a238a4b06d17"/>
@@ -1742,7 +1745,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_3}/(double)$F{views} : null]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_3}/(double)$F{views} , null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
 				<reportElement x="990" y="0" width="70" height="20" uuid="544a28e0-3198-4df7-babe-37f2b428eabf"/>
@@ -1753,7 +1756,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{quartile_4}/(double)$F{views} : null]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_4}/(double)$F{views} , null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
 				<reportElement x="1060" y="0" width="70" height="20" uuid="700fde2c-84f8-4034-8c1b-61cdd6b3bad9"/>
@@ -1764,7 +1767,7 @@ in Minireel]]></text>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{views} > 0 ? (double)$F{adcount}/(double)$F{views} : null]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{adcount}/(double)$F{views} , null)]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
