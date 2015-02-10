@@ -47,16 +47,12 @@
 			<parameterDescription><![CDATA[]]></parameterDescription>
 			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 		</parameter>
+		<parameter name="campaign_name" class="java.lang.String"/>
 		<queryString language="SQL">
-			<![CDATA[select sa.sponsor,sa.adsrv_id,cd.campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
+			<![CDATA[select sa.sponsor,sa.adsrv_id,$P{campaign_name} as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
 from fct.v_sponsored_card_activity sa
-left join (
-	select campaign_id,campaign_name
-	from
-	(values ('6455871','Sangria Grammys'),('6455872','Mai Tai Winter Escape')) as cd(campaign_id,campaign_name)
-) cd on sa.adsrv_id = cd.campaign_id
 where sa.date between $P{start_date} AND $P{end_date} AND sa.sponsor = $P{sponsor} AND sa.adsrv_id = $P{campaign_id}
-group by sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
+group by sa.sponsor,sa.adsrv_id,campaign_name]]>
 		</queryString>
 		<field name="sponsor" class="java.lang.String">
 			<fieldDescription><![CDATA[Sponsor of card.]]></fieldDescription>
@@ -90,7 +86,7 @@ from fct.v_sponsored_card_activity sa
 left join (
 	select campaign_id,campaign_name
 	from
-	(values ('6455871','Sangria Grammys'),('6455872','Mai Tai Winter Escape')) as cd(campaign_id,campaign_name)
+	(values ('6455871','Sangria Grammys'),('6455872','Mai Tai Winter Escape'),('6494459','Valentines Day')) as cd(campaign_id,campaign_name)
 ) cd on sa.adsrv_id = cd.campaign_id
 where sa.sponsor = $P{sponsor} 
 AND $X{IN,sa.adsrv_id, campaign_id_list} 
@@ -274,18 +270,21 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 				<componentElement>
 					<reportElement x="0" y="130" width="798" height="60" uuid="12d759c5-6736-4fba-bf70-f5b63164b2b3"/>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
-						<datasetRun subDataset="campaign_data_agg" uuid="fa2cfe9e-3cab-4d47-aee8-9481990e88fb">
+						<datasetRun subDataset="campaign_data_agg" uuid="a8f0809c-3e69-4641-ab38-1745bc0710e1">
 							<datasetParameter name="campaign_id">
 								<datasetParameterExpression><![CDATA[$F{adsrv_id}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="sponsor">
-								<datasetParameterExpression><![CDATA[$F{sponsor}]]></datasetParameterExpression>
 							</datasetParameter>
 							<datasetParameter name="end_date">
 								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
 							</datasetParameter>
+							<datasetParameter name="sponsor">
+								<datasetParameterExpression><![CDATA[$F{sponsor}]]></datasetParameterExpression>
+							</datasetParameter>
 							<datasetParameter name="start_date">
 								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="campaign_name">
+								<datasetParameterExpression><![CDATA[$F{campaign_name}]]></datasetParameterExpression>
 							</datasetParameter>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
