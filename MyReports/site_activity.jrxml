@@ -5,8 +5,8 @@
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/MiniReelActivityBySite_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/MiniReelActivityBySite"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -424,8 +424,9 @@ order by m.title;]]>
     end as video_length,
     cv.avg_time_on_page as avg_time_on_slide,
     case cv.pageviews when 0 then null else cv.pageviews end AS views,
-    (sum(cv.pageviews) over (PARTITION BY  cv.experience_id,cv.device_category))::bigint as total_views,
-    p.events AS plays,
+    --(sum(cv.pageviews) over (PARTITION BY  cv.experience_id,cv.device_category))::bigint as total_views,
+    (first_value(cv.mr_views) over (PARTITION BY  cv.experience_id,cv.device_category order by cv.mr_views desc))::bigint as total_views,
+     p.events AS plays,
     q1.events AS quartile_1,
     q2.events AS quartile_2,
     q3.events AS quartile_3,
@@ -457,6 +458,7 @@ order by m.title;]]>
    LEFT JOIN ( 
 	SELECT 
 		cv.experience_id,cv.card_id,cv.device_category,sum(coalesce(cv.unique_pageviews,0)) as pageviews, 
+		sum(case when cv.card_index = 0 then cv.unique_pageviews else 0 end) as mr_views,
 		round( (case when (sum(cv.pageviews) - sum(cv.exits) ) > 0 then sum(cv.time_on_page)::numeric / (sum(cv.pageviews) - sum(cv.exits) )::numeric else null end),2 ) as avg_time_on_page
 	FROM
 		fct.mr_card_views_by_device cv
