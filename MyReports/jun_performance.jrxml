@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version last-->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_activity" pageWidth="1200" pageHeight="900" orientation="Landscape" columnWidth="1160" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d0f60ca4-bd05-4b3b-ae11-fcf70405f1f1">
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
@@ -14,32 +13,40 @@
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/campaign_activity_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/campaign_activity"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<queryString language="SQL">
-		<![CDATA[select c.site,c.date,c.sponsor,c.minireel_title,c.card_title,
+		<![CDATA[select site,date,sponsor,minireel_title,card_title,
+sum(minireel_loads) as minireel_loads, sum(minireel_views) as minireel_views,sum(cardviews) as cardviews,sum(autoplay) as autoplay,
+sum(play) as play, sum(q1) as q1, sum(q2) as q2, sum(q3) as q3, sum(q4) as q4, sum(completed_view) as completed_view, sum(errors) as errors
+from (
+select (case c.container when 'embed' then c.hostname else c.container end) as site,c.date,c.sponsor,c.minireel_title,c.card_title,
 	e.events as minireel_loads,v.events as minireel_views,c.cardviews,c.autoplay,c.play,c.q1,c.q2,c.q3,c.q4,c.completed_view,c.errors,c.completion_rate
 from (
-select sc.host_id as site,sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id,
+select sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id,
 	sum(sc.cardviews) as cardviews,sum(sc.autoplay) as autoplay,sum(sc.play) as play,
 	sum(sc.q1) as q1,sum(sc.q2) as q2,sum(sc.q3) as q3,sum(sc.q4) as q4,
 	sum(sc.adcount) as completed_view,sum(sc.err) as errors,
 	sum(sc.adcount)/sum(sc.cardviews) as completion_rate
 from fct.v_sponsored_card_activity sc
-group by sc.host_id,sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id
+group by sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id
 ) as c
 left join (
-	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,sum(events) as events
+	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,sum(case when ve.mr_container = 'connatix' then null else unique_events end) as events
 	from fct.mr_embed_events_by_device ve
 	where ve.experience_id in ( select distinct experience_id from dim.v_sponsored_card)  and ve.event_type ='Visible'
 	group by ve.date_key,ve.experience_id,ve.hostname,ve.mr_container
 ) as v on v.date_key = c.date_key AND v.experience_id = c.experience_id AND v.hostname = c.hostname AND v.mr_container = c.container
 left join (
-	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,sum(pageviews) as events
+	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,sum(unique_pageviews) as events
 	from fct.mr_embeds_by_device ve
 	where ve.experience_id in ( select distinct experience_id from dim.v_sponsored_card) 
 	group by ve.date_key,ve.experience_id,ve.hostname,ve.mr_container
 ) as e on e.date_key = c.date_key AND e.experience_id = c.experience_id AND e.hostname = c.hostname AND e.mr_container = c.container
-where e.events >= 50  AND c.site in ('cinema6.com (jun)','www.pixable.com (embed)')
-order by c.site,c.date,c.sponsor,c.minireel_title,c.card_title]]>
+where e.events >= 50  AND (case c.container when 'embed' then c.hostname else c.container end) in ('jun','connatix','www.pixable.com')
+) i
+group by site,date,sponsor,minireel_title,card_title
+order by site,date,sponsor,minireel_title,card_title 
+]]>
 	</queryString>
 	<field name="site" class="java.lang.String"/>
 	<field name="date" class="java.sql.Date">
@@ -102,7 +109,7 @@ order by c.site,c.date,c.sponsor,c.minireel_title,c.card_title]]>
 		</groupHeader>
 		<groupFooter>
 			<band height="34">
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="410" y="7" width="50" height="20" uuid="489b1585-ad38-4f18-ba57-d717580e75f0">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -176,7 +183,7 @@ order by c.site,c.date,c.sponsor,c.minireel_title,c.card_title]]>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
 				</line>
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="405" y="0" width="50" height="20" uuid="d21f89e2-2fa6-48ba-a79e-25fbb563ddd0"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{mr_total_views}]]></textFieldExpression>
@@ -317,7 +324,7 @@ Rate]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{minireel_loads}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
 				<reportElement x="405" y="0" width="50" height="20" uuid="ec21eec3-5162-43f0-b2f7-f1657319d95b">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
