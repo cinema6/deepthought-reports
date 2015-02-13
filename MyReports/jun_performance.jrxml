@@ -13,40 +13,38 @@
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/campaign_activity_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/campaign_activity"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
 	<queryString language="SQL">
-		<![CDATA[select site,date,sponsor,minireel_title,card_title,
-sum(minireel_loads) as minireel_loads, sum(minireel_views) as minireel_views,sum(cardviews) as cardviews,sum(autoplay) as autoplay,
-sum(play) as play, sum(q1) as q1, sum(q2) as q2, sum(q3) as q3, sum(q4) as q4, sum(completed_view) as completed_view, sum(errors) as errors
-from (
-select (case c.container when 'embed' then c.hostname else c.container end) as site,c.date,c.sponsor,c.minireel_title,c.card_title,
-	e.events as minireel_loads,v.events as minireel_views,c.cardviews,c.autoplay,c.play,c.q1,c.q2,c.q3,c.q4,c.completed_view,c.errors,c.completion_rate
-from (
-select sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id,
-	sum(sc.cardviews) as cardviews,sum(sc.autoplay) as autoplay,sum(sc.play) as play,
-	sum(sc.q1) as q1,sum(sc.q2) as q2,sum(sc.q3) as q3,sum(sc.q4) as q4,
-	sum(sc.adcount) as completed_view,sum(sc.err) as errors,
-	sum(sc.adcount)/sum(sc.cardviews) as completion_rate
-from fct.v_sponsored_card_activity sc
-group by sc.hostname,sc.container,sc.date,sc.date_key,sc.sponsor,sc.minireel_title,sc.card_title,sc.experience_id
-) as c
+		<![CDATA[--SET work_mem = '50MB';
+select d.date,sc.sponsor,sc.minireel_title,sc.card_title,e.site_name as site,
+e.events as minireel_loads,
+case e.site_name when 'Connatix' then 0 when 'Jun' then 0 else v.events end as minireel_views,
+c.cardviews,c.autoplay,c.play,c.q1,c.q2,c.q3,c.q4,c.completed_view,c.errors
+from dim.v_sponsored_card sc
 left join (
-	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,sum(case when ve.mr_container = 'connatix' then null else unique_events end) as events
-	from fct.mr_embed_events_by_device ve
-	where ve.experience_id in ( select distinct experience_id from dim.v_sponsored_card)  and ve.event_type ='Visible'
-	group by ve.date_key,ve.experience_id,ve.hostname,ve.mr_container
-) as v on v.date_key = c.date_key AND v.experience_id = c.experience_id AND v.hostname = c.hostname AND v.mr_container = c.container
+	select e.date_key,e.experience_id,h.site_name,sum(e.unique_pageviews) as events
+	from fct.mr_embeds_by_device e
+	inner join rpt.hostname_to_site h ON e.hostname = h.hostname AND e.mr_container = h.container
+	where e.experience_id in (select distinct experience_id from dim.v_sponsored_card)
+	group by e.date_key,e.experience_id,h.site_name
+) e on sc.experience_id = e.experience_id
 left join (
-	select ve.date_key,ve.experience_id,ve.hostname,ve.mr_container,sum(unique_pageviews) as events
-	from fct.mr_embeds_by_device ve
-	where ve.experience_id in ( select distinct experience_id from dim.v_sponsored_card) 
-	group by ve.date_key,ve.experience_id,ve.hostname,ve.mr_container
-) as e on e.date_key = c.date_key AND e.experience_id = c.experience_id AND e.hostname = c.hostname AND e.mr_container = c.container
-where e.events >= 50  AND (case c.container when 'embed' then c.hostname else c.container end) in ('jun','connatix','www.pixable.com')
-) i
-group by site,date,sponsor,minireel_title,card_title
-order by site,date,sponsor,minireel_title,card_title 
-]]>
+	select e.date_key,e.experience_id,h.site_name,sum(e.unique_events) as events
+	from fct.mr_embed_events_by_device e
+	inner join rpt.hostname_to_site h ON e.hostname = h.hostname AND e.mr_container = h.container
+	where e.experience_id in ( select distinct experience_id from dim.v_sponsored_card)  and e.event_type ='Visible'
+	group by e.date_key,e.experience_id,h.site_name
+) as v on v.date_key = e.date_key AND v.experience_id = e.experience_id AND v.site_name = e.site_name
+left join (
+select c.date_key,c.experience_id,c.site_name,
+	sum(c.cardviews) as cardviews,sum(c.autoplay) as autoplay,sum(c.play) as play,
+	sum(c.q1) as q1,sum(c.q2) as q2,sum(c.q3) as q3,sum(c.q4) as q4,
+	sum(c.adcount) as completed_view,sum(c.err) as errors
+	from fct.v_sponsored_card_activity c
+	group by c.date_key,c.experience_id,site_name
+) as c on c.date_key = e.date_key AND c.experience_id = e.experience_id AND c.site_name = e.site_name
+inner join dim.dates d on d.date_key = e.date_key
+where e.events > 50;]]>
 	</queryString>
 	<field name="site" class="java.lang.String"/>
 	<field name="date" class="java.sql.Date">
@@ -94,6 +92,9 @@ order by site,date,sponsor,minireel_title,card_title
 	<variable name="site_total_completed_views" class="java.lang.Long" resetType="Group" resetGroup="site" calculation="Sum">
 		<variableExpression><![CDATA[$F{completed_view}]]></variableExpression>
 	</variable>
+	<variable name="mr_total_loads" class="java.lang.Long" resetType="Group" resetGroup="sponsored_minireel_card" calculation="Sum">
+		<variableExpression><![CDATA[$F{minireel_loads}]]></variableExpression>
+	</variable>
 	<group name="site">
 		<groupExpression><![CDATA[$F{site}]]></groupExpression>
 		<groupHeader>
@@ -117,7 +118,7 @@ order by site,date,sponsor,minireel_title,card_title
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{site_total_cardviews}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="580" y="7" width="50" height="20" uuid="ca512767-bed6-4e12-bcd7-0ae1c4ab5547">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -125,7 +126,7 @@ order by site,date,sponsor,minireel_title,card_title
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{site_total_completed_views}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.##%">
+				<textField pattern="#,##0.##%" isBlankWhenNull="true">
 					<reportElement x="817" y="7" width="50" height="20" uuid="6a7ed9b7-0f40-41ee-8a51-bb0ac4f0fe6c">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -172,7 +173,7 @@ order by site,date,sponsor,minireel_title,card_title
 		</groupHeader>
 		<groupFooter>
 			<band height="28">
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="305" y="0" width="50" height="20" uuid="19c6fb5f-9988-48bc-8f0e-d9de4a0189a2"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{mr_total_impressions}]]></textFieldExpression>
@@ -184,36 +185,38 @@ order by site,date,sponsor,minireel_title,card_title
 					</reportElement>
 				</line>
 				<textField pattern="#,##0.###" isBlankWhenNull="true">
-					<reportElement x="405" y="0" width="50" height="20" uuid="d21f89e2-2fa6-48ba-a79e-25fbb563ddd0"/>
+					<reportElement x="405" y="0" width="50" height="20" uuid="d21f89e2-2fa6-48ba-a79e-25fbb563ddd0">
+						<printWhenExpression><![CDATA[$V{mr_total_views} > 0]]></printWhenExpression>
+					</reportElement>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{mr_total_views}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="505" y="0" width="50" height="20" uuid="e381dadc-bd5e-4368-9452-2906ad4933bd"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{mr_total_cardviews}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="592" y="0" width="50" height="20" uuid="8ac5d9ad-b580-4ac3-9ec6-894b7c382dfa"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{mr_total_plays}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.###">
+				<textField pattern="#,##0.###" isBlankWhenNull="true">
 					<reportElement x="667" y="0" width="50" height="20" uuid="f92ae36b-e036-4ef7-99b1-af0e89a6a55b"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{mr_total_completed_views}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.##%">
+				<textField pattern="#,##0.##%" isBlankWhenNull="true">
 					<reportElement x="742" y="0" width="50" height="20" uuid="3496deec-53f6-4a18-a50a-2feed1a9a1cb"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
-					<textFieldExpression><![CDATA[(double)$V{mr_total_cardviews}/(double)$V{mr_total_views}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[IF($V{mr_total_views} > 0,(double)$V{mr_total_cardviews}/(double)$V{mr_total_views},(double)$V{mr_total_cardviews}/(double)$V{mr_total_loads})]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.##%">
+				<textField pattern="#,##0.##%" isBlankWhenNull="true">
 					<reportElement x="817" y="0" width="50" height="20" uuid="f0cb9b7b-fb4a-4526-801d-d81a651bbe94"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[(double)$V{mr_total_plays}/(double)$V{mr_total_cardviews}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.##%">
+				<textField pattern="#,##0.##%" isBlankWhenNull="true">
 					<reportElement x="892" y="0" width="50" height="20" uuid="4e6bddb8-560f-4248-a5f7-ee6aeed752d0"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[(double)$V{mr_total_completed_views}/(double)$V{mr_total_cardviews}]]></textFieldExpression>
@@ -242,7 +245,7 @@ order by site,date,sponsor,minireel_title,card_title
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[MiniReel Viewable Impressions]]></text>
+				<text><![CDATA[MiniReel Viewable Impressions**]]></text>
 			</staticText>
 			<staticText>
 				<reportElement x="580" y="0" width="75" height="35" uuid="46b527b0-e563-4d28-a74e-63a4a1003307">
@@ -316,7 +319,7 @@ Rate]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{date}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
 				<reportElement x="305" y="0" width="50" height="20" uuid="2f543b7f-c2f4-4047-90f3-eda0bb31211b">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -327,25 +330,26 @@ Rate]]></text>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
 				<reportElement x="405" y="0" width="50" height="20" uuid="ec21eec3-5162-43f0-b2f7-f1657319d95b">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<printWhenExpression><![CDATA[$F{minireel_views} >0]]></printWhenExpression>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{minireel_views}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
 				<reportElement x="505" y="0" width="50" height="20" uuid="5c01a4ad-cd34-4dea-8592-dc9720d5cc34">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{cardviews}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
 				<reportElement x="592" y="0" width="50" height="20" uuid="d5956d86-7a1a-4e29-8757-33de7e2802f6">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{play}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
 				<reportElement x="667" y="0" width="50" height="20" uuid="ab2c7dcf-2f4f-44d7-bde0-730daef67e8d">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="local_mesure_unity" value="pixel"/>
@@ -354,7 +358,7 @@ Rate]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{completed_view}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.##%">
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
 				<reportElement x="892" y="0" width="50" height="20" uuid="1364e0cf-7b21-4285-8ac0-5620d2ed817b">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -364,7 +368,7 @@ Rate]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{completed_view}.doubleValue()/$F{cardviews}.doubleValue()]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.##%">
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
 				<reportElement x="817" y="0" width="50" height="20" uuid="5e9923c7-a9cc-4eca-9f15-a118d80fc3a4">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -372,21 +376,25 @@ Rate]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{play}.doubleValue()/$F{cardviews}.doubleValue()]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.##%">
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
 				<reportElement x="742" y="0" width="50" height="20" uuid="9cf14787-c1e5-4099-a9e6-c05a0fca9090">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{cardviews}.doubleValue()/$F{minireel_views}.doubleValue()]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{minireel_views} == 0,$F{cardviews}.doubleValue()/$F{minireel_loads}.doubleValue(),$F{cardviews}.doubleValue()/$F{minireel_views}.doubleValue())]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
 	<pageFooter>
-		<band height="39">
+		<band height="66">
 			<staticText>
 				<reportElement x="20" y="19" width="555" height="20" uuid="748f4a0e-5914-41c0-80a5-2bec8fa44aed"/>
 				<text><![CDATA[* Data derived from google analytics generated by Cinema6 code.  May differ from 3rd parties.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="20" y="39" width="910" height="21" uuid="8d860a8a-15cb-4968-8539-18c50938d33d"/>
+				<text><![CDATA[** Viewable Impressions are not currently applicable to the Connatix or Veeseo integrations.  For those workflows, Launch rate is calculated using MiniReel Impressions.]]></text>
 			</staticText>
 		</band>
 	</pageFooter>
