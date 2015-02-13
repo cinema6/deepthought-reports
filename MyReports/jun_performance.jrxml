@@ -13,7 +13,16 @@
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/campaign_activity_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/campaign_activity"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<parameter name="start_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="end_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+	</parameter>
+	<parameter name="site_list" class="java.util.ArrayList">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
 	<queryString language="SQL">
 		<![CDATA[--SET work_mem = '50MB';
 select d.date,sc.sponsor,sc.minireel_title,sc.card_title,e.site_name as site,
@@ -44,7 +53,7 @@ select c.date_key,c.experience_id,c.site_name,
 	group by c.date_key,c.experience_id,site_name
 ) as c on c.date_key = e.date_key AND c.experience_id = e.experience_id AND c.site_name = e.site_name
 inner join dim.dates d on d.date_key = e.date_key
-where e.events > 50;]]>
+where e.events > 50 AND d.date between $P{start_date} AND $P{end_date} AND $X{IN,e.site_name,site_list};]]>
 	</queryString>
 	<field name="site" class="java.lang.String"/>
 	<field name="date" class="java.sql.Date">
@@ -95,7 +104,7 @@ where e.events > 50;]]>
 	<variable name="mr_total_loads" class="java.lang.Long" resetType="Group" resetGroup="sponsored_minireel_card" calculation="Sum">
 		<variableExpression><![CDATA[$F{minireel_loads}]]></variableExpression>
 	</variable>
-	<group name="site">
+	<group name="site" isStartNewPage="true">
 		<groupExpression><![CDATA[$F{site}]]></groupExpression>
 		<groupHeader>
 			<band height="21">
@@ -236,6 +245,13 @@ where e.events > 50;]]>
 				</textElement>
 				<text><![CDATA[Campaign Activity Report]]></text>
 			</staticText>
+			<textField>
+				<reportElement x="290" y="30" width="470" height="20" uuid="8ae39457-b0fc-4f09-8d7b-40c57c605fa1"/>
+				<textElement>
+					<font isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"M/d/yy") + " - " + DATEFORMAT($P{end_date},"M/d/yy")]]></textFieldExpression>
+			</textField>
 		</band>
 	</pageHeader>
 	<columnHeader>
