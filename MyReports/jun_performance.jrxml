@@ -53,7 +53,7 @@ select c.date_key,c.experience_id,c.site_name,
 	group by c.date_key,c.experience_id,site_name
 ) as c on c.date_key = e.date_key AND c.experience_id = e.experience_id AND c.site_name = e.site_name
 inner join dim.dates d on d.date_key = e.date_key
-where e.events > 50 AND d.date between $P{start_date} AND $P{end_date} AND $X{IN,e.site_name,site_list};]]>
+where d.date between $P{start_date} AND $P{end_date} AND $X{IN,e.site_name,site_list};]]>
 	</queryString>
 	<field name="site" class="java.lang.String"/>
 	<field name="date" class="java.sql.Date">
