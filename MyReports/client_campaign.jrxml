@@ -85,9 +85,9 @@ group by sa.sponsor,sa.adsrv_id,campaign_name]]>
 from fct.v_sponsored_card_activity sa
 left join (
 	select campaign_id,campaign_name
-	from
-	(values ('6458108','Sangria Oscars'),('6517778','Dutch75 Oscars'),('6517759','Tom Collins Oscars'),('6455871','Sangria Grammys'),('6455872','Mai Tai Winter Escape'),('6494459','Valentines Day')) as cd(campaign_id,campaign_name)
-) cd on sa.adsrv_id = cd.campaign_id
+	from fct.adtech_campaign_activity
+	group by campaign_id,campaign_name
+	) cd on sa.adsrv_id = cd.campaign_id
 where sa.sponsor = $P{sponsor} 
 AND $X{IN,sa.adsrv_id, campaign_id_list} 
 AND sa.date between $P{start_date} AND $P{end_date}
