@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version last-->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="612" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/ClientCampaign_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/ClientCampaign"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -125,16 +134,20 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 	<variable name="total_q3" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
 		<variableExpression><![CDATA[$F{q3}]]></variableExpression>
 	</variable>
+	<variable name="total_q4" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+		<variableExpression><![CDATA[$F{q4}]]></variableExpression>
+	</variable>
 	<variable name="total_adcount" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
 		<variableExpression><![CDATA[$F{adcount}]]></variableExpression>
 	</variable>
 	<group name="sponsor,adsrv_id,campaign" isStartNewPage="true">
 		<groupExpression><![CDATA[$F{sponsor}+$F{adsrv_id}+$F{campaign_name}]]></groupExpression>
 		<groupHeader>
-			<band height="253">
+			<band height="255">
 				<staticText>
-					<reportElement x="0" y="233" width="114" height="20" uuid="b963166e-fb6f-47f4-b486-c1e73d49c886">
+					<reportElement x="0" y="225" width="114" height="30" uuid="b963166e-fb6f-47f4-b486-c1e73d49c886">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
 					<box>
 						<bottomPen lineWidth="0.5"/>
@@ -145,7 +158,9 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<text><![CDATA[Date]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="114" y="233" width="114" height="20" uuid="4342d6a2-47cd-4adc-96a8-ba648a8ff30c"/>
+					<reportElement x="114" y="225" width="114" height="30" uuid="4342d6a2-47cd-4adc-96a8-ba648a8ff30c">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<box>
 						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
@@ -156,7 +171,11 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<text><![CDATA[Video Loads]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="228" y="233" width="114" height="20" uuid="1bc80298-eaa8-466f-ba76-f937e8980d88"/>
+					<reportElement x="228" y="225" width="80" height="30" uuid="1bc80298-eaa8-466f-ba76-f937e8980d88">
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<box>
 						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
@@ -167,7 +186,11 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<text><![CDATA[25%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="342" y="233" width="114" height="20" uuid="69bca9e8-3688-4574-89ae-b4fbd1dc4cca"/>
+					<reportElement x="308" y="225" width="80" height="30" uuid="69bca9e8-3688-4574-89ae-b4fbd1dc4cca">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<box>
 						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
@@ -178,7 +201,10 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<text><![CDATA[50%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="456" y="233" width="114" height="20" uuid="2b0e5ef1-89d0-4ed4-b305-9a6da7102257"/>
+					<reportElement x="388" y="225" width="80" height="30" uuid="2b0e5ef1-89d0-4ed4-b305-9a6da7102257">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<box>
 						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
@@ -189,11 +215,14 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<text><![CDATA[75%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="570" y="233" width="114" height="20" uuid="477f5b38-b38c-4868-be35-64b2aae4c02a"/>
+					<reportElement x="468" y="225" width="80" height="30" uuid="477f5b38-b38c-4868-be35-64b2aae4c02a">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<box>
 						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
-						<rightPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -208,8 +237,11 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<text><![CDATA[Cinema6 Campaign Report]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="684" y="233" width="114" height="20" uuid="2041d808-110e-48f6-b997-48486d0337ad"/>
+					<reportElement x="548" y="225" width="114" height="30" uuid="2041d808-110e-48f6-b997-48486d0337ad">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
 					<box>
+						<leftPen lineWidth="0.5"/>
 						<bottomPen lineWidth="0.5"/>
 					</box>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
@@ -268,7 +300,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<imageExpression><![CDATA["/Workspace/Images/logo.png"]]></imageExpression>
 				</image>
 				<componentElement>
-					<reportElement x="0" y="130" width="798" height="60" uuid="12d759c5-6736-4fba-bf70-f5b63164b2b3"/>
+					<reportElement x="0" y="130" width="890" height="60" uuid="12d759c5-6736-4fba-bf70-f5b63164b2b3"/>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
 						<datasetRun subDataset="campaign_data_agg" uuid="a8f0809c-3e69-4641-ab38-1745bc0710e1">
 							<datasetParameter name="campaign_id">
@@ -359,7 +391,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="114" uuid="52597089-7a4e-48e6-98b9-d1e0f651491b">
+						<jr:column width="80" uuid="52597089-7a4e-48e6-98b9-d1e0f651491b">
 							<jr:columnHeader style="Table_CH" height="30">
 								<box>
 									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -368,7 +400,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="5780c387-3a26-42c9-b262-743c2b2dea1d"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="5780c387-3a26-42c9-b262-743c2b2dea1d"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle">
 										<font isBold="true"/>
 									</textElement>
@@ -383,7 +415,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="3f40e4f3-4a96-4ac3-b46c-36c97cccf9a3"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="3f40e4f3-4a96-4ac3-b46c-36c97cccf9a3"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle">
 										<paragraph leftIndent="8" rightIndent="8"/>
 									</textElement>
@@ -391,7 +423,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="114" uuid="2e4ac57a-dd2d-41a4-b982-137ebb4d2c5a">
+						<jr:column width="80" uuid="2e4ac57a-dd2d-41a4-b982-137ebb4d2c5a">
 							<jr:columnHeader style="Table_CH" height="30">
 								<box>
 									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -400,7 +432,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="cc908c00-d07d-42d3-ae87-199d5263fef5"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="cc908c00-d07d-42d3-ae87-199d5263fef5"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle">
 										<font isBold="true"/>
 									</textElement>
@@ -415,7 +447,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="9d19b313-3a5a-494d-b5c5-3ba16fc58eb4"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="9d19b313-3a5a-494d-b5c5-3ba16fc58eb4"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle">
 										<paragraph leftIndent="8" rightIndent="8"/>
 									</textElement>
@@ -423,7 +455,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="114" uuid="e444e6b3-fa22-46b7-bc84-058e059a63de">
+						<jr:column width="80" uuid="e444e6b3-fa22-46b7-bc84-058e059a63de">
 							<jr:columnHeader style="Table_CH" height="30">
 								<box>
 									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -432,7 +464,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="dda63833-f4f1-4ee3-80d4-8be60ba3871c"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="dda63833-f4f1-4ee3-80d4-8be60ba3871c"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle">
 										<font isBold="true"/>
 									</textElement>
@@ -447,7 +479,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="ddedfcaf-9621-444b-9cf2-2038875624c3"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="ddedfcaf-9621-444b-9cf2-2038875624c3"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle">
 										<paragraph leftIndent="8" rightIndent="8"/>
 									</textElement>
@@ -455,7 +487,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
-						<jr:column width="114" uuid="893ff76b-cd95-48fb-8b23-6a840f49cd62">
+						<jr:column width="80" uuid="893ff76b-cd95-48fb-8b23-6a840f49cd62">
 							<jr:columnHeader style="Table_CH" height="30">
 								<box>
 									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
@@ -464,7 +496,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="220615af-66d8-4682-88df-a0c757c69bf4"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="220615af-66d8-4682-88df-a0c757c69bf4"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle">
 										<font isBold="true"/>
 									</textElement>
@@ -479,11 +511,11 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="c28f5c2f-39a2-439e-b29f-1b3bd21ea05c"/>
+									<reportElement x="0" y="0" width="80" height="30" uuid="c28f5c2f-39a2-439e-b29f-1b3bd21ea05c"/>
 									<textElement textAlignment="Right" verticalAlignment="Middle">
 										<paragraph leftIndent="8" rightIndent="8"/>
 									</textElement>
-									<textFieldExpression><![CDATA[$F{adcount}]]></textFieldExpression>
+									<textFieldExpression><![CDATA[$F{q4}]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -493,7 +525,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
 									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<staticText>
 									<reportElement x="0" y="0" width="114" height="30" uuid="02b1033a-9b2e-4fd2-9f3c-69349c39c93b"/>
@@ -508,10 +540,67 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 								</box>
 								<textField pattern="#,##0%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="e64a19b3-a331-4289-bdb3-1fa8cd7e08a9"/>
+									<reportElement x="0" y="0" width="114" height="30" uuid="c3c4beb6-5a41-4aad-a7e7-3a0e8b00a1d1"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<paragraph leftIndent="8" rightIndent="8"/>
+									</textElement>
+									<textFieldExpression><![CDATA[IF($F{video_loads} > 0,(double)$F{q4}/(double)$F{video_loads},null)]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="114" uuid="704f6c06-3c99-49e0-b5c3-524e5eb6f3b4">
+							<jr:columnHeader style="Table_CH" height="30">
+								<box>
+									<topPen lineWidth="0.0"/>
+									<bottomPen lineWidth="0.5"/>
+								</box>
+								<staticText>
+									<reportElement x="0" y="0" width="114" height="30" uuid="1ea8a0ac-f2b2-4984-b086-f08d4ba427c2"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font isBold="true"/>
+									</textElement>
+									<text><![CDATA[Ad Counts]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table_TD" height="30">
+								<box>
+									<bottomPen lineWidth="0.0"/>
+								</box>
+								<textField pattern="#,##0" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="114" height="30" uuid="c50c5a6a-9b24-4c96-b16a-bfee2b8295eb"/>
+									<textElement textAlignment="Right" verticalAlignment="Middle">
+										<paragraph leftIndent="8" rightIndent="8"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$F{adcount}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="114" uuid="0c07e9ca-6962-4265-b313-8516bb753eb2">
+							<jr:columnHeader style="Table_CH" height="30">
+								<box>
+									<topPen lineWidth="0.0"/>
+									<bottomPen lineWidth="0.5"/>
+									<rightPen lineWidth="0.0"/>
+								</box>
+								<staticText>
+									<reportElement x="0" y="0" width="114" height="30" uuid="0bbc6ca2-48d8-4b13-a902-ffb5ce708c80"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font isBold="true"/>
+									</textElement>
+									<text><![CDATA[Ad Counts
+Completion Rate]]></text>
+								</staticText>
+							</jr:columnHeader>
+							<jr:detailCell style="Table_TD" height="30">
+								<box>
+									<bottomPen lineWidth="0.0"/>
+									<rightPen lineWidth="0.0"/>
+								</box>
+								<textField pattern="#,##0%" isBlankWhenNull="true">
+									<reportElement x="0" y="0" width="114" height="30" uuid="f1204946-a0d3-445b-8344-8a550f261a4a"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle">
 										<paragraph leftIndent="8" rightIndent="8"/>
 									</textElement>
@@ -521,6 +610,37 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 						</jr:column>
 					</jr:table>
 				</componentElement>
+				<staticText>
+					<reportElement x="662" y="225" width="114" height="30" uuid="782e519f-4ab3-4e50-af59-55c4a628a936">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Ad Counts]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="776" y="225" width="114" height="30" uuid="447995d6-d970-41a2-b14a-97440cebffbf">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Ad Counts
+Completion Rate]]></text>
+				</staticText>
 			</band>
 		</groupHeader>
 		<groupFooter>
@@ -554,7 +674,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<textFieldExpression><![CDATA[$V{total_loads}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="228" y="8" width="114" height="20" uuid="f3864403-f98b-498f-a807-59b1753e51a9">
+					<reportElement x="228" y="8" width="80" height="20" uuid="f3864403-f98b-498f-a807-59b1753e51a9">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
@@ -566,7 +686,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<textFieldExpression><![CDATA[$V{total_q1}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="342" y="8" width="114" height="20" uuid="49acf675-179c-4152-a563-ec297fab076e">
+					<reportElement x="308" y="8" width="80" height="20" uuid="49acf675-179c-4152-a563-ec297fab076e">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					</reportElement>
@@ -577,7 +697,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<textFieldExpression><![CDATA[$V{total_q2}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="456" y="8" width="114" height="20" uuid="fd1f80e5-fb5b-4f09-8669-a61da95fe334">
+					<reportElement x="388" y="8" width="80" height="20" uuid="fd1f80e5-fb5b-4f09-8669-a61da95fe334">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					</reportElement>
@@ -588,9 +708,10 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<textFieldExpression><![CDATA[$V{total_q3}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="570" y="8" width="114" height="20" uuid="85420d0b-9f8a-47c1-afa9-5ea602a1ed67">
+					<reportElement x="662" y="8" width="114" height="20" uuid="85420d0b-9f8a-47c1-afa9-5ea602a1ed67">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+						<property name="local_mesure_unitwidth" value="pixel"/>
 					</reportElement>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -599,7 +720,7 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 					<textFieldExpression><![CDATA[$V{total_adcount}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0%" isBlankWhenNull="true">
-					<reportElement x="684" y="8" width="114" height="20" uuid="420de911-0603-411d-b2c5-08f4de5d70f0">
+					<reportElement x="776" y="8" width="114" height="20" uuid="420de911-0603-411d-b2c5-08f4de5d70f0">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					</reportElement>
@@ -608,6 +729,28 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 						<paragraph leftIndent="8" rightIndent="8"/>
 					</textElement>
 					<textFieldExpression><![CDATA[IF($V{total_loads} > 0,(double)$V{total_adcount}/(double)$V{total_loads},null)]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="470" y="8" width="80" height="20" uuid="a7a2cfa7-d06d-44e7-a58a-9f0c45916aa7">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true"/>
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_q4}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0%" isBlankWhenNull="true">
+					<reportElement x="550" y="8" width="114" height="20" uuid="2f535115-978f-493e-87eb-8799539047a9">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[IF($V{total_loads} > 0,(double)$V{total_q4}/(double)$V{total_loads},null)]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>
@@ -642,7 +785,9 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 				<textFieldExpression><![CDATA[$F{video_loads}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
-				<reportElement x="228" y="0" width="114" height="20" uuid="90899c62-93f0-44aa-8496-a85022a68b64"/>
+				<reportElement x="228" y="0" width="80" height="20" uuid="90899c62-93f0-44aa-8496-a85022a68b64">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<leftPen lineWidth="0.5"/>
 				</box>
@@ -652,7 +797,9 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 				<textFieldExpression><![CDATA[$F{q1}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
-				<reportElement x="342" y="0" width="114" height="20" uuid="4319194b-4d0c-4673-aaa1-a8f5da5bee03"/>
+				<reportElement x="308" y="0" width="80" height="20" uuid="4319194b-4d0c-4673-aaa1-a8f5da5bee03">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<leftPen lineWidth="0.5"/>
 				</box>
@@ -662,7 +809,9 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 				<textFieldExpression><![CDATA[$F{q2}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
-				<reportElement x="456" y="0" width="114" height="20" uuid="7d4eeb22-928f-42b3-b56f-a122ccf25d6c"/>
+				<reportElement x="388" y="0" width="80" height="20" uuid="7d4eeb22-928f-42b3-b56f-a122ccf25d6c">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<leftPen lineWidth="0.5"/>
 				</box>
@@ -672,10 +821,36 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 				<textFieldExpression><![CDATA[$F{q3}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
-				<reportElement x="570" y="0" width="114" height="20" uuid="08d50082-c0be-435f-8794-e8c4e61c2b2d"/>
+				<reportElement x="468" y="0" width="80" height="20" uuid="08d50082-c0be-435f-8794-e8c4e61c2b2d">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box>
 					<leftPen lineWidth="0.5"/>
-					<rightPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{q4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0%" isBlankWhenNull="true">
+				<reportElement x="548" y="0" width="114" height="20" uuid="4cf35b2a-b829-4099-bbc2-789e89f03355"/>
+				<box>
+					<leftPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[IF($F{video_loads} > 0,(double)$F{q4}/(double)$F{video_loads},null)]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="662" y="0" width="114" height="20" uuid="fc84b6e2-43b8-42f5-859a-7bac1e557129">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					<property name="local_mesure_unitwidth" value="pixel"/>
+				</reportElement>
+				<box>
+					<leftPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.0"/>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<paragraph leftIndent="8" rightIndent="8"/>
@@ -683,7 +858,10 @@ group by sa.date,sa.sponsor,sa.adsrv_id,cd.campaign_name]]>
 				<textFieldExpression><![CDATA[$F{adcount}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="684" y="0" width="114" height="20" uuid="4cf35b2a-b829-4099-bbc2-789e89f03355"/>
+				<reportElement x="776" y="0" width="114" height="20" uuid="28e4a549-d37e-478f-8346-b6789ffd9c3e"/>
+				<box>
+					<leftPen lineWidth="0.5"/>
+				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
