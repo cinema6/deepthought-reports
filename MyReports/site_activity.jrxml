@@ -444,7 +444,7 @@ order by m.title;]]>
 	WHERE
 		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND e.card_index = 0
 	GROUP BY e.experience_id
-	HAVING sum(e.pageviews) > 10
+	--HAVING sum(e.pageviews) > 10
    ) e 
    INNER JOIN dim.minireel m ON e.experience_id = m.experience_id AND m.end_ts = dim.sp_end_of_time()
    INNER JOIN dim.minireel_card c ON c.minireel_key = m.minireel_key
