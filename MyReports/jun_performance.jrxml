@@ -25,33 +25,33 @@
 	</parameter>
 	<queryString language="SQL">
 		<![CDATA[--SET work_mem = '50MB';
-select d.date,sc.sponsor,sc.minireel_title,sc.card_title,e.site_name as site,
+select d.date,sc.sponsor,c.minireel_title,sc.card_title,c.site_name as site,
 e.events as minireel_loads,
 case e.site_name when 'Connatix' then 0  else v.events end as minireel_views,
 c.cardviews,c.autoplay,c.play,c.q1,c.q2,c.q3,c.q4,c.completed_view,c.errors
 from dim.v_sponsored_card sc
-left join (
-	select e.date_key,e.experience_id,h.site_name,sum(e.unique_pageviews) as events
-	from fct.mr_embeds_by_device e
-	inner join rpt.hostname_to_site h ON e.hostname = h.hostname AND e.mr_container = h.container
-	where e.experience_id in (select distinct experience_id from dim.v_sponsored_card)
-	group by e.date_key,e.experience_id,h.site_name
-) e on sc.experience_id = e.experience_id
-left join (
-	select e.date_key,e.experience_id,h.site_name,sum(e.unique_events) as events
-	from fct.mr_embed_events_by_device e
-	inner join rpt.hostname_to_site h ON e.hostname = h.hostname AND e.mr_container = h.container
-	where e.experience_id in ( select distinct experience_id from dim.v_sponsored_card)  and e.event_type ='Visible'
-	group by e.date_key,e.experience_id,h.site_name
-) as v on v.date_key = e.date_key AND v.experience_id = e.experience_id AND v.site_name = e.site_name
-left join (
-select c.date_key,c.experience_id,c.site_name,
+INNER JOIN (
+select c.date_key,c.experience_id,c.minireel_title,c.card_id,c.site_name,
 	sum(c.cardviews) as cardviews,sum(c.autoplay) as autoplay,sum(c.play) as play,
 	sum(c.q1) as q1,sum(c.q2) as q2,sum(c.q3) as q3,sum(c.q4) as q4,
 	sum(c.adcount) as completed_view,sum(c.err) as errors
 	from fct.v_sponsored_card_activity c
-	group by c.date_key,c.experience_id,site_name
-) as c on c.date_key = e.date_key AND c.experience_id = e.experience_id AND c.site_name = e.site_name
+	group by c.date_key,c.experience_id,c.minireel_title,c.card_id,site_name
+) as c ON c.card_id = sc.card_id
+left join (
+	select e.date_key,e.experience_id,h.site_name,sum(e.unique_pageviews) as events
+	from fct.mr_embeds_by_device e
+	inner join rpt.hostname_to_site h ON e.hostname = h.hostname AND e.mr_container = h.container
+	where e.experience_id in (select distinct experience_id from fct.v_sponsored_card_activity)
+	group by e.date_key,e.experience_id,h.site_name
+) e on c.date_key = e.date_key AND c.experience_id = e.experience_id AND c.site_name = e.site_name
+left join (
+	select e.date_key,e.experience_id,h.site_name,sum(e.unique_events) as events
+	from fct.mr_embed_events_by_device e
+	inner join rpt.hostname_to_site h ON e.hostname = h.hostname AND e.mr_container = h.container
+	where e.experience_id in ( select distinct experience_id from fct.v_sponsored_card_activity)  and e.event_type ='Visible'
+	group by e.date_key,e.experience_id,h.site_name
+) as v on v.date_key = e.date_key AND v.experience_id = e.experience_id AND v.site_name = e.site_name
 inner join dim.dates d on d.date_key = e.date_key
 where d.date between $P{start_date} AND $P{end_date} AND $X{IN,e.site_name,site_list};]]>
 	</queryString>
