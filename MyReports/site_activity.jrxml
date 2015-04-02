@@ -6,7 +6,7 @@
 	<property name="ireport.jasperserver.report.resource" value="/Reports/MiniReelActivityBySite_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/MiniReelActivityBySite"/>
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -408,7 +408,7 @@ order by m.title;]]>
 		<![CDATA[SELECT
     dc.device_category,
     dc.device_category_pretty,
-    e.experience_id,
+    c.experience_id,
     o.name as publisher,
     m.title as minireel,
     c.card_index + 1 as slide_index,
@@ -433,21 +433,31 @@ order by m.title;]]>
     q4.events AS quartile_4,
     ac.events AS adcount
    FROM (
-	SELECT 
-		e.experience_id,sum(e.pageviews)
-	FROM
-		fct.mr_card_views_by_device e
-	INNER JOIN
-		rpt.hostname_to_site hs ON e.hostname = hs.hostname AND e.mr_container = hs.container
-	INNER JOIN
-		dim.dates d ON d.date_key = e.date_key
-	WHERE
-		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND e.card_index = 0
-	GROUP BY e.experience_id
-	--HAVING sum(e.pageviews) > 10
-   ) e 
-   INNER JOIN dim.minireel m ON e.experience_id = m.experience_id AND m.end_ts = dim.sp_end_of_time()
-   INNER JOIN dim.minireel_card c ON c.minireel_key = m.minireel_key
+	SELECT e.experience_id,c.card_id,c.card_index,c.title,c.sponsored,c.sponsor,c.vast,c.video_source,c.video_start,c.video_end,c.video_client_id
+	from (
+		SELECT 	e.experience_id--,sum(e.pageviews)
+		FROM	fct.mr_card_views_by_device e
+		INNER JOIN rpt.hostname_to_site hs ON e.hostname = hs.hostname AND e.mr_container = hs.container
+		INNER JOIN dim.dates d ON d.date_key = e.date_key
+		WHERE hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND e.card_index = 0
+		GROUP BY e.experience_id,e.card_id
+	) as e
+	INNER JOIN dim.minireel_card c ON e.experience_id = c.experience_id AND c.standalone = 'f' and c.card_type <> 'wildcard' AND c.end_ts = dim.sp_end_of_time()
+	UNION
+	SELECT e.experience_id,c.card_id,e.card_index,c.title,c.sponsored,coalesce(c.sponsor,ad.name) as sponsor,c.vast,c.video_source,c.video_start,c.video_end,c.video_client_id
+	from (
+		SELECT e.experience_id,e.card_id,min(e.card_index) as card_index--,sum(e.pageviews)
+		FROM fct.mr_card_views_by_device e
+		INNER JOIN rpt.hostname_to_site hs ON e.hostname = hs.hostname AND e.mr_container = hs.container
+		INNER JOIN dim.dates d ON d.date_key = e.date_key
+		WHERE hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} --AND e.card_index = 0
+		GROUP BY e.experience_id,e.card_id 
+	) as e
+	INNER JOIN dim.minireel_card c ON e.card_id = c.card_id AND c.standalone = 't' AND c.end_ts = dim.sp_end_of_time()
+	LEFT JOIN dim.campaign ca ON c.campaign_id = ca.campaign_id AND ca.end_ts = dim.sp_end_of_time()
+	LEFT JOIN dim.advertiser ad ON ca.advertiser_id = ad.advertiser_id AND ad.end_ts = dim.sp_end_of_time()
+   ) c 
+   INNER JOIN dim.minireel m ON c.experience_id = m.experience_id AND m.end_ts = dim.sp_end_of_time()
    INNER JOIN dim.org o ON m.org_id = o.org_id AND o.end_ts = m.end_ts
    CROSS JOIN (
 	SELECT device_category,device_category_pretty
@@ -469,7 +479,7 @@ order by m.title;]]>
 	WHERE
 		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT cv.card_index is null
 	GROUP BY cv.experience_id,cv.card_id,cv.device_category
-    )cv ON cv.experience_id = e.experience_id AND cv.card_id = c.card_id AND cv.device_category = dc.device_category
+    )cv ON cv.experience_id = c.experience_id AND cv.card_id = c.card_id AND cv.device_category = dc.device_category
     LEFT JOIN ( 
 	SELECT 
 		ve.experience_id,ve.card_id,ve.device_category, sum(ve.events) as events
@@ -548,7 +558,8 @@ order by m.title;]]>
 		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Quartile 4'
 	GROUP BY ve.experience_id,ve.card_id,ve.device_category
     ) q4 ON q4.experience_id = cv.experience_id AND q4.card_id = cv.card_id  AND q4.device_category = cv.device_category
-    order by e.experience_id,dc.device_category,c.card_index]]>
+    order by c.experience_id,dc.device_category,c.card_index
+]]>
 	</queryString>
 	<field name="device_category" class="java.lang.String"/>
 	<field name="experience_id" class="java.lang.String">
