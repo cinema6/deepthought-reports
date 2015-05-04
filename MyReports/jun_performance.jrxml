@@ -78,7 +78,9 @@ where d.date between $P{start_date} AND $P{end_date} AND $X{IN,e.site_name,site_
 	<field name="completed_view" class="java.math.BigDecimal"/>
 	<field name="errors" class="java.math.BigDecimal"/>
 	<sortField name="site"/>
+	<sortField name="sponsor"/>
 	<sortField name="minireel_title"/>
+	<sortField name="card_title"/>
 	<sortField name="date"/>
 	<variable name="mr_total_impressions" class="java.lang.Long" resetType="Group" resetGroup="sponsored_minireel_card" calculation="Sum">
 		<variableExpression><![CDATA[$F{minireel_loads}]]></variableExpression>
