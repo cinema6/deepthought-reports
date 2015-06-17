@@ -467,8 +467,8 @@ order by m.title;]]>
    LEFT OUTER JOIN dim.video v on c.video_client_id = v.video_client_id AND v.end_ts = dim.sp_end_of_time()
    LEFT JOIN ( 
 	SELECT 
-		cv.experience_id,cv.card_id,cv.device_category,sum(coalesce(cv.unique_pageviews,0)) as pageviews, 
-		sum(case when cv.card_index = 0 then cv.unique_pageviews else 0 end) as mr_views,
+		cv.experience_id,cv.card_id,cv.device_category,sum(coalesce(cv.pageviews,0)) as pageviews, 
+		sum(case when cv.card_index = 0 then cv.pageviews else 0 end) as mr_views,
 		round( (case when (sum(cv.pageviews) - sum(cv.exits) ) > 0 then sum(cv.time_on_page)::numeric / (sum(cv.pageviews) - sum(cv.exits) )::numeric else null end),2 ) as avg_time_on_page
 	FROM
 		fct.mr_card_views_by_device cv
@@ -558,8 +558,7 @@ order by m.title;]]>
 		hs.site_name = $P{site}  AND d.date BETWEEN $P{start_date} AND $P{end_date} AND NOT ve.card_index is null AND ve.event_type = 'Quartile 4'
 	GROUP BY ve.experience_id,ve.card_id,ve.device_category
     ) q4 ON q4.experience_id = cv.experience_id AND q4.card_id = cv.card_id  AND q4.device_category = cv.device_category
-    order by c.experience_id,dc.device_category,c.card_index
-]]>
+    order by c.experience_id,dc.device_category,c.card_index]]>
 	</queryString>
 	<field name="device_category" class="java.lang.String"/>
 	<field name="experience_id" class="java.lang.String">
