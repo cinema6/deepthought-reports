@@ -2,8 +2,8 @@
 <!-- Created with Jaspersoft Studio version last-->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="site_campaign" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7f95c384-8e1b-4cfb-bf05-5d77eeb05348">
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
-	<property name="ireport.jasperserver.report.resource" value="/Reports/Campaign_Activity_By_Site_files/main_jrxml"/>
-	<property name="ireport.jasperserver.reportUnit" value="/Reports/Campaign_Activity_By_Site"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/Campaign_Activity_By_Site_UTC_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/Campaign_Activity_By_Site_UTC"/>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="Deepthought"/>
 	<parameter name="date_range" class="java.lang.String">
 		<parameterDescription><![CDATA[]]></parameterDescription>
@@ -25,15 +25,14 @@ from (
 		from (
 			select sa.site_name,sa.campaign,sa.experience_id, 1 as mr_count
 			from fct.v_sponsored_card_activity sa
-			where $X{EQUAL, sa.date,report_date} and sa.site_name is not null
+			where $X{EQUAL, sa.rec_ts::date,report_date} and sa.site_name is not null
 			group by sa.site_name,sa.campaign,sa.experience_id
 		) c
 		left join (
 			select h.site_name,e.experience_id,sum(pageviews) as loads
 			from fct.mr_embeds_by_device e
-			inner join dim.dates d ON e.date_key = d.date_key
 			inner join rpt.hostname_to_site h ON h.container = e.mr_container AND h.hostname = e.hostname
-			where  $X{EQUAL, d.date,report_date}
+			where  $X{EQUAL, e.rec_ts::date,report_date}
 			group by h.site_name,e.experience_id
 		) e ON c.site_name = e.site_name AND c.experience_id = e.experience_id
 	) i
@@ -44,7 +43,7 @@ left join (
 	from (
 		select site_name,campaign,card_id,sum(cardviews) as cardviews, sum(play) as plays, sum(adcount) as adcounts, 1 as crd_count
 		from fct.v_sponsored_card_activity
-		where  $X{EQUAL, date,report_date} and site_name is not null
+		where  $X{EQUAL, rec_ts::date,report_date} and site_name is not null
 		group by site_name,campaign,card_id
 	) as i
 	group by site_name,campaign
@@ -85,19 +84,19 @@ order by cr.site_name,cr.campaign]]>
 	</background>
 	<title>
 		<band height="61" splitType="Stretch">
-			<textField pattern="MMMM d, yyyy">
-				<reportElement x="10" y="40" width="150" height="20" uuid="f6d70032-34de-4a8d-a721-488a687db879"/>
+			<textField pattern="">
+				<reportElement x="10" y="40" width="240" height="20" uuid="f6d70032-34de-4a8d-a721-488a687db879"/>
 				<textElement>
 					<font size="14"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$P{report_date}.getEnd()]]></textFieldExpression>
+				<textFieldExpression><![CDATA[DATEFORMAT( $P{report_date}.getEnd(),"MMMM d, yyyy") + " UTC"]]></textFieldExpression>
 			</textField>
 			<staticText>
 				<reportElement x="10" y="10" width="555" height="30" uuid="076463d8-ae4f-4ec3-bd63-08dfd7a2a1ee"/>
 				<textElement>
 					<font size="18"/>
 				</textElement>
-				<text><![CDATA[Daily Campaign Activity By Site Report]]></text>
+				<text><![CDATA[Daily Campaign Activity by Site Report]]></text>
 			</staticText>
 		</band>
 	</title>
