@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version last-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="site_performance" pageWidth="595" pageHeight="1224" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="f4638e0d-e2e9-4768-87ef-7b4d8bf97a4f">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/DailySitePerformanceUTC_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/DailySitePerformanceUTC"/>
+	<subDataset name="site_perf_agg" uuid="f1b4abfb-5c51-4102-9d5c-1e4e483c31df">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+		<parameter name="start_ts" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<parameter name="end_ts" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<queryString language="SQL">
+			<![CDATA[SELECT e.site_name,e.loads,coalesce(v.launches,0) as launches,coalesce(s.sponsored_cardviews,0) as sponsored_cardviews, coalesce(s.adcounts,0) as adcounts
+FROM (
+select r.site_name,sum(pageviews) as loads
+from fct.mr_embeds_by_device e
+INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+group by r.site_name
+having sum(e.pageviews) >= 100 
+) e
+LEFT JOIN (
+select r.site_name,sum(sessions + bounce_sessions) as launches
+from fct.mr_views_by_device e
+INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+group by r.site_name
+) v ON e.site_name = v.site_name
+LEFT JOIN (
+select site_name,sum(cardviews) as sponsored_cardviews, sum(adcount) as adcounts
+from fct.v_sponsored_card_activity
+where rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+group by site_name
+) s ON e.site_name = s.site_name
+ORDER BY e.site_name]]>
+		</queryString>
+		<field name="site_name" class="java.lang.String"/>
+		<field name="loads" class="java.lang.Long"/>
+		<field name="launches" class="java.lang.Long"/>
+		<field name="sponsored_cardviews" class="java.lang.Long"/>
+		<field name="adcounts" class="java.lang.Long"/>
+	</subDataset>
+	<subDataset name="site_perf_hourly_per_site" uuid="1f7b012d-5572-4278-80c9-77100b1d3122">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+		<parameter name="end_ts" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<parameter name="start_ts" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<parameter name="site_name" class="java.lang.String">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+		</parameter>
+		<queryString language="SQL">
+			<![CDATA[SELECT o.hod24,coalesce(e.loads,0) as loads,coalesce(v.launches,0) as launches,coalesce(s.sponsored_cardviews,0) as sponsored_cardviews, coalesce(s.adcounts,0) as adcounts
+FROM dim.hours o
+LEFT JOIN (
+	select extract(hour from e.rec_ts)::smallint as hod_key,sum(pageviews) as loads
+	from fct.mr_embeds_by_device e
+	INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+	where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+	AND r.site_name = $P{site_name}
+	group by extract(hour from e.rec_ts)::smallint
+	having sum(e.pageviews) > 1
+) e ON o.hod_key = e.hod_key
+LEFT JOIN (
+	select extract(hour from e.rec_ts)::smallint as hod_key,sum(sessions + bounce_sessions) as launches
+	from fct.mr_views_by_device e
+	INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+	where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+	AND r.site_name = $P{site_name}
+	group by extract(hour from e.rec_ts)::smallint
+) v ON o.hod_key = v.hod_key
+LEFT JOIN (
+	select extract(hour from rec_ts)::smallint as hod_key,sum(cardviews) as sponsored_cardviews, sum(adcount) as adcounts
+	from fct.v_sponsored_card_activity
+	where rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+	AND site_name = $P{site_name}
+	group by extract(hour from rec_ts)::smallint
+) s ON o.hod_key = s.hod_key
+ORDER BY o.hod_key]]>
+		</queryString>
+		<field name="hod24" class="java.lang.String">
+			<fieldDescription><![CDATA[Hour of the day (00 - 23)]]></fieldDescription>
+		</field>
+		<field name="loads" class="java.lang.Long"/>
+		<field name="launches" class="java.lang.Long"/>
+		<field name="sponsored_cardviews" class="java.lang.Long"/>
+		<field name="adcounts" class="java.lang.Long"/>
+	</subDataset>
+	<parameter name="custom_date" class="java.util.Date">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
+	<parameter name="date_range" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA["DAY-0"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="start_ts" class="java.lang.String" isForPrompting="false">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA[DATEFORMAT((($P{date_range}.equals("custom") || $P{custom_date} != null) ? DATERANGE($P{custom_date}) : DATERANGE( $P{date_range})).getEnd(),"yyyy-MM-dd  00:00:00+00")]]></defaultValueExpression>
+	</parameter>
+	<parameter name="end_ts" class="java.lang.String" isForPrompting="false">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA[DATEFORMAT((($P{date_range}.equals("custom") || $P{custom_date} != null) ? DATERANGE($P{custom_date}) : DATERANGE( $P{date_range})).getEnd(),"yyyy-MM-dd  23:00:00+00")]]></defaultValueExpression>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[SELECT o.hod24,o.site_name,coalesce(e.loads,0) as loads,coalesce(v.launches,0) as launches,coalesce(s.sponsored_cardviews,0) as sponsored_cardviews, coalesce(s.adcounts,0) as adcounts,
+round(max (case when coalesce(s.sponsored_cardviews,0) > 10 AND coalesce(s.adcounts,0) > 10 then coalesce(s.adcounts,0) / coalesce(s.sponsored_cardviews,0) else 0.0 end)  OVER ( partition by o.site_name ),1) as max_adcount_rate,
+round(min (case when coalesce(s.sponsored_cardviews,0) > 10 AND coalesce(s.adcounts,0) > 10 then coalesce(s.adcounts,0) / coalesce(s.sponsored_cardviews,0) else 1.0 end)  OVER ( partition by o.site_name),1) as min_adcount_rate,
+round(max (case when coalesce(s.sponsored_cardviews,0) > 10 AND coalesce(s.adcounts,0) > 10 then s.adcounts::numeric / s.sponsored_cardviews::numeric else 0.0 end)  OVER ( )::numeric,1) as max_adcount_rate_agg,
+round(min (case when coalesce(s.sponsored_cardviews,0) > 10 AND coalesce(s.adcounts,0) > 10 then s.adcounts::numeric / s.sponsored_cardviews::numeric else 1.0 end)  OVER ( )::numeric,1) as min_adcount_rate_agg,
+round(max (case when coalesce(v.launches,0) > 10 AND coalesce(s.sponsored_cardviews,0) > 10 then s.sponsored_cardviews::numeric / v.launches::numeric else 0.0 end)  OVER ( )::numeric,1) as max_adload_rate_agg,
+round(min (case when coalesce(v.launches,0) > 10 AND coalesce(s.sponsored_cardviews,0) > 10 then s.sponsored_cardviews::numeric / v.launches::numeric else 1.0 end)  OVER ( )::numeric,1) as min_adload_rate_agg,
+round(max (case when coalesce(v.launches,0) > 10 AND coalesce(e.loads,0) > 10 then v.launches::numeric / e.loads::numeric else 0.0 end) OVER ( )::numeric,1) as max_launch_rate_agg,
+round(min (case when coalesce(v.launches,0) > 10 AND coalesce(e.loads,0) > 10 then v.launches::numeric / e.loads::numeric else 1.0 end)  OVER ( )::numeric,1) as min_launch_rate_agg
+FROM (
+	select h.hod_key,h.hod24,r.site_name
+	from dim.hours h
+	cross join (
+		select r.site_name
+		from fct.mr_embeds_by_device e
+		INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+		where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+		group by r.site_name
+		having sum(pageviews) >= 100 
+	) r
+) o
+LEFT JOIN (
+	select extract(hour from e.rec_ts)::smallint as hod_key,r.site_name,sum(pageviews) as loads
+	from fct.mr_embeds_by_device e
+	INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+	where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+	group by extract(hour from e.rec_ts)::smallint,r.site_name
+) e ON o.hod_key = e.hod_key AND o.site_name = e.site_name
+LEFT JOIN (
+	select extract(hour from e.rec_ts)::smallint as hod_key,r.site_name,sum(sessions + bounce_sessions) as launches
+	from fct.mr_views_by_device e
+	INNER JOIN rpt.hostname_to_site r ON e.hostname = r.hostname AND e.mr_container = r.container
+	where e.rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+	group by extract(hour from e.rec_ts)::smallint,r.site_name
+) v ON o.hod_key = v.hod_key AND o.site_name = v.site_name
+LEFT JOIN (
+	select extract(hour from rec_ts)::smallint as hod_key,site_name,sum(cardviews) as sponsored_cardviews, sum(adcount) as adcounts
+	from fct.v_sponsored_card_activity
+	where rec_ts between $P{start_ts}::timestamp with time zone AND $P{end_ts}::timestamp with time zone
+	group by extract(hour from rec_ts)::smallint,site_name
+) s ON o.hod_key = s.hod_key AND o.site_name = s.site_name
+ORDER BY o.site_name,o.hod_key]]>
+	</queryString>
+	<field name="hod24" class="java.lang.String">
+		<fieldDescription><![CDATA[Hour of the day (00 - 23)]]></fieldDescription>
+	</field>
+	<field name="site_name" class="java.lang.String"/>
+	<field name="loads" class="java.lang.Long"/>
+	<field name="launches" class="java.lang.Long"/>
+	<field name="sponsored_cardviews" class="java.lang.Long"/>
+	<field name="adcounts" class="java.lang.Long"/>
+	<field name="max_adcount_rate" class="java.lang.Double"/>
+	<field name="min_adcount_rate" class="java.lang.Double"/>
+	<field name="min_adcount_rate_agg" class="java.lang.Double"/>
+	<field name="max_adcount_rate_agg" class="java.lang.Double"/>
+	<field name="max_adload_rate_agg" class="java.lang.Double"/>
+	<field name="min_adload_rate_agg" class="java.lang.Double"/>
+	<field name="max_launch_rate_agg" class="java.lang.Double"/>
+	<field name="min_launch_rate_agg" class="java.lang.Double"/>
+	<group name="site_name" keepTogether="true">
+		<groupExpression><![CDATA[$F{site_name}]]></groupExpression>
+		<groupHeader>
+			<band height="300">
+				<property name="local_mesure_unitheight" value="pixel"/>
+				<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				<textField>
+					<reportElement x="-1" y="30" width="280" height="20" uuid="25d964b1-f403-4d4e-9e26-f98b9f6fe7e6"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{site_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="90" y="263" width="50" height="37" uuid="222c4e21-2f6d-4837-a0b2-5748e51a3238"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[Loads]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="150" y="263" width="50" height="37" uuid="8dbc7477-2c57-46b5-85ca-9e35e72934dc"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[Launches]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="220" y="263" width="70" height="37" uuid="226003f3-2663-448c-a83d-92e1d9a53100"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[Ad Loads]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="290" y="263" width="50" height="37" uuid="5ddc82a1-0f48-43b7-894e-9eb0c276bfe0"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[AdCounts]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="380" y="263" width="50" height="37" uuid="1d9e4179-a894-4968-be73-d6490781e49a"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[Launch Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="440" y="263" width="50" height="37" uuid="638bd09e-6898-4951-bdc3-42e7d3ca7f51"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[Ad Load
+Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="504" y="263" width="50" height="37" uuid="651d253f-57fc-4afa-9cc4-906366a094f8"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[AdCount
+Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="263" width="40" height="37" uuid="a80f5fae-7aac-471b-aef0-be95e63caaa3"/>
+					<textElement textAlignment="Center" verticalAlignment="Bottom"/>
+					<text><![CDATA[Hour]]></text>
+				</staticText>
+				<lineChart>
+					<chart evaluationTime="Group" evaluationGroup="site_name">
+						<reportElement x="0" y="60" width="554" height="190" printWhenGroupChanges="site_name" uuid="7984fe31-3b0e-434c-acb3-bba5eb24562b"/>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend/>
+					</chart>
+					<categoryDataset>
+						<dataset>
+							<datasetRun subDataset="site_perf_hourly_per_site" uuid="38cda7e0-3579-466c-8f36-7dd7a3fe4824">
+								<datasetParameter name="end_ts">
+									<datasetParameterExpression><![CDATA[$P{end_ts}]]></datasetParameterExpression>
+								</datasetParameter>
+								<datasetParameter name="start_ts">
+									<datasetParameterExpression><![CDATA[$P{start_ts}]]></datasetParameterExpression>
+								</datasetParameter>
+								<datasetParameter name="site_name">
+									<datasetParameterExpression><![CDATA[$F{site_name}]]></datasetParameterExpression>
+								</datasetParameter>
+								<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+							</datasetRun>
+						</dataset>
+						<categorySeries>
+							<seriesExpression><![CDATA["Launch Rate"]]></seriesExpression>
+							<categoryExpression><![CDATA[$F{hod24}]]></categoryExpression>
+							<valueExpression><![CDATA[IF($F{loads} > 0,(double)$F{launches} / (double)$F{loads},null)]]></valueExpression>
+						</categorySeries>
+						<categorySeries>
+							<seriesExpression><![CDATA["Ad Load Rate"]]></seriesExpression>
+							<categoryExpression><![CDATA[$F{hod24}]]></categoryExpression>
+							<valueExpression><![CDATA[IF($F{launches} > 0,(double)$F{sponsored_cardviews} / (double)$F{launches},null)]]></valueExpression>
+						</categorySeries>
+						<categorySeries>
+							<seriesExpression><![CDATA["AdCount Rate"]]></seriesExpression>
+							<categoryExpression><![CDATA[$F{hod24}]]></categoryExpression>
+							<valueExpression><![CDATA[IF($F{sponsored_cardviews} > 0,(double)$F{adcounts} / (double)$F{sponsored_cardviews},null)]]></valueExpression>
+						</categorySeries>
+					</categoryDataset>
+					<linePlot isShowShapes="false">
+						<plot/>
+						<categoryAxisFormat>
+							<axisFormat/>
+						</categoryAxisFormat>
+						<valueAxisFormat>
+							<axisFormat tickLabelMask="#,##0.##%"/>
+						</valueAxisFormat>
+						<rangeAxisMinValueExpression><![CDATA[MAX($F{min_adcount_rate} - 0.1,0)]]></rangeAxisMinValueExpression>
+						<rangeAxisMaxValueExpression><![CDATA[1.05]]></rangeAxisMaxValueExpression>
+					</linePlot>
+				</lineChart>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="883" splitType="Stretch">
+			<property name="local_mesure_unitheight" value="pixel"/>
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<barChart>
+				<chart evaluationTime="Report">
+					<reportElement x="0" y="690" width="554" height="180" uuid="d53f4ced-9433-4af1-9b86-fc846fa033a2">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<chartTitle>
+						<font size="12"/>
+						<titleExpression><![CDATA["AdCount Rate (AdCounts / Ad Loads)"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<categoryDataset>
+					<dataset>
+						<datasetRun subDataset="site_perf_agg" uuid="88a6ea41-b5b8-4861-ae0c-8d53ef368ae2">
+							<datasetParameter name="start_ts">
+								<datasetParameterExpression><![CDATA[$P{start_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_ts">
+								<datasetParameterExpression><![CDATA[$P{end_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+					</dataset>
+					<categorySeries>
+						<seriesExpression><![CDATA[$F{site_name}]]></seriesExpression>
+						<categoryExpression><![CDATA[""]]></categoryExpression>
+						<valueExpression><![CDATA[IF($F{sponsored_cardviews} > 0,(double)$F{adcounts} / (double)$F{sponsored_cardviews},(double)0)]]></valueExpression>
+						<labelExpression><![CDATA[TEXT(DOUBLE_VALUE((IF($F{sponsored_cardviews} > 0,(double)$F{adcounts} / (double)$F{sponsored_cardviews},(double)0)).toString()),"#,##0.##%")]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="true">
+					<plot labelRotation="0.0"/>
+					<itemLabel/>
+					<categoryAxisFormat labelRotation="0.0">
+						<axisFormat verticalTickLabels="false"/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat tickLabelMask="#,##0.##%"/>
+					</valueAxisFormat>
+					<rangeAxisMinValueExpression><![CDATA[MAX($F{min_adcount_rate_agg} - 0.1,0)]]></rangeAxisMinValueExpression>
+					<rangeAxisMaxValueExpression><![CDATA[MIN($F{max_adcount_rate_agg} + 0.1,1.10)]]></rangeAxisMaxValueExpression>
+				</barPlot>
+			</barChart>
+			<barChart>
+				<chart evaluationTime="Report">
+					<reportElement x="-1" y="90" width="554" height="180" uuid="02263212-d15e-4e97-bea1-d7efe33d4e45">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<chartTitle>
+						<font size="12"/>
+						<titleExpression><![CDATA["Loads"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<categoryDataset>
+					<dataset>
+						<datasetRun subDataset="site_perf_agg" uuid="2ff07156-aa0b-4d4e-8140-cc4b6aff21f7">
+							<datasetParameter name="start_ts">
+								<datasetParameterExpression><![CDATA[$P{start_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_ts">
+								<datasetParameterExpression><![CDATA[$P{end_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+					</dataset>
+					<categorySeries>
+						<seriesExpression><![CDATA[$F{site_name}]]></seriesExpression>
+						<categoryExpression><![CDATA[""]]></categoryExpression>
+						<valueExpression><![CDATA[$F{loads}]]></valueExpression>
+						<labelExpression><![CDATA[TEXT($F{loads},"#,###")]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="true">
+					<plot labelRotation="0.0"/>
+					<itemLabel/>
+					<categoryAxisFormat labelRotation="0.0">
+						<axisFormat verticalTickLabels="false"/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat tickLabelMask="#,###"/>
+					</valueAxisFormat>
+				</barPlot>
+			</barChart>
+			<barChart>
+				<chart evaluationTime="Report">
+					<reportElement x="0" y="490" width="554" height="180" uuid="70391821-317f-4253-8516-90ee281e73cb">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<chartTitle>
+						<font size="12"/>
+						<titleExpression><![CDATA["Ad Load Rate (Ad Loads / Launches)"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<categoryDataset>
+					<dataset>
+						<datasetRun subDataset="site_perf_agg" uuid="c7a78638-55fd-4024-ae21-eab7694750fe">
+							<datasetParameter name="start_ts">
+								<datasetParameterExpression><![CDATA[$P{start_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_ts">
+								<datasetParameterExpression><![CDATA[$P{end_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+					</dataset>
+					<categorySeries>
+						<seriesExpression><![CDATA[$F{site_name}]]></seriesExpression>
+						<categoryExpression><![CDATA[""]]></categoryExpression>
+						<valueExpression><![CDATA[IF($F{launches} > 0,(double)$F{sponsored_cardviews} / (double)$F{launches},(double)0)]]></valueExpression>
+						<labelExpression><![CDATA[TEXT(DOUBLE_VALUE((IF($F{launches} > 0,(double)$F{sponsored_cardviews} / (double)$F{launches},(double)0)).toString()),"#,##0.##%")]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="true">
+					<plot labelRotation="0.0"/>
+					<itemLabel/>
+					<categoryAxisFormat labelRotation="0.0">
+						<axisFormat verticalTickLabels="false"/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat tickLabelMask="#,##0.##%"/>
+					</valueAxisFormat>
+					<rangeAxisMinValueExpression><![CDATA[MAX($F{min_adload_rate_agg} - 0.1,0)]]></rangeAxisMinValueExpression>
+					<rangeAxisMaxValueExpression><![CDATA[MIN($F{max_adload_rate_agg} + 0.1,1.10)]]></rangeAxisMaxValueExpression>
+				</barPlot>
+			</barChart>
+			<break>
+				<reportElement x="0" y="882" width="96" height="1" uuid="32f04f27-a4aa-4999-bcbb-3206373deb8a"/>
+			</break>
+			<staticText>
+				<reportElement x="0" y="10" width="321" height="30" uuid="3291825d-ef9a-4a6f-9218-0eff15ad5c1b"/>
+				<textElement>
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[Daily Site Performance]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="50" width="260" height="20" uuid="151b6faf-834e-44be-bd5f-c6a0dea209b7"/>
+				<textFieldExpression><![CDATA[LEFT($P{start_ts},10) + " UTC"]]></textFieldExpression>
+			</textField>
+			<barChart>
+				<chart evaluationTime="Report">
+					<reportElement x="0" y="290" width="554" height="180" uuid="5bcefef8-4284-490e-91bb-6a7b5b8011f7">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<chartTitle>
+						<font size="12"/>
+						<titleExpression><![CDATA["Launch Rate (Launches / Loads)"]]></titleExpression>
+					</chartTitle>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<categoryDataset>
+					<dataset>
+						<datasetRun subDataset="site_perf_agg" uuid="47cdabbf-aa62-45ab-a4fc-99aa84c2f8f0">
+							<datasetParameter name="start_ts">
+								<datasetParameterExpression><![CDATA[$P{start_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_ts">
+								<datasetParameterExpression><![CDATA[$P{end_ts}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+					</dataset>
+					<categorySeries>
+						<seriesExpression><![CDATA[$F{site_name}]]></seriesExpression>
+						<categoryExpression><![CDATA[""]]></categoryExpression>
+						<valueExpression><![CDATA[(double)$F{launches} / (double)$F{loads}]]></valueExpression>
+						<labelExpression><![CDATA[TEXT((double)$F{launches} / (double)$F{loads},"#,##0.##%")]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="true">
+					<plot labelRotation="0.0"/>
+					<itemLabel/>
+					<categoryAxisFormat labelRotation="0.0">
+						<axisFormat verticalTickLabels="false"/>
+					</categoryAxisFormat>
+					<valueAxisFormat>
+						<axisFormat tickLabelMask="#,##0.##%"/>
+					</valueAxisFormat>
+					<rangeAxisMinValueExpression><![CDATA[MAX($F{min_launch_rate_agg} - 0.1,0)]]></rangeAxisMinValueExpression>
+					<rangeAxisMaxValueExpression><![CDATA[MIN($F{max_launch_rate_agg} + 0.1,1.10)]]></rangeAxisMaxValueExpression>
+				</barPlot>
+			</barChart>
+		</band>
+	</title>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="40" height="20" uuid="491ff20e-2643-4d71-8c24-fdca40537c02"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{hod24}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="90" y="0" width="50" height="20" uuid="b258e180-cbe9-49d9-bf56-288addb61235">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{loads}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="150" y="0" width="50" height="20" uuid="b5df24a2-7069-43a9-a82e-49e7fcea3cb8">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{launches}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="220" y="0" width="50" height="20" uuid="d18eb1d6-e8be-4af1-b4a3-43393a31fe39">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sponsored_cardviews}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="290" y="0" width="50" height="20" uuid="c254e978-dda5-4161-82a0-e7940b951baf">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{adcounts}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="380" y="0" width="50" height="20" uuid="00848151-aa06-44dd-a4fc-704b204aa8a0">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[IF($F{loads} > 0,(double)$F{launches} / (double)$F{loads},null)]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="504" y="0" width="50" height="20" uuid="a278643d-034f-4ddb-acd4-f262b9cd2fb0">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[IF($F{sponsored_cardviews} > 0,(double)$F{adcounts} / (double)$F{sponsored_cardviews},null)]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="440" y="0" width="50" height="20" uuid="43ad4112-593b-4249-a52e-00ea6ca86ed9">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[IF($F{launches} > 0,(double)$F{sponsored_cardviews} / (double)$F{launches},null)]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

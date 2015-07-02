@@ -681,8 +681,9 @@ Length]]></text>
 on Slide]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="580" y="67" width="70" height="40" backcolor="#31B0F5" uuid="69453858-4bb5-46f5-9d80-790051c15bdf">
+					<reportElement mode="Opaque" x="580" y="67" width="80" height="40" backcolor="#31B0F5" uuid="69453858-4bb5-46f5-9d80-790051c15bdf">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -694,21 +695,10 @@ on Slide]]></text>
 					<text><![CDATA[Views]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="650" y="67" width="60" height="40" backcolor="#31B0F5" uuid="dd4d88ad-d3cf-487b-80de-d5d87a28b1bf">
+					<reportElement mode="Opaque" x="660" y="67" width="80" height="40" backcolor="#31B0F5" uuid="f5366a27-97e3-4877-ad50-0182c58ba241">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
-					</reportElement>
-					<box leftPadding="4" rightPadding="4">
-						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-					</box>
-					<textElement textAlignment="Center" verticalAlignment="Middle"/>
-					<text><![CDATA[Drop-off]]></text>
-				</staticText>
-				<staticText>
-					<reportElement mode="Opaque" x="710" y="67" width="70" height="40" backcolor="#31B0F5" uuid="f5366a27-97e3-4877-ad50-0182c58ba241">
-						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -720,8 +710,9 @@ on Slide]]></text>
 					<text><![CDATA[Plays]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="780" y="67" width="70" height="40" backcolor="#31B0F5" uuid="94eca6a7-aa25-41b5-bd16-3043b6de329f">
+					<reportElement mode="Opaque" x="740" y="67" width="80" height="40" backcolor="#31B0F5" uuid="94eca6a7-aa25-41b5-bd16-3043b6de329f">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -733,8 +724,9 @@ on Slide]]></text>
 					<text><![CDATA[1st Quartile]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="850" y="67" width="70" height="40" backcolor="#31B0F5" uuid="24e6b67b-2a7e-4d7a-9094-ce92e7cd034b">
+					<reportElement mode="Opaque" x="820" y="67" width="80" height="40" backcolor="#31B0F5" uuid="24e6b67b-2a7e-4d7a-9094-ce92e7cd034b">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -746,8 +738,9 @@ on Slide]]></text>
 					<text><![CDATA[2nd Quartile]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="920" y="67" width="70" height="40" backcolor="#31B0F5" uuid="52c85d97-a356-4646-beb7-01cff30699fd">
+					<reportElement mode="Opaque" x="900" y="67" width="80" height="40" backcolor="#31B0F5" uuid="52c85d97-a356-4646-beb7-01cff30699fd">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -759,8 +752,9 @@ on Slide]]></text>
 					<text><![CDATA[3rd Quartile]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="990" y="67" width="70" height="40" backcolor="#31B0F5" uuid="31400815-9cfe-4b61-b9d9-3b06008e7856">
+					<reportElement mode="Opaque" x="980" y="67" width="80" height="40" backcolor="#31B0F5" uuid="31400815-9cfe-4b61-b9d9-3b06008e7856">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -772,8 +766,9 @@ on Slide]]></text>
 					<text><![CDATA[4th Quartile]]></text>
 				</staticText>
 				<staticText>
-					<reportElement mode="Opaque" x="1060" y="67" width="70" height="40" backcolor="#31B0F5" uuid="a9f2272c-3594-458d-a76e-81ce5d450ce8">
+					<reportElement mode="Opaque" x="1060" y="67" width="80" height="40" backcolor="#31B0F5" uuid="a9f2272c-3594-458d-a76e-81ce5d450ce8">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<box leftPadding="4" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -1150,7 +1145,7 @@ Rate]]></text>
 				</componentElement>
 				<pieChart>
 					<chart isShowLegend="false" evaluationTime="Group" evaluationGroup="experience_id">
-						<reportElement key="" x="660" y="350" width="450" height="300" uuid="3407837b-d4bf-45d7-a1cc-89dfd8ca78f2">
+						<reportElement key="" x="660" y="40" width="450" height="300" uuid="3407837b-d4bf-45d7-a1cc-89dfd8ca78f2">
 							<property name="local_mesure_unitwidth" value="pixel"/>
 							<property name="com.jaspersoft.studio.unit.width" value="px"/>
 							<property name="local_mesure_unitheight" value="pixel"/>
@@ -1200,58 +1195,6 @@ Rate]]></text>
 						<itemLabel/>
 					</piePlot>
 				</pieChart>
-				<pieChart>
-					<chart isShowLegend="false" evaluationTime="Group" evaluationGroup="experience_id">
-						<reportElement key="" x="660" y="40" width="450" height="300" uuid="7951fbc5-4c4c-4d2c-bc1c-132bd6442483">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<property name="com.jaspersoft.studio.unit.width" value="px"/>
-							<property name="local_mesure_unitheight" value="pixel"/>
-							<property name="com.jaspersoft.studio.unit.height" value="px"/>
-						</reportElement>
-						<box>
-							<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-							<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-							<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-							<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-						</box>
-						<chartTitle position="Top">
-							<font size="14"/>
-							<titleExpression><![CDATA["MiniReel Impressions"]]></titleExpression>
-						</chartTitle>
-						<chartSubtitle/>
-						<chartLegend/>
-					</chart>
-					<pieDataset minPercentage="0.0">
-						<dataset>
-							<datasetRun subDataset="minireel activity by device" uuid="2fd474cb-d28d-4262-86dc-a6ab323cfb44">
-								<datasetParameter name="start_date">
-									<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
-								</datasetParameter>
-								<datasetParameter name="end_date">
-									<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
-								</datasetParameter>
-								<datasetParameter name="site">
-									<datasetParameterExpression><![CDATA[$P{site}]]></datasetParameterExpression>
-								</datasetParameter>
-								<datasetParameter name="experience_id">
-									<datasetParameterExpression><![CDATA[$F{experience_id}]]></datasetParameterExpression>
-								</datasetParameter>
-								<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-							</datasetRun>
-						</dataset>
-						<keyExpression><![CDATA[$F{device}]]></keyExpression>
-						<valueExpression><![CDATA[IF($F{loads} == null , 0 , $F{loads})]]></valueExpression>
-						<labelExpression><![CDATA[$F{device} + " " + IF($F{total_loads} > 0 , TEXT((double)$F{loads} / (double)$F{total_loads},"#,##0%") ,"-")]]></labelExpression>
-					</pieDataset>
-					<piePlot isShowLabels="true" labelFormat="">
-						<plot>
-							<seriesColor seriesOrder="0" color="#FA2020"/>
-							<seriesColor seriesOrder="1" color="#31B0F5"/>
-							<seriesColor seriesOrder="2" color="#AAD90F"/>
-						</plot>
-						<itemLabel/>
-					</piePlot>
-				</pieChart>
 				<break>
 					<reportElement x="0" y="630" width="99" height="1" printWhenGroupChanges="experience_id" uuid="155fa39b-1824-4f6e-86a9-200f9329fea8"/>
 				</break>
@@ -1263,7 +1206,7 @@ Rate]]></text>
 		<groupHeader>
 			<band height="28">
 				<textField>
-					<reportElement mode="Opaque" x="30" y="0" width="1100" height="28" backcolor="#FFFFFF" uuid="ea79209b-d928-4164-b466-4cce1de89bd4"/>
+					<reportElement mode="Opaque" x="30" y="0" width="1110" height="28" backcolor="#FFFFFF" uuid="ea79209b-d928-4164-b466-4cce1de89bd4"/>
 					<box leftPadding="34" rightPadding="4">
 						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -1693,8 +1636,11 @@ in Minireel]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{avg_time_on_slide}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="580" y="0" width="70" height="20" uuid="64ec4a36-2213-4fb0-a860-cacece2d4cb8"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="580" y="0" width="80" height="20" uuid="64ec4a36-2213-4fb0-a860-cacece2d4cb8">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
@@ -1704,82 +1650,83 @@ in Minireel]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="650" y="0" width="60" height="20" uuid="422284aa-997d-44a4-be6b-7ff4c2d53609"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="660" y="0" width="80" height="20" uuid="b9e7ea12-0394-489e-8e84-f6196cc22bec">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF((($F{total_views} > 0) && ($F{views} > 0)) && (($F{slide_index}) > 1) , (float)($F{total_views} - $F{views})/(float)$F{total_views} , (float)0)]]></textFieldExpression>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{plays}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="710" y="0" width="70" height="20" uuid="b9e7ea12-0394-489e-8e84-f6196cc22bec"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="740" y="0" width="80" height="20" uuid="67b5e2e9-285f-44e8-8908-7b4ad99e954f">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{plays}/(double)$F{views} ,null)]]></textFieldExpression>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{quartile_1}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="780" y="0" width="70" height="20" uuid="67b5e2e9-285f-44e8-8908-7b4ad99e954f"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="820" y="0" width="80" height="20" uuid="3dc48661-8762-4e48-b51e-6cccef2d82fa">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_1}/(double)$F{views} , null)]]></textFieldExpression>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{quartile_2}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="850" y="0" width="70" height="20" uuid="3dc48661-8762-4e48-b51e-6cccef2d82fa"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="900" y="0" width="80" height="20" uuid="42284f54-447f-4dd7-a1ba-a238a4b06d17">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_2}/(double)$F{views} , null)]]></textFieldExpression>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{quartile_3}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="920" y="0" width="70" height="20" uuid="42284f54-447f-4dd7-a1ba-a238a4b06d17"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="980" y="0" width="80" height="20" uuid="544a28e0-3198-4df7-babe-37f2b428eabf">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_3}/(double)$F{views} , null)]]></textFieldExpression>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{quartile_4}]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="990" y="0" width="70" height="20" uuid="544a28e0-3198-4df7-babe-37f2b428eabf"/>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="1060" y="0" width="80" height="20" uuid="700fde2c-84f8-4034-8c1b-61cdd6b3bad9">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
 				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{quartile_4}/(double)$F{views} , null)]]></textFieldExpression>
-			</textField>
-			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="1060" y="0" width="70" height="20" uuid="700fde2c-84f8-4034-8c1b-61cdd6b3bad9"/>
-				<box leftPadding="4" rightPadding="4">
-					<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[IF($F{views} > 0 , (double)$F{adcount}/(double)$F{views} , null)]]></textFieldExpression>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{adcount}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

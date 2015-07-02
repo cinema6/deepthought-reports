@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version last-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="diageo_estimator" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isFloatColumnFooter="true" uuid="a811366b-9045-4307-8cc6-c03c7bcc5e3b">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/DiageoCampaignsProgressEstimator_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/DiageoCampaignsProgressEstimator"/>
+	<queryString>
+		<![CDATA[select campaign as "Campaign",sum(hours_remaining) as "Hours Remaining", max(total_adcounts)::int4 as "Completed Views", sum(est_adcounts)::int4 as "Total Projected Completed Views"
+FROM (
+	select campaign, total_adcounts, hours_remaining, case part when 'Part 2' then avg_adcounts_per_hour2 else avg_adcounts_per_hour end as avg_adcounts_per_hour,
+	hours_remaining * (case part when 'Part 2' then avg_adcounts_per_hour2 else avg_adcounts_per_hour end) as est_adcounts
+	FROM (
+		select c1.campaign,c3.part, c1.avg_adcounts_per_hour,c2.total_adcounts,c3.hours_remaining, sum(c1.avg_adcounts_per_hour) OVER (partition by c3.agg) as avg_adcounts_per_hour2
+		FROM (
+			select campaign,avg(adcounts)::int4 as avg_adcounts_per_hour
+			FROM (
+				select campaign,rec_ts,sum(adcount) as adcounts
+				from fct.v_sponsored_card_activity
+				where rec_ts between '2015-07-01 21:00:00+00' AND (current_timestamp  - INTERVAL '1 hour') AND campaign in ('Ketel One - 4th of July 2015','Captain Morgan Flavors - 4th of July 2015')
+				group by campaign,rec_ts
+				order by campaign,rec_ts
+			) as foo
+			group by campaign
+			order by campaign
+		) c1
+		INNER JOIN (
+			select campaign,sum(adcount) as total_adcounts
+			from fct.v_sponsored_card_activity
+			where rec_ts > '2015-07-01 00:00:00+00' AND campaign in ('Ketel One - 4th of July 2015','Captain Morgan Flavors - 4th of July 2015')
+			group by campaign
+			order by campaign
+		) c2 ON c1.campaign = c2.campaign		
+		INNER JOIN (
+			SELECT 'Captain Morgan Flavors - 4th of July 2015'::text as campaign, floor(EXTRACT(EPOCH FROM '2015-07-08 04:00:00+00'::timestamp with time zone - '2015-07-06 04:00:00+00'::timestamp with time zone ) / 3600)::int4 AS hours_remaining, 'Part 2'::text as part, 'yes'::text as agg
+			UNION
+			SELECT 'Captain Morgan Flavors - 4th of July 2015'::text as campaign, floor(EXTRACT(EPOCH FROM '2015-07-06 04:00:00+00' - current_timestamp ) / 3600)::int4 AS hours_remaining, 'Part 1'::text as part, 'no'::text as agg
+			UNION
+			SELECT 'Ketel One - 4th of July 2015'::text as campaign, floor(EXTRACT(EPOCH FROM '2015-07-06 04:00:00+00' - current_timestamp ) / 3600)::int4 AS hours_remaining, 'Part 1'::text as part, 'yes'::text as agg
+		) c3 ON c1.campaign = c3.campaign
+	) o
+) final	
+GROUP BY campaign
+ORDER BY campaign]]>
+	</queryString>
+	<field name="Campaign" class="java.lang.String"/>
+	<field name="Hours Remaining" class="java.lang.Long"/>
+	<field name="Completed Views" class="java.lang.Integer"/>
+	<field name="Total Projected Completed Views" class="java.lang.Integer"/>
+	<variable name="sumCompletedViews" class="java.lang.Long" calculation="Sum">
+		<variableExpression><![CDATA[$F{Completed Views}]]></variableExpression>
+	</variable>
+	<variable name="sumProjectedViews" class="java.lang.Long" calculation="Sum">
+		<variableExpression><![CDATA[$F{Total Projected Completed Views}]]></variableExpression>
+	</variable>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="105" splitType="Stretch">
+			<staticText>
+				<reportElement x="60" y="10" width="350" height="40" uuid="733257c0-c4bb-4834-9240-1efb2b513f12"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[Diageo Campaigns Progress Estimator]]></text>
+			</staticText>
+			<textField pattern="MMMMM dd, yyyy  HH:mm">
+				<reportElement x="60" y="60" width="140" height="20" uuid="7b2b2333-0064-48cc-8e84-da57af7b00f0"/>
+				<textElement verticalAlignment="Bottom">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="38" splitType="Stretch">
+			<staticText>
+				<reportElement x="60" y="0" width="220" height="38" uuid="6195da9b-1e9c-4733-a91e-af12c7ebe3d1"/>
+				<box>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Campaign]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="320" y="0" width="70" height="38" uuid="1d905f60-2bde-45b8-a020-bc6ccd7f9755"/>
+				<box>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Hours Remaining]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="420" y="0" width="100" height="38" uuid="304e9375-ba4a-4385-85ba-920cc666b404"/>
+				<box>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Completed Views]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="550" y="0" width="110" height="38" uuid="ee1d113f-273e-41d6-99b4-77f66991f3ae">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<bottomPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true" isUnderline="false"/>
+				</textElement>
+				<text><![CDATA[Total Projected Completed Views]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="31">
+			<textField>
+				<reportElement x="60" y="11" width="220" height="20" uuid="918498b8-27b2-4e22-8a0b-30eed4fe885e"/>
+				<textFieldExpression><![CDATA[$F{Campaign}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="320" y="11" width="70" height="20" uuid="2671d5dc-f682-483e-8621-91ef81050e06"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Hours Remaining}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="420" y="11" width="100" height="20" uuid="07868771-48b7-4d69-91fb-92e14e068d06"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Completed Views}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="550" y="11" width="110" height="20" uuid="5e418e1f-4e15-4565-9f0b-121526c77aae"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{Total Projected Completed Views}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<columnFooter>
+		<band height="33">
+			<textField pattern="#,###">
+				<reportElement x="420" y="6" width="100" height="20" uuid="d8286f02-c179-4b11-a983-a4d497c52196"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sumCompletedViews}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###">
+				<reportElement x="550" y="6" width="110" height="20" uuid="ff3a8104-8a5e-43a2-9192-86b2a084e585"/>
+				<box>
+					<topPen lineWidth="1.0"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{sumProjectedViews}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnFooter>
+</jasperReport>
