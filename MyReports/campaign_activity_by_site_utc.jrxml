@@ -20,12 +20,15 @@
 	<parameter name="end_date" class="java.util.Date">
 		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
 	</parameter>
+	<parameter name="site_list" class="java.util.List">
+		<parameterDescription><![CDATA[List of sites.]]></parameterDescription>
+	</parameter>
 	<queryString language="SQL">
 		<![CDATA[select site_name,campaign,sum(crd_count) as cards,sum(cardviews) as cardviews, sum(plays) as plays, sum(adcounts) as adcounts
 from (
 	select site_name,campaign,card_id,sum(cardviews) as cardviews, sum(play) as plays, sum(adcount) as adcounts, 1 as crd_count
 	from fct.v_sponsored_card_activity
-	where  rec_ts::date BETWEEN $P{start_date} AND $P{end_date} and site_name is not null
+	where  rec_ts::date BETWEEN $P{start_date} AND $P{end_date} and $X{IN, site_name, site_list}
 	group by site_name,campaign,card_id
 ) as i
 group by site_name,campaign
