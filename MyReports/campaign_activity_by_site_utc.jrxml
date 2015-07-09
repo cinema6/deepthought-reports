@@ -28,7 +28,7 @@
 from (
 	select site_name,campaign,card_id,sum(cardviews) as cardviews, sum(play) as plays, sum(adcount) as adcounts, 1 as crd_count
 	from fct.v_sponsored_card_activity
-	where  rec_ts::date BETWEEN $P{start_date} AND $P{end_date} and $X{IN, site_name, site_list}
+	where  rec_ts::date BETWEEN $P{start_date} AND $P{end_date} and $X{IN, site_name, site_list} AND site_name <> '' AND site_name is NOT null
 	group by site_name,campaign,card_id
 ) as i
 group by site_name,campaign
