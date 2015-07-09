@@ -37,14 +37,14 @@
 	<parameter name="exclude_publishers" class="java.util.ArrayList"/>
 	<queryString language="SQL">
 		<![CDATA[select o.name as publisher, case when u.fname = 'null' then u.email else u.fname || ' ' || u.lname end as editor,
-m.title as minireel,c.title as slide_title,c.card_index + 1 as slide_number, 
+m.experience_id,m.title as minireel,c.title as slide_title,c.card_index + 1 as slide_number, 
 coalesce(v.title,'unknown') as video_title,coalesce(v.channel,'unknown') as video_channel,
 case v.source when 'YouTube' then 'https://www.youtube.com/watch?v=' || v.video_id else null end as video_url,
 v.source as video_source, v.status as video_status, 
 v.start_ts as status_date
 from dim.video v
 inner join dim.minireel_card c on c.video_client_id = v.video_client_id
-inner join dim.minireel m on c.minireel_key = m.minireel_key AND m.end_ts = dim.sp_end_of_time()
+inner join dim.minireel m on c.minireel_key = m.minireel_key AND m.end_ts = dim.sp_end_of_time() AND m.status = 'active'
 inner join dim.org o on m.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
 inner join dim.user u on m.created_by = u.user_id and u.end_ts = dim.sp_end_of_time()
 WHERE v.status <> 'ok' AND v.end_ts = dim.sp_end_of_time() AND $X{NOTIN,o.name,exclude_publishers}
@@ -63,6 +63,9 @@ order by o.name,m.title]]>
 	</field>
 	<field name="video_status" class="java.lang.String"/>
 	<field name="status_date" class="java.sql.Timestamp"/>
+	<field name="experience_id" class="java.lang.String">
+		<fieldDescription><![CDATA[Unique id of the minireel.]]></fieldDescription>
+	</field>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
@@ -191,14 +194,15 @@ order by o.name,m.title]]>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[($F{editor}.length() > 14) ? $F{editor}.substring(0,13) + ".." : $F{editor}]]></textFieldExpression>
 			</textField>
-			<textField>
-				<reportElement x="200" y="0" width="220" height="24" uuid="79f12680-db35-45a8-8f83-8da0493e5d6d">
+			<textField hyperlinkType="Reference" hyperlinkTarget="Blank">
+				<reportElement x="200" y="0" width="220" height="24" forecolor="#181AA8" uuid="79f12680-db35-45a8-8f83-8da0493e5d6d">
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<box leftPadding="4" rightPadding="4"/>
 				<textElement textAlignment="Left" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{minireel}]]></textFieldExpression>
+				<hyperlinkReferenceExpression><![CDATA["https://portal.cinema6.com/#/apps/minireel/studio/edit/" + $F{experience_id}]]></hyperlinkReferenceExpression>
 			</textField>
 			<textField hyperlinkType="Reference" hyperlinkTarget="Blank">
 				<reportElement x="680" y="0" width="150" height="24" forecolor="#181AA8" uuid="46948112-27c4-4805-b3e7-ea6cf1c43475">
