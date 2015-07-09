@@ -3,8 +3,8 @@
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_site_utc_period" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="32f3947b-4b6f-40cf-a568-8716c8480ba8">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
-	<property name="ireport.jasperserver.report.resource" value="/Reports/SiteActivityByCampaign_files/main_jrxml"/>
-	<property name="ireport.jasperserver.reportUnit" value="/Reports/SiteActivityByCampaign"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/CampaignActivityByCampaignUTC_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/CampaignActivityByCampaignUTC"/>
 	<parameter name="start_date" class="java.util.Date">
 		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 	</parameter>
