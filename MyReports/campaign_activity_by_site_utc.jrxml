@@ -113,14 +113,14 @@ order by campaign,site_name;]]>
 			<property name="local_mesure_unitheight" value="pixel"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<staticText>
-				<reportElement x="10" y="10" width="300" height="30" uuid="ba5e3a49-e553-42ca-8d24-89e763187cec"/>
+				<reportElement x="10" y="10" width="340" height="30" uuid="ba5e3a49-e553-42ca-8d24-89e763187cec"/>
 				<textElement>
 					<font size="18"/>
 				</textElement>
-				<text><![CDATA[Site Activity by Campaign (UTC)]]></text>
+				<text><![CDATA[Campaign Activity by Campaign (UTC)]]></text>
 			</staticText>
 			<textField>
-				<reportElement x="340" y="10" width="240" height="30" uuid="407f0754-f565-4ea2-849e-bbe954632d88">
+				<reportElement x="360" y="10" width="220" height="30" uuid="407f0754-f565-4ea2-849e-bbe954632d88">
 					<property name="local_mesure_unitheight" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
