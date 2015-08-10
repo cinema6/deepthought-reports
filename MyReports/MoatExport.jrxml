@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version last-->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="MoatExport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="6bf7cd09-1ffb-4410-9a64-8643738e7eb7">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/MoatExport_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/MoatExport"/>
+	<queryString language="SQL">
+		<![CDATA[select advertiser_id,advertiser_name,campaign_id,campaign_name,card_id,card_reporting_name,campaign_status,card_type
+from dim.v_sponsored_card_ext
+where advertiser_name <> 'Demo'
+order by advertiser_name,campaign_name,card_reporting_name]]>
+	</queryString>
+	<field name="advertiser_id" class="java.lang.String">
+		<fieldDescription><![CDATA[Unique identifier of the advertiser within the ad server.]]></fieldDescription>
+	</field>
+	<field name="advertiser_name" class="java.lang.String"/>
+	<field name="campaign_id" class="java.lang.String">
+		<fieldDescription><![CDATA[Unique identifier of the campaign within the system.]]></fieldDescription>
+	</field>
+	<field name="campaign_name" class="java.lang.String"/>
+	<field name="card_id" class="java.lang.String">
+		<fieldDescription><![CDATA[Unique id of the card.]]></fieldDescription>
+	</field>
+	<field name="card_reporting_name" class="java.lang.String"/>
+	<field name="campaign_status" class="java.lang.String"/>
+	<field name="card_type" class="java.lang.String">
+		<fieldDescription><![CDATA[Type of MiniReel card.]]></fieldDescription>
+	</field>
+	<columnHeader>
+		<band height="21" splitType="Prevent">
+			<staticText>
+				<reportElement x="0" y="0" width="130" height="20" uuid="243a7fe1-a384-45c0-adb0-b6e7fe949653">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<text><![CDATA[advertiser_id]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="130" y="0" width="130" height="20" uuid="7e4d47ca-0877-4ad7-af22-01a932e9804f"/>
+				<text><![CDATA[advertiser_name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="260" y="0" width="130" height="20" uuid="c1557b0d-d206-49fc-ac1d-dd7775e9a95b">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<text><![CDATA[campaign_id]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="400" y="0" width="120" height="20" uuid="f8434d55-8593-41f8-8472-83d595f021d8"/>
+				<text><![CDATA[campaign_name]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="520" y="0" width="130" height="20" uuid="753e23b2-3682-4fd6-9eb5-11e99fc902cf"/>
+				<text><![CDATA[creative_id]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="650" y="0" width="120" height="20" uuid="62ee7c61-744f-4ad1-beba-fd3f22d47567"/>
+				<text><![CDATA[creative_name]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="22" splitType="Stretch">
+			<textField isStretchWithOverflow="true">
+				<reportElement x="0" y="0" width="130" height="20" uuid="a746c2cf-383f-4a2a-98d0-1725354c53fd">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{advertiser_id}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="130" y="0" width="130" height="20" uuid="6b286226-f061-4c76-ae75-6f913f06ba7c"/>
+				<textFieldExpression><![CDATA[$F{advertiser_name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="260" y="0" width="130" height="20" uuid="27e578b9-b0ff-4077-be6d-b5839ed5bb04">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textFieldExpression><![CDATA[$F{campaign_id}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="400" y="0" width="120" height="20" uuid="3fd239b3-cc4a-4b73-a8f8-2642533effd8"/>
+				<textFieldExpression><![CDATA[$F{campaign_name}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="520" y="0" width="130" height="20" uuid="f92a8a0c-c8dc-4379-8b9a-2cb3ca0ba3ce"/>
+				<textFieldExpression><![CDATA[$F{card_id}]]></textFieldExpression>
+			</textField>
+			<textField isStretchWithOverflow="true">
+				<reportElement x="650" y="0" width="120" height="20" uuid="08b1772c-1a28-4f99-a504-cebc7df8127d"/>
+				<textFieldExpression><![CDATA[$F{card_reporting_name}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
