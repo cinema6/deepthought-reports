@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version last-->
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2015-11-23T16:17:52 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="MoatExport" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="6bf7cd09-1ffb-4410-9a64-8643738e7eb7">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/MoatExport_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/MoatExport"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="ireport.jasperserver.user" value="howard"/>
 	<queryString language="SQL">
-		<![CDATA[select advertiser_id,advertiser_name,campaign_id,campaign_name,card_id,card_reporting_name,campaign_status,card_type
-from dim.v_sponsored_card_ext
+		<![CDATA[select advertiser_id,advertiser_name,campaign_id,campaign as campaign_name,card_id,coalesce(reporting_id,card_title) as card_reporting_name,status as campaign_status,card_type
+from dim.v_sponsored_card
 where advertiser_name <> 'Demo'
 order by advertiser_name,campaign_name,card_reporting_name]]>
 	</queryString>
