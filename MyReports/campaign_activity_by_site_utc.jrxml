@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-11-25T10:42:17 -->
+<!-- 2015-11-30T11:47:59 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="site_campaign_utc_period" pageWidth="612" pageHeight="792" columnWidth="572" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="a12014a1-cf1b-456a-8c3a-1a8c0995ff3c">
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -15,6 +15,7 @@
 	<property name="ireport.jasperserver.report.resource" value="/Reports/CampaignActivityBySiteUTC_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/CampaignActivityBySiteUTC"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="ireport.jasperserver.user" value="howard"/>
 	<parameter name="start_date" class="java.util.Date">
 		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 	</parameter>
@@ -23,6 +24,10 @@
 	</parameter>
 	<parameter name="site_list" class="java.util.List">
 		<parameterDescription><![CDATA[List of sites.]]></parameterDescription>
+	</parameter>
+	<parameter name="timezone" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA["UTC"]]></defaultValueExpression>
 	</parameter>
 	<queryString language="SQL">
 		<![CDATA[select i.site_name,c.campaign,sum(i.crd_count) as cards, sum(i.cardviews) as cardviews, sum(i.plays) as plays, sum(i.adcounts) as adcounts, sum(spend_est) as spend_est
@@ -33,7 +38,7 @@ from (
 		from rpt.sponsored_card_activity a
 		LEFT JOIN dim.campaign_pricing cp ON a.campaign_id = cp.campaign_id AND a.rec_ts between cp.start_ts and cp.end_ts
 		LEFT join rpt.hostname_to_site s ON a.hostname = s.hostname AND a.container = s.container
-		where  a.rec_ts::date BETWEEN $P{start_date} AND $P{end_date} and $X{IN, site_name, site_list} and s.site_name is not null
+		where  (a.rec_ts at time zone $P{timezone})::date BETWEEN $P{start_date} AND $P{end_date} and $X{IN, site_name, site_list} and s.site_name is not null
 	) f
 	group by campaign_id,card_id,site_name
 ) i
@@ -136,22 +141,24 @@ order by i.site_name,c.campaign;]]>
 	</background>
 	<title>
 		<band height="56" splitType="Stretch">
-			<staticText>
-				<reportElement x="10" y="0" width="300" height="30" uuid="51ff4eaa-5d97-40ac-871c-d8105920e50e"/>
-				<textElement>
-					<font size="18"/>
-				</textElement>
-				<text><![CDATA[Campaign Activity by Site (UTC)]]></text>
-			</staticText>
 			<textField>
-				<reportElement x="10" y="30" width="300" height="20" uuid="fe433e56-0f83-4617-896f-5057beda037c">
+				<reportElement x="10" y="30" width="559" height="20" uuid="fe433e56-0f83-4617-896f-5057beda037c">
 					<property name="local_mesure_unitheight" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
+				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"M/d/yyyy" ) + " - " + DATEFORMAT($P{end_date},"M/d/yyyy")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"M/d/yyyy" ) + " - " + DATEFORMAT($P{end_date},"M/d/yyyy") + " (" + $P{timezone} + ")"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="10" y="0" width="559" height="30" uuid="5f9fb2b1-0a5a-4df5-a17b-d4222b88dba2">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement>
+					<font size="18"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Campaign Activity by Site"]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
