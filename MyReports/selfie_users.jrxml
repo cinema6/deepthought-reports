@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2015-12-01T15:27:24 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="selfie_users" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="3df7bac9-35eb-4e32-9a26-f551d8c08b83">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="howard"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/Selfie_Users_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/Selfie_Users"/>
+	<queryString>
+		<![CDATA[select (fname || ' ' || lname) as user_name, email, company, 
+created_ts at time zone 'America/New_York' as created_ts, 
+updated_ts at time zone 'America/New_York' as last_updated_ts, status
+from dim.user
+where end_ts = dim.sp_end_of_time() and self_serve = 't'
+order by created_ts desc;]]>
+	</queryString>
+	<field name="user_name" class="java.lang.String"/>
+	<field name="email" class="java.lang.String"/>
+	<field name="company" class="java.lang.String"/>
+	<field name="created_ts" class="java.sql.Timestamp"/>
+	<field name="last_updated_ts" class="java.sql.Timestamp"/>
+	<field name="status" class="java.lang.String"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="79" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="24" width="800" height="30" uuid="df2d41d1-666f-4a29-a1b4-cf03e1e6012d"/>
+				<textElement textAlignment="Center">
+					<font size="24"/>
+				</textElement>
+				<text><![CDATA[Selfie Users]]></text>
+			</staticText>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="32" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="130" height="20" uuid="e8d7df9d-6578-41dd-a057-aeb11094cadb"/>
+				<text><![CDATA[User]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="140" y="0" width="180" height="20" uuid="82299898-6042-499e-a57e-aa740622a008"/>
+				<text><![CDATA[Email]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="330" y="0" width="170" height="20" uuid="4e2092b6-dc18-4c9a-bec8-f35e4dfb88b2"/>
+				<text><![CDATA[Company]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="510" y="0" width="110" height="20" uuid="3ca4d6c8-548c-4a90-bee4-77d6f645634f"/>
+				<text><![CDATA[Created]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="630" y="0" width="110" height="20" uuid="75314c2d-2397-4d4a-b31c-829ea59f9f1f"/>
+				<text><![CDATA[Last Updated]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="750" y="0" width="50" height="20" uuid="d0e981fb-9cab-4101-94a5-fc6db0a64b46"/>
+				<text><![CDATA[Status]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="40" splitType="Stretch">
+			<textField>
+				<reportElement x="0" y="0" width="130" height="40" uuid="40253dbf-076b-410f-be57-9b3a1739dbd6"/>
+				<textFieldExpression><![CDATA[$F{user_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="140" y="0" width="180" height="40" uuid="d07dc706-342a-4dca-b691-44633b88f9c5"/>
+				<textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="330" y="0" width="170" height="40" uuid="c279965c-4d76-4b29-9ca3-3f1a9c9b587b"/>
+				<textFieldExpression><![CDATA[$F{company}]]></textFieldExpression>
+			</textField>
+			<textField pattern="MM/dd/yyyy - HH:mm">
+				<reportElement x="510" y="0" width="110" height="40" uuid="8e56270b-25ea-451e-8861-2771815fdb14"/>
+				<textFieldExpression><![CDATA[$F{created_ts}]]></textFieldExpression>
+			</textField>
+			<textField pattern="MM/dd/yyyy- HH:mm">
+				<reportElement x="630" y="0" width="110" height="40" uuid="1fb07f7d-0f2f-47d5-93fd-9e38c9aef284"/>
+				<textFieldExpression><![CDATA[$F{last_updated_ts}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="750" y="0" width="50" height="40" uuid="8db29aac-08f1-44be-9ddc-8f5fe184b1d5"/>
+				<textFieldExpression><![CDATA[$F{status}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
