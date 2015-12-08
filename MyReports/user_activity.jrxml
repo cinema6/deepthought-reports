@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2015-12-08T10:38:28 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="user_activity" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="9104f152-eba4-4454-b6a3-1dd265b1f257">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="howard"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/User_Activity_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/User_Activity"/>
+	<parameter name="start_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="user_type_list" class="java.util.List">
+		<parameterDescription><![CDATA[List of user types.]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[select user_type,firm,user_name,email,last_login,days_with_logins,campaigns_active,campaigns_pending,campaigns_canceled
+from (
+	select 
+	case coalesce(u.self_serve,'f') when 't' then 'Self Service' else 'System' end as user_type,
+	coalesce(u.company,o.name) as firm, 
+	u.fname || ' ' || u.lname as user_name, 
+	u.email as email , 
+	j.last_login as last_login, j.days_logged_in as days_with_logins,
+	coalesce(ca.count,0) as campaigns_active,
+	coalesce(cp.count,0) as campaigns_pending,
+	coalesce(cp.count,0) as campaigns_canceled
+	from dim.user u
+	inner join
+	(
+		select user_id, last_login, sum(day_count) as days_logged_in
+		from (
+			select 	distinct (rec_ts at time zone 'America/New_York')::date as rec_date, 
+				user_id,max(rec_ts at time zone 'America/New_York') over (partition by user_id) as last_login,	1 as day_count
+			from fct.journals
+			where entry_data->>'route' like 'POST /api/auth/login'	and rec_ts >= $P{start_date}
+		) iu
+		group by user_id, last_login
+	) j on u.user_id = j.user_id and u.end_ts = dim.sp_end_of_time()
+	inner join dim.org o ON u.org_id = o.org_id AND o.end_ts = u.end_ts
+	left join (
+		select user_id,count(*)
+		from dim.campaign
+		where   end_ts = dim.sp_end_of_time()  and status = 'active'
+		group by user_id
+	) as ca ON u.user_id = ca.user_id
+	left join (
+		select user_id,count(*)
+		from dim.campaign
+		where   end_ts = dim.sp_end_of_time()  and status = 'pending'
+		group by user_id
+	) as cp ON u.user_id = cp.user_id
+	left join (
+		select user_id,count(*)
+		from dim.campaign
+		where  end_ts = dim.sp_end_of_time()  and status = 'canceled'
+		group by user_id
+	) as cc ON u.user_id = cc.user_id
+) q
+where $X{IN, q.user_type, user_type_list}
+order by 1,2,3]]>
+	</queryString>
+	<field name="user_type" class="java.lang.String"/>
+	<field name="firm" class="java.lang.String"/>
+	<field name="user_name" class="java.lang.String"/>
+	<field name="email" class="java.lang.String"/>
+	<field name="last_login" class="java.sql.Timestamp"/>
+	<field name="days_with_logins" class="java.lang.Long"/>
+	<field name="campaigns_active" class="java.lang.Long"/>
+	<field name="campaigns_pending" class="java.lang.Long"/>
+	<field name="campaigns_canceled" class="java.lang.Long"/>
+	<variable name="user_type1" class="java.lang.Integer" resetType="Group" resetGroup="user_type" calculation="DistinctCount">
+		<variableExpression><![CDATA[$F{user_type}]]></variableExpression>
+	</variable>
+	<group name="user_type">
+		<groupExpression><![CDATA[$F{user_type}]]></groupExpression>
+		<groupHeader>
+			<band height="22">
+				<textField>
+					<reportElement mode="Opaque" x="0" y="0" width="560" height="20" backcolor="#E0E0E0" uuid="d4ac2d59-ae4e-4ce8-8680-6cc95ee2b8c0"/>
+					<textElement>
+						<font size="12" isBold="true" isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{user_type} + " Users"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="74" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="10" width="260" height="30" uuid="29d1b3fb-3f58-4759-873a-113e6022909d"/>
+				<textElement>
+					<font size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[User Activity Report]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="40" width="260" height="20" uuid="6bbb979f-435b-4c13-8ff9-d6ce97e1cdb2"/>
+				<textElement>
+					<font isItalic="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["From " + DATEFORMAT($P{start_date},"MM/dd/yyyy")]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="42">
+			<staticText>
+				<reportElement x="0" y="0" width="160" height="30" uuid="42e568bc-9677-4dbb-8990-334ee0600e75"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Firm]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="170" y="0" width="140" height="30" uuid="8d7ee9f4-b504-4e9b-8cb7-8d5c2c0a26c7"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[User]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="320" y="0" width="40" height="30" uuid="c57c4cd2-0f5e-48ad-8bc9-fd0a2975c20c"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Active Days]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="370" y="0" width="100" height="30" uuid="f9d7a76c-cdc6-4584-b942-de74089501a8"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Last]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="480" y="0" width="64" height="30" uuid="bdba737d-3a33-4d98-a1b1-8f149aa4f578"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Campaigns]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="52" splitType="Stretch">
+			<textField>
+				<reportElement x="170" y="10" width="140" height="20" uuid="8bdcc773-29cb-4845-a33d-609397ea81c8"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{user_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="0" y="10" width="160" height="40" uuid="3056d22a-e9fc-4ecf-91f7-a285fb56578c"/>
+				<textElement verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{firm}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="170" y="30" width="140" height="20" uuid="8eab2ebd-b19a-45b2-bc73-3ef4b6f46872"/>
+				<textElement>
+					<font size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+			</textField>
+			<textField pattern="MM/dd/yy hh:mm a">
+				<reportElement x="370" y="10" width="100" height="40" uuid="22cdac45-ea2a-48a1-a9a6-8722727ebc64"/>
+				<textElement textAlignment="Right" verticalAlignment="Top">
+					<font size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{last_login}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="320" y="10" width="40" height="40" uuid="83a069d5-a269-4b90-b247-e2bb9f4fea06"/>
+				<textElement textAlignment="Right" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{days_with_logins}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="480" y="10" width="64" height="40" uuid="83cb06db-0163-4365-9d9e-b1aaed40d956"/>
+				<textElement textAlignment="Right" verticalAlignment="Top"/>
+				<textFieldExpression><![CDATA[$F{campaigns_active} + $F{campaigns_pending}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
