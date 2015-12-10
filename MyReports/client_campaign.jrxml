@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-10T16:39:40 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="1008" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
+<!-- 2015-12-10T16:56:51 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="908" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
@@ -814,7 +814,7 @@ Completion Rate]]></text>
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="367">
+			<band height="344">
 				<staticText>
 					<reportElement x="0" y="8" width="114" height="20" uuid="8a45475e-d5ee-40fd-bdf3-88838cfccc40">
 						<property name="local_mesure_unity" value="pixel"/>
@@ -923,7 +923,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[IF($V{total_loads} > 0,(double)$V{total_q4}/(double)$V{total_loads},null)]]></textFieldExpression>
 				</textField>
 				<componentElement>
-					<reportElement x="10" y="90" width="200" height="200" uuid="4ffd181d-0b6d-4e0b-bbb9-e910f2fa00dd">
+					<reportElement x="10" y="40" width="200" height="200" uuid="4ffd181d-0b6d-4e0b-bbb9-e910f2fa00dd">
 						<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
 					</reportElement>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
@@ -943,6 +943,20 @@ Completion Rate]]></text>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
 						<jr:column width="100" uuid="9ed2db1e-9f37-4302-b714-f388e17c86dc">
+							<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+							<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+							<jr:tableHeader height="30">
+								<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+								<property name="com.jaspersoft.studio.unit.height" value="px"/>
+								<staticText>
+									<reportElement x="0" y="0" width="100" height="30" uuid="7a4d53fe-d3ea-49ac-ab73-24e4046fb650"/>
+									<textElement verticalAlignment="Middle">
+										<font size="12" isBold="true"/>
+										<paragraph leftIndent="8"/>
+									</textElement>
+									<text><![CDATA[Link Clicks]]></text>
+								</staticText>
+							</jr:tableHeader>
 							<jr:detailCell style="Table 1_TD" height="30">
 								<textField>
 									<reportElement x="0" y="0" width="100" height="30" uuid="ba905438-4d9f-4e2c-99ae-64a65396bdf6"/>
@@ -952,8 +966,10 @@ Completion Rate]]></text>
 							</jr:detailCell>
 						</jr:column>
 						<jr:column width="100" uuid="a675d317-4817-41f0-b05d-29ffb119bf8d">
+							<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+							<jr:tableHeader height="30"/>
 							<jr:detailCell style="Table 1_TD" height="30">
-								<textField>
+								<textField pattern="#,##0.###">
 									<reportElement x="0" y="0" width="100" height="30" uuid="0bf92b27-7c3b-4f63-8cbe-7a8a9ea230b6"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[$F{click_count}]]></textFieldExpression>
@@ -963,7 +979,7 @@ Completion Rate]]></text>
 					</jr:table>
 				</componentElement>
 				<componentElement>
-					<reportElement x="280" y="90" width="200" height="200" uuid="52f26f66-9b17-4c08-941e-1531703bbf0b">
+					<reportElement x="280" y="40" width="200" height="140" uuid="52f26f66-9b17-4c08-941e-1531703bbf0b">
 						<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
 					</reportElement>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
@@ -983,6 +999,19 @@ Completion Rate]]></text>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
 						<jr:column width="100" uuid="0ccd26b5-a95e-47c7-82bf-cee62ab4d105">
+							<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column1"/>
+							<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+							<jr:tableHeader height="30">
+								<property name="com.jaspersoft.studio.unit.height" value="px"/>
+								<staticText>
+									<reportElement x="0" y="0" width="100" height="30" uuid="26534189-5028-42b6-a5a0-60262b384bf3"/>
+									<textElement textAlignment="Left" verticalAlignment="Middle">
+										<font size="12" isBold="true"/>
+										<paragraph leftIndent="8"/>
+									</textElement>
+									<text><![CDATA[Share Clicks]]></text>
+								</staticText>
+							</jr:tableHeader>
 							<jr:detailCell style="Table 2_TD" height="30">
 								<textField>
 									<reportElement x="0" y="0" width="100" height="30" uuid="acd0b406-f0b7-4da2-917a-f23fe2c7bfd0"/>
@@ -992,8 +1021,10 @@ Completion Rate]]></text>
 							</jr:detailCell>
 						</jr:column>
 						<jr:column width="100" uuid="911da843-cbec-4ebe-9313-7dca8e5ca623">
+							<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
+							<jr:tableHeader height="30"/>
 							<jr:detailCell style="Table 2_TD" height="30">
-								<textField>
+								<textField pattern="#,##0.###">
 									<reportElement x="0" y="0" width="100" height="30" uuid="55d35655-b920-4849-8cf8-d3070e9f6ede"/>
 									<textElement textAlignment="Center" verticalAlignment="Middle"/>
 									<textFieldExpression><![CDATA[$F{click_count}]]></textFieldExpression>
@@ -1002,20 +1033,6 @@ Completion Rate]]></text>
 						</jr:column>
 					</jr:table>
 				</componentElement>
-				<staticText>
-					<reportElement x="10" y="60" width="198" height="20" uuid="66e14cce-0345-4584-8ea2-77d9dbb43d1b"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font size="12" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Link Clicks]]></text>
-				</staticText>
-				<staticText>
-					<reportElement x="280" y="60" width="198" height="20" uuid="2a418d86-be43-442e-b55b-ea1cc2cc9c56"/>
-					<textElement textAlignment="Left" verticalAlignment="Middle">
-						<font size="12" isBold="true"/>
-					</textElement>
-					<text><![CDATA[Share Clicks]]></text>
-				</staticText>
 			</band>
 		</groupFooter>
 	</group>
