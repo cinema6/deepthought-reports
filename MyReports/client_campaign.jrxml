@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-11-25T11:45:02 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="612" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
+<!-- 2015-12-10T16:39:40 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="1008" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/ClientCampaign_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/ClientCampaign"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
-	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="ireport.jasperserver.user" value="howard"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
@@ -45,10 +37,136 @@
 			<rightPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
+	<style name="Crosstab_CH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CG" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CT" mode="Opaque" backcolor="#005FB3">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab_CD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab 1_CH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab 1_CG" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab 1_CT" mode="Opaque" backcolor="#005FB3">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Crosstab 1_CD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 2_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 2_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 2_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
 	<subDataset name="campaign_data_agg" uuid="20ee7cb1-001f-41e6-b806-8612d174d7ff">
 		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
-		<parameter name="campaign_id" class="java.lang.String"/>
+		<parameter name="card_id" class="java.lang.String"/>
 		<parameter name="sponsor" class="java.lang.String">
 			<parameterDescription><![CDATA[]]></parameterDescription>
 		</parameter>
@@ -60,18 +178,19 @@
 			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 		</parameter>
 		<parameter name="campaign_name" class="java.lang.String"/>
+		<parameter name="campaign_id" class="java.lang.String"/>
 		<queryString language="SQL">
-			<![CDATA[select sc.sponsor,sc.adsrv_id,$P{campaign_name} as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
+			<![CDATA[select sc.sponsor,sc.card_id,$P{campaign_name} as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
 from dim.v_sponsored_card sc
 inner join rpt.sponsored_card_activity sa on sc.campaign_id = sa.campaign_id AND sc.card_id = sa.card_id
 inner join dim.dates d ON sa.date_key = d.date_key
-where d.date between $P{start_date} AND $P{end_date} AND sc.sponsor = $P{sponsor} AND sc.adsrv_id = $P{campaign_id}
-group by sc.sponsor,sc.adsrv_id,campaign_name]]>
+where d.date between $P{start_date} AND $P{end_date} AND sc.card_id = $P{card_id} and sc.campaign_id = $P{campaign_id}
+group by sc.sponsor,sc.card_id,campaign_name]]>
 		</queryString>
 		<field name="sponsor" class="java.lang.String">
 			<fieldDescription><![CDATA[Sponsor of card.]]></fieldDescription>
 		</field>
-		<field name="adsrv_id" class="java.lang.String">
+		<field name="card_id" class="java.lang.String">
 			<fieldDescription><![CDATA[Id for related entity in ad server.]]></fieldDescription>
 		</field>
 		<field name="campaign_name" class="java.lang.String"/>
@@ -82,6 +201,56 @@ group by sc.sponsor,sc.adsrv_id,campaign_name]]>
 		<field name="q3" class="java.lang.Long"/>
 		<field name="q4" class="java.lang.Long"/>
 		<field name="adcount" class="java.lang.Long"/>
+	</subDataset>
+	<subDataset name="campaign_card_links" uuid="4fbaecf8-6d16-4ee6-9d51-94818769b45b">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+		<parameter name="card_id" class="java.lang.String"/>
+		<parameter name="end_date" class="java.util.Date">
+			<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+		</parameter>
+		<parameter name="start_date" class="java.util.Date">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+		</parameter>
+		<parameter name="campaign_id" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select initcap(regexp_replace(a.event_type,'^\w+\.','')) as link_name,sum(events)::int4 as click_count
+from fct.campaign_activity_by_device a
+inner join  dim.v_sponsored_card sc on a.campaign_id = sc.campaign_id and a.card_id = sc.card_id
+inner join dim.dates d ON a.date_key = d.date_key
+where d.date between $P{start_date} AND $P{end_date} AND a.campaign_id =$P{campaign_id} and a.card_id = $P{card_id}
+ and event_type like 'link.%' 
+group by 1
+order by 1]]>
+		</queryString>
+		<field name="link_name" class="java.lang.String"/>
+		<field name="click_count" class="java.lang.Integer"/>
+	</subDataset>
+	<subDataset name="campaign_card_shares" uuid="7b06e80f-b47b-47f4-a769-7d3ab583bbf2">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<parameter name="card_id" class="java.lang.String"/>
+		<parameter name="end_date" class="java.util.Date">
+			<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+		</parameter>
+		<parameter name="start_date" class="java.util.Date">
+			<parameterDescription><![CDATA[]]></parameterDescription>
+			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+		</parameter>
+		<parameter name="campaign_id" class="java.lang.String"/>
+		<queryString>
+			<![CDATA[select initcap(regexp_replace(a.event_type,'^\w+\.','')) as link_name,sum(events)::int4 as click_count
+from fct.campaign_activity_by_device a
+inner join  dim.v_sponsored_card sc on a.campaign_id = sc.campaign_id and a.card_id = sc.card_id
+inner join dim.dates d ON a.date_key = d.date_key
+where d.date between $P{start_date} AND $P{end_date} AND a.campaign_id =$P{campaign_id} and a.card_id = $P{card_id}
+ and event_type like 'shareLink.%' 
+group by 1
+order by 1]]>
+		</queryString>
+		<field name="link_name" class="java.lang.String"/>
+		<field name="click_count" class="java.lang.Integer"/>
 	</subDataset>
 	<parameter name="start_date" class="java.util.Date">
 		<parameterDescription><![CDATA[]]></parameterDescription>
@@ -95,26 +264,20 @@ group by sc.sponsor,sc.adsrv_id,campaign_name]]>
 	</parameter>
 	<parameter name="campaign_id_list" class="java.util.ArrayList"/>
 	<queryString language="SQL">
-		<![CDATA[select d.date,sc.sponsor,sc.adsrv_id,coalesce(sc.reporting_id,sc.campaign) as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
+		<![CDATA[select d.date,sc.sponsor,sc.card_id,sc.campaign_id,coalesce(sc.reporting_id,sc.campaign) as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
 from dim.v_sponsored_card sc
 inner join rpt.sponsored_card_activity sa on sc.campaign_id = sa.campaign_id AND sc.card_id = sa.card_id
 inner join dim.dates d ON sa.date_key = d.date_key
 where sc.sponsor = $P{sponsor}
-AND $X{IN,sc.adsrv_id, campaign_id_list} 
+AND $X{IN,sc.campaign_id, campaign_id_list} 
 and d.date between $P{start_date} AND $P{end_date}
-group by d.date,sc.sponsor,sc.adsrv_id,campaign_name
-order by d.date,sc.sponsor,sc.adsrv_id,campaign_name
-]]>
+group by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name
+order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 	</queryString>
-	<field name="date" class="java.sql.Date">
-		<fieldDescription><![CDATA[Date as a date.]]></fieldDescription>
-	</field>
-	<field name="sponsor" class="java.lang.String">
-		<fieldDescription><![CDATA[Sponsor of card.]]></fieldDescription>
-	</field>
-	<field name="adsrv_id" class="java.lang.String">
-		<fieldDescription><![CDATA[Id for related entity in ad server.]]></fieldDescription>
-	</field>
+	<field name="date" class="java.sql.Date"/>
+	<field name="sponsor" class="java.lang.String"/>
+	<field name="card_id" class="java.lang.String"/>
+	<field name="campaign_id" class="java.lang.String"/>
 	<field name="campaign_name" class="java.lang.String"/>
 	<field name="video_loads" class="java.lang.Long"/>
 	<field name="video_plays" class="java.lang.Long"/>
@@ -126,26 +289,26 @@ order by d.date,sc.sponsor,sc.adsrv_id,campaign_name
 	<sortField name="sponsor"/>
 	<sortField name="campaign_name"/>
 	<sortField name="date"/>
-	<variable name="total_loads" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+	<variable name="total_loads" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{video_loads}]]></variableExpression>
 	</variable>
-	<variable name="total_q1" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+	<variable name="total_q1" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{q1}]]></variableExpression>
 	</variable>
-	<variable name="total_q2" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+	<variable name="total_q2" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{q2}]]></variableExpression>
 	</variable>
-	<variable name="total_q3" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+	<variable name="total_q3" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{q3}]]></variableExpression>
 	</variable>
-	<variable name="total_q4" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+	<variable name="total_q4" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{q4}]]></variableExpression>
 	</variable>
-	<variable name="total_adcount" class="java.lang.Long" resetType="Group" resetGroup="sponsor,adsrv_id,campaign" calculation="Sum">
+	<variable name="total_adcount" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{adcount}]]></variableExpression>
 	</variable>
-	<group name="sponsor,adsrv_id,campaign" isStartNewPage="true">
-		<groupExpression><![CDATA[$F{sponsor}+$F{adsrv_id}+$F{campaign_name}]]></groupExpression>
+	<group name="card_id,campaign_id" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{card_id}+$F{campaign_name}]]></groupExpression>
 		<groupHeader>
 			<band height="255">
 				<staticText>
@@ -238,7 +401,7 @@ order by d.date,sc.sponsor,sc.adsrv_id,campaign_name
 					<textElement>
 						<font isBold="true"/>
 					</textElement>
-					<text><![CDATA[Cinema6 Campaign Report]]></text>
+					<text><![CDATA[Reelcontent Campaign Report]]></text>
 				</staticText>
 				<staticText>
 					<reportElement x="548" y="225" width="114" height="30" uuid="2041d808-110e-48f6-b997-48486d0337ad">
@@ -306,10 +469,7 @@ order by d.date,sc.sponsor,sc.adsrv_id,campaign_name
 				<componentElement>
 					<reportElement x="0" y="130" width="890" height="60" uuid="12d759c5-6736-4fba-bf70-f5b63164b2b3"/>
 					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
-						<datasetRun subDataset="campaign_data_agg" uuid="a8f0809c-3e69-4641-ab38-1745bc0710e1">
-							<datasetParameter name="campaign_id">
-								<datasetParameterExpression><![CDATA[$F{adsrv_id}]]></datasetParameterExpression>
-							</datasetParameter>
+						<datasetRun subDataset="campaign_data_agg" uuid="d17a4a05-44b2-4f49-9549-cc508b232350">
 							<datasetParameter name="end_date">
 								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
 							</datasetParameter>
@@ -321,6 +481,12 @@ order by d.date,sc.sponsor,sc.adsrv_id,campaign_name
 							</datasetParameter>
 							<datasetParameter name="campaign_name">
 								<datasetParameterExpression><![CDATA[$F{campaign_name}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="card_id">
+								<datasetParameterExpression><![CDATA[$F{card_id}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="campaign_id">
+								<datasetParameterExpression><![CDATA[$F{campaign_id}]]></datasetParameterExpression>
 							</datasetParameter>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
@@ -648,7 +814,7 @@ Completion Rate]]></text>
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="52">
+			<band height="367">
 				<staticText>
 					<reportElement x="0" y="8" width="114" height="20" uuid="8a45475e-d5ee-40fd-bdf3-88838cfccc40">
 						<property name="local_mesure_unity" value="pixel"/>
@@ -756,6 +922,100 @@ Completion Rate]]></text>
 					</textElement>
 					<textFieldExpression><![CDATA[IF($V{total_loads} > 0,(double)$V{total_q4}/(double)$V{total_loads},null)]]></textFieldExpression>
 				</textField>
+				<componentElement>
+					<reportElement x="10" y="90" width="200" height="200" uuid="4ffd181d-0b6d-4e0b-bbb9-e910f2fa00dd">
+						<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					</reportElement>
+					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<datasetRun subDataset="campaign_card_links" uuid="8c13d343-233f-4986-9d0c-9bf225ae1df4">
+							<datasetParameter name="campaign_id">
+								<datasetParameterExpression><![CDATA[$F{campaign_id}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="card_id">
+								<datasetParameterExpression><![CDATA[$F{card_id}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="start_date">
+								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_date">
+								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+						<jr:column width="100" uuid="9ed2db1e-9f37-4302-b714-f388e17c86dc">
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="100" height="30" uuid="ba905438-4d9f-4e2c-99ae-64a65396bdf6"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<textFieldExpression><![CDATA[$F{link_name}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="100" uuid="a675d317-4817-41f0-b05d-29ffb119bf8d">
+							<jr:detailCell style="Table 1_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="100" height="30" uuid="0bf92b27-7c3b-4f63-8cbe-7a8a9ea230b6"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<textFieldExpression><![CDATA[$F{click_count}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:table>
+				</componentElement>
+				<componentElement>
+					<reportElement x="280" y="90" width="200" height="200" uuid="52f26f66-9b17-4c08-941e-1531703bbf0b">
+						<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
+					</reportElement>
+					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<datasetRun subDataset="campaign_card_shares" uuid="1e8ebe05-a13b-465d-9faa-60d594569b58">
+							<datasetParameter name="campaign_id">
+								<datasetParameterExpression><![CDATA[$F{campaign_id}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="card_id">
+								<datasetParameterExpression><![CDATA[$F{card_id}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="start_date">
+								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="end_date">
+								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						</datasetRun>
+						<jr:column width="100" uuid="0ccd26b5-a95e-47c7-82bf-cee62ab4d105">
+							<jr:detailCell style="Table 2_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="100" height="30" uuid="acd0b406-f0b7-4da2-917a-f23fe2c7bfd0"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<textFieldExpression><![CDATA[$F{link_name}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+						<jr:column width="100" uuid="911da843-cbec-4ebe-9313-7dca8e5ca623">
+							<jr:detailCell style="Table 2_TD" height="30">
+								<textField>
+									<reportElement x="0" y="0" width="100" height="30" uuid="55d35655-b920-4849-8cf8-d3070e9f6ede"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle"/>
+									<textFieldExpression><![CDATA[$F{click_count}]]></textFieldExpression>
+								</textField>
+							</jr:detailCell>
+						</jr:column>
+					</jr:table>
+				</componentElement>
+				<staticText>
+					<reportElement x="10" y="60" width="198" height="20" uuid="66e14cce-0345-4584-8ea2-77d9dbb43d1b"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Link Clicks]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="280" y="60" width="198" height="20" uuid="2a418d86-be43-442e-b55b-ea1cc2cc9c56"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Share Clicks]]></text>
+				</staticText>
 			</band>
 		</groupFooter>
 	</group>
