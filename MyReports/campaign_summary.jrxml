@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2015-12-15T18:12:36 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_summary" pageWidth="360" pageHeight="160" columnWidth="360" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="f96c3104-6dd2-4540-b685-55b688fcb7ac">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<parameter name="campaign_id" class="java.lang.String"/>
+	<parameter name="start_date" class="java.util.Date"/>
+	<parameter name="end_date" class="java.util.Date"/>
+	<queryString>
+		<![CDATA[select coalesce(c.advertiser_display_name,a.name) as advertiser_name,c.name as campaign_name,
+sc.start_date,sc.end_date,
+cast(c.src_doc->'pricing'->>'cost' as numeric(12,4)) as cpv,
+cast(c.src_doc->'pricing'->>'budget' as numeric(12,2)) as budget,
+cast(case coalesce(c.src_doc->'pricing'->>'dailyLimit','') when '' then c.src_doc->'pricing'->>'budget' else c.src_doc->'pricing'->>'dailyLimit'  end as numeric(12,2)) as daily_limit,
+cast(coalesce(pv.spend,0) as numeric(12,4)) as spend
+from dim.campaign c
+inner join dim.advertiser a ON c.advertiser_id = a.advertiser_id AND c.end_ts = a.end_ts
+LEFT JOIN (
+	select a.campaign_id, sum(a.events) as paid_views , sum(a.event_cost) as spend
+	from fct.campaign_activity_by_device a
+	where a.campaign_id = $P{campaign_id} AND a.event_type ='completedView' AND a.rec_ts::date BETWEEN $P{start_date} AND $P{end_date}
+	group by 1
+) pv ON c.campaign_id = pv.campaign_id
+LEFT JOIN (
+	SELECT campaign_id,min(campaign_start_date)::date as start_date,max(campaign_end_date)::date as end_date
+	FROM dim.minireel_card
+	where campaign_id = $P{campaign_id} and end_ts = dim.sp_end_of_time()
+	group by 1
+) sc ON sc.campaign_id = c.campaign_id
+where c.campaign_id = $P{campaign_id} AND c.end_ts = dim.sp_end_of_time()]]>
+	</queryString>
+	<field name="advertiser_name" class="java.lang.String"/>
+	<field name="campaign_name" class="java.lang.String"/>
+	<field name="start_date" class="java.sql.Date"/>
+	<field name="end_date" class="java.sql.Date"/>
+	<field name="cpv" class="java.math.BigDecimal"/>
+	<field name="budget" class="java.math.BigDecimal"/>
+	<field name="daily_limit" class="java.math.BigDecimal"/>
+	<field name="spend" class="java.math.BigDecimal"/>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="159" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<textField>
+				<reportElement x="80" y="20" width="250" height="20" uuid="fb5bd87d-cbbb-4623-93e6-70bfda91ae8a"/>
+				<textFieldExpression><![CDATA[$F{campaign_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="20" width="70" height="20" uuid="7638792c-6c78-4363-8f77-466ee4de9dbd"/>
+				<text><![CDATA[Campaign:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="80" y="0" width="250" height="20" uuid="a4778aa9-b675-48ac-9438-cea74bef0ae9"/>
+				<textFieldExpression><![CDATA[$F{advertiser_name}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="0" width="70" height="20" uuid="9f0c89cb-fcad-4aed-8159-80417113218c"/>
+				<text><![CDATA[Advertiser:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="40" width="70" height="20" uuid="185c4073-d2e3-48d2-ad7e-da37e06b0e79"/>
+				<text><![CDATA[Flight Dates:]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="80" y="40" width="250" height="20" uuid="b11aa7fe-1853-4cda-bda7-4664a402b4e8"/>
+				<textFieldExpression><![CDATA[DATEFORMAT($F{start_date},"M/d/yy") + " - " + DATEFORMAT($F{end_date},"M/d/yy")]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤#,##0.00;¤-#,##0.00##">
+				<reportElement x="80" y="60" width="250" height="20" uuid="0d275635-a744-47f1-8a7c-eaa3f3fb248d"/>
+				<textFieldExpression><![CDATA[$F{cpv}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="60" width="70" height="20" uuid="d096dc0a-471f-4dd5-965d-196d419bcae9"/>
+				<text><![CDATA[CPV:]]></text>
+			</staticText>
+			<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<reportElement x="80" y="80" width="80" height="20" uuid="61286bfd-704d-4097-8c20-5e62b7529090"/>
+				<textFieldExpression><![CDATA[$F{budget}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="80" width="70" height="20" uuid="84c4677a-759b-410a-87fc-d0dd71dcc724"/>
+				<text><![CDATA[Budget:]]></text>
+			</staticText>
+			<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<reportElement x="80" y="100" width="80" height="20" uuid="23c38491-4d75-45aa-b335-01fc7ce256d2"/>
+				<textFieldExpression><![CDATA[$F{daily_limit}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="100" width="70" height="20" uuid="74ddbe84-5026-47b3-b221-df84ca539386"/>
+				<text><![CDATA[Daily Limit:]]></text>
+			</staticText>
+			<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<reportElement x="80" y="120" width="250" height="17" uuid="36ddd06d-5c40-47c6-919a-aa3180a8b913"/>
+				<textFieldExpression><![CDATA[$F{spend}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="0" y="120" width="70" height="17" uuid="2cdce126-a5f4-4ba1-86a4-6f6393296b2e"/>
+				<text><![CDATA[Spend:]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="0" y="137" width="70" height="17" uuid="5aad6c84-ccc8-4517-9883-503872971168"/>
+				<text><![CDATA[Balance:]]></text>
+			</staticText>
+			<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<reportElement x="80" y="137" width="80" height="17" uuid="d36cc1d0-ab00-4fae-99bc-c53a213c8ae5"/>
+				<textFieldExpression><![CDATA[$F{budget}.doubleValue() - $F{spend}.doubleValue()]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="160" y="80" width="80" height="20" uuid="90b4cea8-f7e4-4b01-b155-863deac316bb"/>
+				<box leftPadding="8" rightPadding="8"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{cpv}.doubleValue() > 0 ? $F{budget}.doubleValue() / $F{cpv}.doubleValue() : 0]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="240" y="80" width="90" height="20" uuid="39ade48b-a8af-4e69-8da5-6ae7d726e68a"/>
+				<text><![CDATA[Est. Total Views]]></text>
+			</staticText>
+			<textField pattern="#,##0.###">
+				<reportElement x="160" y="100" width="80" height="20" uuid="80a41297-3b2b-4157-8370-9e08d0613426"/>
+				<box leftPadding="8" rightPadding="8"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[$F{cpv}.doubleValue() > 0 ? $F{daily_limit}.doubleValue() / $F{cpv}.doubleValue() : 0]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="240" y="100" width="90" height="20" uuid="c3a9c7c7-8009-42f8-8a30-ecb7fa2d6caf"/>
+				<text><![CDATA[Est. Daily Views]]></text>
+			</staticText>
+			<textField pattern="#,##0">
+				<reportElement x="160" y="137" width="80" height="17" uuid="34a70595-5c1b-487e-a4a4-43d74e39e128"/>
+				<box leftPadding="8" rightPadding="8"/>
+				<textElement textAlignment="Right"/>
+				<textFieldExpression><![CDATA[($F{daily_limit}.doubleValue() > 0  && ($F{budget}.doubleValue() - $F{spend}.doubleValue()) > 0) ? ($F{budget}.doubleValue() - $F{spend}.doubleValue()) / $F{daily_limit}.doubleValue() : 0]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="240" y="135" width="90" height="20" uuid="47df5a60-c927-40d3-a812-93c9e7080609"/>
+				<text><![CDATA[Days Remaining]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>
