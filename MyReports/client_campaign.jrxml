@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-10T16:56:51 -->
+<!-- 2015-12-14T16:07:51 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="908" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
@@ -289,8 +289,8 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 	<sortField name="sponsor"/>
 	<sortField name="campaign_name"/>
 	<sortField name="date"/>
-	<variable name="total_loads" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
-		<variableExpression><![CDATA[$F{video_loads}]]></variableExpression>
+	<variable name="total_plays" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{video_plays}]]></variableExpression>
 	</variable>
 	<variable name="total_q1" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{q1}]]></variableExpression>
@@ -557,7 +557,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 									<textElement textAlignment="Right" verticalAlignment="Middle">
 										<paragraph leftIndent="8" rightIndent="8"/>
 									</textElement>
-									<textFieldExpression><![CDATA[$F{video_loads}]]></textFieldExpression>
+									<textFieldExpression><![CDATA[$F{video_plays}]]></textFieldExpression>
 								</textField>
 							</jr:detailCell>
 						</jr:column>
@@ -841,7 +841,7 @@ Completion Rate]]></text>
 						<font isBold="true"/>
 						<paragraph leftIndent="8" rightIndent="8"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$V{total_loads}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$V{total_plays}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
 					<reportElement x="228" y="8" width="80" height="20" uuid="f3864403-f98b-498f-a807-59b1753e51a9">
@@ -898,7 +898,7 @@ Completion Rate]]></text>
 						<font isBold="true"/>
 						<paragraph leftIndent="8" rightIndent="8"/>
 					</textElement>
-					<textFieldExpression><![CDATA[IF($V{total_loads} > 0,(double)$V{total_adcount}/(double)$V{total_loads},null)]]></textFieldExpression>
+					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_adcount}/(double)$V{total_plays},null)]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
 					<reportElement x="470" y="8" width="80" height="20" uuid="a7a2cfa7-d06d-44e7-a58a-9f0c45916aa7">
@@ -920,7 +920,7 @@ Completion Rate]]></text>
 						<font isBold="true"/>
 						<paragraph leftIndent="8" rightIndent="8"/>
 					</textElement>
-					<textFieldExpression><![CDATA[IF($V{total_loads} > 0,(double)$V{total_q4}/(double)$V{total_loads},null)]]></textFieldExpression>
+					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_q4}/(double)$V{total_plays},null)]]></textFieldExpression>
 				</textField>
 				<componentElement>
 					<reportElement x="10" y="40" width="200" height="200" uuid="4ffd181d-0b6d-4e0b-bbb9-e910f2fa00dd">
@@ -1063,7 +1063,7 @@ Completion Rate]]></text>
 				<textElement textAlignment="Right" verticalAlignment="Middle">
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[$F{video_loads}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{video_plays}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
 				<reportElement x="228" y="0" width="80" height="20" uuid="90899c62-93f0-44aa-8496-a85022a68b64">
