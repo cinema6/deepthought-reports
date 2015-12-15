@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-15T18:12:36 -->
+<!-- 2015-12-15T18:50:52 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_summary" pageWidth="360" pageHeight="160" columnWidth="360" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="f96c3104-6dd2-4540-b685-55b688fcb7ac">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -66,9 +66,9 @@ where c.campaign_id = $P{campaign_id} AND c.end_ts = dim.sp_end_of_time()]]>
 				<reportElement x="0" y="40" width="70" height="20" uuid="185c4073-d2e3-48d2-ad7e-da37e06b0e79"/>
 				<text><![CDATA[Flight Dates:]]></text>
 			</staticText>
-			<textField>
+			<textField isBlankWhenNull="true">
 				<reportElement x="80" y="40" width="250" height="20" uuid="b11aa7fe-1853-4cda-bda7-4664a402b4e8"/>
-				<textFieldExpression><![CDATA[DATEFORMAT($F{start_date},"M/d/yy") + " - " + DATEFORMAT($F{end_date},"M/d/yy")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[($F{start_date} == null || $F{end_date} == null ) ? null : DATEFORMAT($F{start_date},"M/d/yy") + " - " + DATEFORMAT($F{end_date},"M/d/yy")]]></textFieldExpression>
 			</textField>
 			<textField pattern="¤#,##0.00;¤-#,##0.00##">
 				<reportElement x="80" y="60" width="250" height="20" uuid="0d275635-a744-47f1-8a7c-eaa3f3fb248d"/>
@@ -110,7 +110,7 @@ where c.campaign_id = $P{campaign_id} AND c.end_ts = dim.sp_end_of_time()]]>
 				<reportElement x="80" y="137" width="80" height="17" uuid="d36cc1d0-ab00-4fae-99bc-c53a213c8ae5"/>
 				<textFieldExpression><![CDATA[$F{budget}.doubleValue() - $F{spend}.doubleValue()]]></textFieldExpression>
 			</textField>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0">
 				<reportElement x="160" y="80" width="80" height="20" uuid="90b4cea8-f7e4-4b01-b155-863deac316bb"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right"/>
@@ -120,7 +120,7 @@ where c.campaign_id = $P{campaign_id} AND c.end_ts = dim.sp_end_of_time()]]>
 				<reportElement x="240" y="80" width="90" height="20" uuid="39ade48b-a8af-4e69-8da5-6ae7d726e68a"/>
 				<text><![CDATA[Est. Total Views]]></text>
 			</staticText>
-			<textField pattern="#,##0.###">
+			<textField pattern="#,##0">
 				<reportElement x="160" y="100" width="80" height="20" uuid="80a41297-3b2b-4157-8370-9e08d0613426"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right"/>

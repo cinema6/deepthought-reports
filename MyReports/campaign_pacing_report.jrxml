@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-15T18:38:25 -->
+<!-- 2015-12-15T18:46:05 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_pacing_report" pageWidth="792" pageHeight="1224" columnWidth="700" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d54d2932-73ab-484a-aa27-020affaf615d">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -160,7 +160,7 @@ order by 1, 2]]>
 					<subreportExpression><![CDATA["campaign_summary.jasper"]]></subreportExpression>
 				</subreport>
 				<staticText>
-					<reportElement x="50" y="551" width="80" height="36" uuid="53902264-a19b-4690-add4-3c2d3e0cbe18">
+					<reportElement x="40" y="551" width="80" height="36" uuid="53902264-a19b-4690-add4-3c2d3e0cbe18">
 						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					</reportElement>
 					<box>
@@ -173,7 +173,7 @@ order by 1, 2]]>
 					<text><![CDATA[Date]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="130" y="551" width="80" height="36" uuid="6a1690a4-af2f-4281-a18f-c8293d41c42e"/>
+					<reportElement x="120" y="551" width="80" height="36" uuid="6a1690a4-af2f-4281-a18f-c8293d41c42e"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -184,7 +184,7 @@ order by 1, 2]]>
 					<text><![CDATA[Unpaid Views]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="210" y="551" width="80" height="36" uuid="fe810ebf-df72-4908-91a5-b4299c76515e"/>
+					<reportElement x="200" y="551" width="80" height="36" uuid="fe810ebf-df72-4908-91a5-b4299c76515e"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -195,7 +195,7 @@ order by 1, 2]]>
 					<text><![CDATA[Paid Views]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="290" y="551" width="80" height="36" uuid="9209924b-3b71-4ea3-9b0d-a529474bb141"/>
+					<reportElement x="280" y="551" width="80" height="36" uuid="9209924b-3b71-4ea3-9b0d-a529474bb141"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -206,7 +206,7 @@ order by 1, 2]]>
 					<text><![CDATA[Average CPV]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="369" y="551" width="80" height="36" uuid="6da11e38-0d7f-4777-9434-42e2de35df63"/>
+					<reportElement x="360" y="551" width="80" height="36" uuid="6da11e38-0d7f-4777-9434-42e2de35df63"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -217,7 +217,7 @@ order by 1, 2]]>
 					<text><![CDATA[Spend]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="450" y="551" width="80" height="36" uuid="57e2aaaf-659c-4249-a6a3-d8799d4e9a41"/>
+					<reportElement x="440" y="551" width="80" height="36" uuid="57e2aaaf-659c-4249-a6a3-d8799d4e9a41"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -228,7 +228,7 @@ order by 1, 2]]>
 					<text><![CDATA[Daily Limit]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="530" y="551" width="80" height="36" uuid="68fb790a-ae48-43df-a8ca-455f4b30daa2"/>
+					<reportElement x="520" y="551" width="80" height="36" uuid="68fb790a-ae48-43df-a8ca-455f4b30daa2"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -239,7 +239,7 @@ order by 1, 2]]>
 					<text><![CDATA[Burn Rate]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="610" y="551" width="80" height="36" uuid="0d0dc961-a9e4-4f4c-b937-47bd8f2f0673"/>
+					<reportElement x="600" y="551" width="80" height="36" uuid="0d0dc961-a9e4-4f4c-b937-47bd8f2f0673"/>
 					<box>
 						<topPen lineWidth="1.0"/>
 						<leftPen lineWidth="1.0"/>
@@ -450,8 +450,7 @@ order by 1, 2]]>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="12"/>
 					</textElement>
-					<textFieldExpression><![CDATA[new java.util.Date(TODAY().getTime() + (((int)((double)($V{budget}.doubleValue() - $V{total_spend}) / $V{daily_limit}.doubleValue()) ) * 24*60*60*1000))
-]]></textFieldExpression>
+					<textFieldExpression><![CDATA[new java.util.Date(TODAY().getTime() + (((int)((double)($V{budget}.doubleValue() - $V{total_spend}) / $V{daily_limit}.doubleValue()) ) * 24*60*60*1000))]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement mode="Opaque" x="612" y="180" width="122" height="19" forecolor="#FFFFFF" backcolor="#1E86B2" uuid="14ad079b-f0cf-4b4e-a4e9-45a3e3b64416">
@@ -473,7 +472,7 @@ order by 1, 2]]>
 		<groupFooter>
 			<band height="50">
 				<textField pattern="#,##0.###;#,##0.###-">
-					<reportElement x="130" y="10" width="80" height="30" uuid="65f20e5b-2ae2-4cb4-bd2d-75ec7ae67b22"/>
+					<reportElement x="120" y="10" width="80" height="30" uuid="65f20e5b-2ae2-4cb4-bd2d-75ec7ae67b22"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -481,7 +480,7 @@ order by 1, 2]]>
 					<textFieldExpression><![CDATA[$V{total_unpaid_views}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0.###;#,##0.###-">
-					<reportElement x="210" y="10" width="80" height="30" uuid="bf42452e-050d-4ced-8629-47982bce625e"/>
+					<reportElement x="200" y="10" width="80" height="30" uuid="bf42452e-050d-4ced-8629-47982bce625e"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -489,7 +488,7 @@ order by 1, 2]]>
 					<textFieldExpression><![CDATA[$V{total_paid_views}]]></textFieldExpression>
 				</textField>
 				<textField pattern="¤#,##0.00;¤-#,##0.00">
-					<reportElement x="290" y="10" width="80" height="30" uuid="5c646306-534c-4064-97e2-278021e673a6"/>
+					<reportElement x="280" y="10" width="80" height="30" uuid="5c646306-534c-4064-97e2-278021e673a6"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -497,7 +496,7 @@ order by 1, 2]]>
 					<textFieldExpression><![CDATA[$V{total_paid_views} > 0 ? $V{total_spend}.doubleValue() / (double)$V{total_paid_views}: 0]]></textFieldExpression>
 				</textField>
 				<textField pattern="¤#,##0.00;¤-#,##0.00">
-					<reportElement x="370" y="10" width="80" height="30" uuid="94f04de7-d122-43e5-9e83-834aeb2a8bef"/>
+					<reportElement x="360" y="10" width="80" height="30" uuid="94f04de7-d122-43e5-9e83-834aeb2a8bef"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -505,7 +504,7 @@ order by 1, 2]]>
 					<textFieldExpression><![CDATA[$V{total_spend}]]></textFieldExpression>
 				</textField>
 				<textField pattern="¤#,##0.00;¤-#,##0.00">
-					<reportElement x="449" y="10" width="80" height="30" uuid="4255bb26-ea0e-47ee-ae1b-f04909068e8c"/>
+					<reportElement x="440" y="10" width="80" height="30" uuid="4255bb26-ea0e-47ee-ae1b-f04909068e8c"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -513,7 +512,7 @@ order by 1, 2]]>
 					<textFieldExpression><![CDATA[$V{avg_daily_limit}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0%">
-					<reportElement x="532" y="10" width="80" height="30" uuid="3e95f006-7f27-4256-934b-885dd4178495"/>
+					<reportElement x="520" y="10" width="80" height="30" uuid="3e95f006-7f27-4256-934b-885dd4178495"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -521,7 +520,7 @@ order by 1, 2]]>
 					<textFieldExpression><![CDATA[$V{total_daily_limit}.doubleValue() > 0 ? $V{total_spend}.doubleValue() / $V{total_daily_limit}.doubleValue(): 0]]></textFieldExpression>
 				</textField>
 				<textField pattern="¤#,##0.00;¤-#,##0.00">
-					<reportElement x="610" y="10" width="80" height="30" uuid="9c04fdfd-30fd-42a6-8d04-f323c63ac46d"/>
+					<reportElement x="600" y="10" width="80" height="30" uuid="9c04fdfd-30fd-42a6-8d04-f323c63ac46d"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
@@ -549,7 +548,7 @@ order by 1, 2]]>
 		<band height="24" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<textField pattern="M/d/yy">
-				<reportElement x="50" y="0" width="80" height="24" uuid="30a50fa9-dcf9-48c8-ac84-ab2d0c396db1">
+				<reportElement x="40" y="0" width="80" height="24" uuid="30a50fa9-dcf9-48c8-ac84-ab2d0c396db1">
 					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
@@ -558,43 +557,43 @@ order by 1, 2]]>
 				<textFieldExpression><![CDATA[$F{rec_date}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###;#,##0.###-">
-				<reportElement x="130" y="0" width="80" height="24" uuid="cf300b17-85bd-4b94-a8b7-a08038fc2f2b"/>
+				<reportElement x="120" y="0" width="80" height="24" uuid="cf300b17-85bd-4b94-a8b7-a08038fc2f2b"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{unpaid_views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###;#,##0.###-">
-				<reportElement x="210" y="0" width="80" height="24" uuid="f7984448-2d17-46b9-badc-e7b374a5bc71"/>
+				<reportElement x="200" y="0" width="80" height="24" uuid="f7984448-2d17-46b9-badc-e7b374a5bc71"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{paid_views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="¤#,##0.00;¤-#,##0.00">
-				<reportElement x="369" y="0" width="80" height="24" uuid="9c23f132-b90c-40eb-84d3-38755edb4fbe"/>
+				<reportElement x="360" y="0" width="80" height="24" uuid="9c23f132-b90c-40eb-84d3-38755edb4fbe"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{spend}]]></textFieldExpression>
 			</textField>
 			<textField pattern="¤#,##0.00;¤-#,##0.00">
-				<reportElement x="450" y="0" width="80" height="24" uuid="482fe466-911c-43fc-b789-d90e053ef706"/>
+				<reportElement x="440" y="0" width="80" height="24" uuid="482fe466-911c-43fc-b789-d90e053ef706"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{daily_limit}]]></textFieldExpression>
 			</textField>
 			<textField pattern="¤#,##0.00;¤-#,##0.00">
-				<reportElement x="290" y="0" width="80" height="24" uuid="22e7de27-78f6-404c-ab40-49159f0914e2"/>
+				<reportElement x="280" y="0" width="80" height="24" uuid="22e7de27-78f6-404c-ab40-49159f0914e2"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{paid_views} > 0 ? $F{spend}.doubleValue() / (double)$F{paid_views}: 0]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%">
-				<reportElement x="530" y="0" width="80" height="24" uuid="0590b6c7-1b3f-41c7-a456-837c87c72c5c"/>
+				<reportElement x="520" y="0" width="80" height="24" uuid="0590b6c7-1b3f-41c7-a456-837c87c72c5c"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{daily_limit}.doubleValue() > 0 ? $F{spend}.doubleValue() / $F{daily_limit}.doubleValue(): 0]]></textFieldExpression>
 			</textField>
 			<textField pattern="¤#,##0.00;¤-#,##0.00">
-				<reportElement x="610" y="0" width="80" height="24" uuid="7b7a3092-bc1e-49d0-822a-0de00bf02b87"/>
+				<reportElement x="600" y="0" width="80" height="24" uuid="7b7a3092-bc1e-49d0-822a-0de00bf02b87"/>
 				<box leftPadding="8" rightPadding="8"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{daily_limit}.doubleValue() > 0 ? $F{daily_limit}.doubleValue() - $F{spend}.doubleValue(): 0]]></textFieldExpression>
