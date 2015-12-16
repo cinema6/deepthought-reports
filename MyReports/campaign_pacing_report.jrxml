@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-15T18:46:05 -->
+<!-- 2015-12-15T19:11:04 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_pacing_report" pageWidth="792" pageHeight="1224" columnWidth="700" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="d54d2932-73ab-484a-aa27-020affaf615d">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -120,7 +120,7 @@ order by 1, 2]]>
 	<variable name="total_paid_views" class="java.lang.Long" resetType="Group" resetGroup="campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{paid_views}]]></variableExpression>
 	</variable>
-	<variable name="total_spend" class="java.lang.Long" resetType="Group" resetGroup="campaign_id" calculation="Sum">
+	<variable name="total_spend" class="java.math.BigDecimal" resetType="Group" resetGroup="campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{spend}]]></variableExpression>
 	</variable>
 	<variable name="budget" class="java.math.BigDecimal" resetType="Group" resetGroup="campaign_id">
@@ -250,8 +250,8 @@ order by 1, 2]]>
 					<text><![CDATA[Remainig Budget (daily)]]></text>
 				</staticText>
 				<stackedBarChart>
-					<chart evaluationTime="Report">
-						<reportElement x="0" y="290" width="740" height="240" uuid="d431568d-8e31-47c5-8cfa-0178c0a72924">
+					<chart evaluationTime="Group" evaluationGroup="campaign_id">
+						<reportElement x="0" y="290" width="740" height="240" uuid="2d743c6c-f786-4e13-a838-b9d8bbc4e658">
 							<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 						</reportElement>
 						<box padding="8">
@@ -268,6 +268,7 @@ order by 1, 2]]>
 						<chartLegend position="Top"/>
 					</chart>
 					<categoryDataset>
+						<dataset resetType="Group" resetGroup="campaign_id"/>
 						<categorySeries>
 							<seriesExpression><![CDATA["Daily Spend"]]></seriesExpression>
 							<categoryExpression><![CDATA[DATEFORMAT( $F{rec_date}, "M/d")]]></categoryExpression>
@@ -349,7 +350,7 @@ order by 1, 2]]>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="12"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$V{budget}.doubleValue() - $V{total_spend}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$V{budget}.doubleValue() - $V{total_spend}.doubleValue()]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="#,##0">
 					<reportElement x="490" y="200" width="122" height="70" uuid="9ca79704-5daf-49dc-9047-41e0913b2fea"/>
@@ -362,7 +363,7 @@ order by 1, 2]]>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="12"/>
 					</textElement>
-					<textFieldExpression><![CDATA[(double)($V{budget}.doubleValue() - $V{total_spend}) / $V{daily_limit}.doubleValue()]]></textFieldExpression>
+					<textFieldExpression><![CDATA[(double)($V{budget}.doubleValue() - $V{total_spend}.doubleValue()) / $V{daily_limit}.doubleValue()]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement mode="Opaque" x="2" y="180" width="122" height="19" forecolor="#FFFFFF" backcolor="#1E86B2" uuid="25929af2-c0a2-4683-8c22-fa7f56163a9d">
@@ -450,7 +451,7 @@ order by 1, 2]]>
 					<textElement textAlignment="Center" verticalAlignment="Middle">
 						<font size="12"/>
 					</textElement>
-					<textFieldExpression><![CDATA[new java.util.Date(TODAY().getTime() + (((int)((double)($V{budget}.doubleValue() - $V{total_spend}) / $V{daily_limit}.doubleValue()) ) * 24*60*60*1000))]]></textFieldExpression>
+					<textFieldExpression><![CDATA[new java.util.Date(TODAY().getTime() + (((int)((double)($V{budget}.doubleValue() - $V{total_spend}.doubleValue()) / $V{daily_limit}.doubleValue()) ) * 24*60*60*1000))]]></textFieldExpression>
 				</textField>
 				<staticText>
 					<reportElement mode="Opaque" x="612" y="180" width="122" height="19" forecolor="#FFFFFF" backcolor="#1E86B2" uuid="14ad079b-f0cf-4b4e-a4e9-45a3e3b64416">
@@ -471,7 +472,7 @@ order by 1, 2]]>
 		</groupHeader>
 		<groupFooter>
 			<band height="50">
-				<textField pattern="#,##0.###;#,##0.###-">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="#,##0.###;#,##0.###-">
 					<reportElement x="120" y="10" width="80" height="30" uuid="65f20e5b-2ae2-4cb4-bd2d-75ec7ae67b22"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -479,7 +480,7 @@ order by 1, 2]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{total_unpaid_views}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0.###;#,##0.###-">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="#,##0.###;#,##0.###-">
 					<reportElement x="200" y="10" width="80" height="30" uuid="bf42452e-050d-4ced-8629-47982bce625e"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -487,7 +488,7 @@ order by 1, 2]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{total_paid_views}]]></textFieldExpression>
 				</textField>
-				<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="¤#,##0.00;¤-#,##0.00">
 					<reportElement x="280" y="10" width="80" height="30" uuid="5c646306-534c-4064-97e2-278021e673a6"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -495,7 +496,7 @@ order by 1, 2]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{total_paid_views} > 0 ? $V{total_spend}.doubleValue() / (double)$V{total_paid_views}: 0]]></textFieldExpression>
 				</textField>
-				<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="¤#,##0.00;¤-#,##0.00">
 					<reportElement x="360" y="10" width="80" height="30" uuid="94f04de7-d122-43e5-9e83-834aeb2a8bef"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -503,7 +504,7 @@ order by 1, 2]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{total_spend}]]></textFieldExpression>
 				</textField>
-				<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="¤#,##0.00;¤-#,##0.00">
 					<reportElement x="440" y="10" width="80" height="30" uuid="4255bb26-ea0e-47ee-ae1b-f04909068e8c"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -511,7 +512,7 @@ order by 1, 2]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{avg_daily_limit}]]></textFieldExpression>
 				</textField>
-				<textField pattern="#,##0%">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="#,##0%">
 					<reportElement x="520" y="10" width="80" height="30" uuid="3e95f006-7f27-4256-934b-885dd4178495"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
@@ -519,13 +520,13 @@ order by 1, 2]]>
 					</textElement>
 					<textFieldExpression><![CDATA[$V{total_daily_limit}.doubleValue() > 0 ? $V{total_spend}.doubleValue() / $V{total_daily_limit}.doubleValue(): 0]]></textFieldExpression>
 				</textField>
-				<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<textField evaluationTime="Group" evaluationGroup="campaign_id" pattern="¤#,##0.00;¤-#,##0.00">
 					<reportElement x="600" y="10" width="80" height="30" uuid="9c04fdfd-30fd-42a6-8d04-f323c63ac46d"/>
 					<box leftPadding="8" rightPadding="6"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle">
 						<font isBold="true"/>
 					</textElement>
-					<textFieldExpression><![CDATA[$V{budget}.doubleValue() - $V{total_spend}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[$V{budget}.doubleValue() - $V{total_spend}.doubleValue()]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>
@@ -533,17 +534,17 @@ order by 1, 2]]>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
-	<title>
-		<band height="32" splitType="Stretch">
+	<pageHeader>
+		<band height="50">
 			<staticText>
-				<reportElement x="0" y="0" width="280" height="30" uuid="13a2a2f5-5bb6-497c-98e1-2d68d26d20e6"/>
+				<reportElement x="2" y="8" width="280" height="30" uuid="13a2a2f5-5bb6-497c-98e1-2d68d26d20e6"/>
 				<textElement>
 					<font size="18"/>
 				</textElement>
 				<text><![CDATA[Reelcontent Video Performance Report]]></text>
 			</staticText>
 		</band>
-	</title>
+	</pageHeader>
 	<detail>
 		<band height="24" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
