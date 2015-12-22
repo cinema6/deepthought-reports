@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-22T17:27:35 -->
+<!-- 2015-12-22T17:32:23 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="908" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
@@ -254,7 +254,9 @@ order by 1]]>
 		</queryString>
 		<field name="link_name" class="java.lang.String"/>
 		<field name="click_count" class="java.lang.Integer"/>
-		<variable name="total_click_count" class="java.lang.Long" calculation="Sum"/>
+		<variable name="total_click_count" class="java.lang.Long" calculation="Sum">
+			<variableExpression><![CDATA[$F{click_count}]]></variableExpression>
+		</variable>
 	</subDataset>
 	<parameter name="start_date" class="java.util.Date">
 		<parameterDescription><![CDATA[]]></parameterDescription>
