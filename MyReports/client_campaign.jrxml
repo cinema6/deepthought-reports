@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-14T16:07:51 -->
+<!-- 2015-12-22T17:27:35 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="908" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
@@ -226,6 +226,9 @@ order by 1]]>
 		</queryString>
 		<field name="link_name" class="java.lang.String"/>
 		<field name="click_count" class="java.lang.Integer"/>
+		<variable name="total_click_count" class="java.lang.Long" calculation="Sum">
+			<variableExpression><![CDATA[$F{click_count}]]></variableExpression>
+		</variable>
 	</subDataset>
 	<subDataset name="campaign_card_shares" uuid="7b06e80f-b47b-47f4-a769-7d3ab583bbf2">
 		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -251,6 +254,7 @@ order by 1]]>
 		</queryString>
 		<field name="link_name" class="java.lang.String"/>
 		<field name="click_count" class="java.lang.Integer"/>
+		<variable name="total_click_count" class="java.lang.Long" calculation="Sum"/>
 	</subDataset>
 	<parameter name="start_date" class="java.util.Date">
 		<parameterDescription><![CDATA[]]></parameterDescription>
@@ -967,7 +971,16 @@ Completion Rate]]></text>
 						</jr:column>
 						<jr:column width="100" uuid="a675d317-4817-41f0-b05d-29ffb119bf8d">
 							<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
-							<jr:tableHeader height="30"/>
+							<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+							<jr:tableHeader height="30">
+								<textField evaluationTime="Report" pattern="#,##0.###">
+									<reportElement x="0" y="0" width="100" height="30" uuid="99fcba07-e882-4eb8-a769-4104d0fa7bb5"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font size="12" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{total_click_count}]]></textFieldExpression>
+								</textField>
+							</jr:tableHeader>
 							<jr:detailCell style="Table 1_TD" height="30">
 								<textField pattern="#,##0.###">
 									<reportElement x="0" y="0" width="100" height="30" uuid="0bf92b27-7c3b-4f63-8cbe-7a8a9ea230b6"/>
@@ -1022,7 +1035,15 @@ Completion Rate]]></text>
 						</jr:column>
 						<jr:column width="100" uuid="911da843-cbec-4ebe-9313-7dca8e5ca623">
 							<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column2"/>
-							<jr:tableHeader height="30"/>
+							<jr:tableHeader height="30">
+								<textField evaluationTime="Report" pattern="#,##0.###">
+									<reportElement x="0" y="0" width="100" height="30" uuid="e9443dff-6983-4dec-b590-0413d0a94429"/>
+									<textElement textAlignment="Center" verticalAlignment="Middle">
+										<font size="12" isBold="true"/>
+									</textElement>
+									<textFieldExpression><![CDATA[$V{total_click_count}]]></textFieldExpression>
+								</textField>
+							</jr:tableHeader>
 							<jr:detailCell style="Table 2_TD" height="30">
 								<textField pattern="#,##0.###">
 									<reportElement x="0" y="0" width="100" height="30" uuid="55d35655-b920-4849-8cf8-d3070e9f6ede"/>
