@@ -1,0 +1,1108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2015-12-28T14:23:45 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="selfie_campaign_daily" pageWidth="1224" pageHeight="792" orientation="Landscape" columnWidth="1184" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="22705753-e7e5-45b9-b49b-736d9c804f24">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="start_date" class="java.util.Date">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="end_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+	</parameter>
+	<parameter name="list_active_selfie_campaign_ids" class="java.util.List">
+		<parameterDescription><![CDATA[Select campaign(s) with activity within the last 24 hours.]]></parameterDescription>
+		<defaultValueExpression><![CDATA[Arrays.asList("cam-6106ff2b590cf0","cam-43607096ac075b","cam-aa407ae9f52df0")]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT imp.rec_date,cm.campaign_id,cr.card_id,coalesce(coalesce(cm.advertiser_display_name,cr.sponsor),ad.name) as sponsor, 
+cm.name as campaign, cr.title, 
+(case cr.video_duration when -1 then null else cr.video_duration end)::int4 as video_duration,
+cr.campaign_min_view_time::int4 as min_view_time,
+(case 
+	when cr.video_duration > -1 AND cr.campaign_min_view_time = -1 
+	then cr.video_duration::float * 1.0
+	when cr.video_duration > -1 AND cr.campaign_min_view_time > -1 
+	then cr.campaign_min_view_time::float * 1.0
+	 else null 
+end
+)::float as video_duration_min,
+(case when cr.video_duration > -1 then cr.video_duration::float * 0.25 else null end)::float as video_duration_25,
+(case when cr.video_duration > -1 then cr.video_duration::float * 0.5 else null end)::float as video_duration_50,
+(case when cr.video_duration > -1 then cr.video_duration::float * 0.75 else null end)::float as video_duration_75,
+(case when cr.video_duration > -1 then cr.video_duration::float * 1.0 else null end)::float as video_duration_100,
+cr.video_source,
+cr.campaign_start_date, cr.campaign_end_date, cm.status,
+imp.events::int4 as impressions,
+coalesce(pl.events,0)::int4 as plays,
+coalesce(q1.events,0)::int4 as q1,
+coalesce(q2.events,0)::int4 as q2,
+coalesce(q3.events,0)::int4 as q3,
+coalesce(q4.events,0)::int4 as q4,
+coalesce(cv.events,0)::int4 as views,
+coalesce(cv.event_cost,0)::numeric(12,4) as spend,
+coalesce(cla.events,0)::int4 as call_to_action_clicks,
+coalesce(clw.events,0)::int4 as website_clicks,
+coalesce(cl.events,0)::int4 as link_clicks,
+coalesce(cs.events,0)::int4 as share_clicks
+FROM dim.campaign cm  
+INNER JOIN dim.minireel_card cr ON cr.campaign_id = cm.campaign_id AND cr.end_ts = dim.sp_end_of_time()
+INNER JOIN dim.advertiser ad ON ad.advertiser_id = cm.advertiser_id AND ad.end_ts = dim.sp_end_of_time()
+INNER JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'cardView'
+	GROUP BY 1,2,3
+) as imp ON imp.campaign_id = cm.campaign_id AND imp.card_id = cr.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'play'
+	GROUP BY 1,2,3
+) as pl ON pl.rec_date = imp.rec_date AND pl.campaign_id = imp.campaign_id AND pl.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'q1'
+	GROUP BY 1,2,3
+) as q1 ON q1.rec_date = imp.rec_date AND q1.campaign_id = imp.campaign_id AND q1.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'q2'
+	GROUP BY 1,2,3
+) as q2 ON q2.rec_date = imp.rec_date AND q2.campaign_id = imp.campaign_id AND q2.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'q3'
+	GROUP BY 1,2,3
+) as q3 ON q3.rec_date = imp.rec_date AND q3.campaign_id = imp.campaign_id AND q3.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'q4'
+	GROUP BY 1,2,3
+) as q4 ON q4.rec_date = imp.rec_date AND q4.campaign_id = imp.campaign_id AND q4.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events,sum(event_cost) as event_cost
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'completedView'
+	GROUP BY 1,2,3
+) as cv ON cv.rec_date = imp.rec_date AND cv.campaign_id = imp.campaign_id AND cv.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'link.Action'
+	GROUP BY 1,2,3
+) as cla ON cla.rec_date = imp.rec_date AND cla.campaign_id = imp.campaign_id AND cla.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and event_type = 'link.Website'
+	GROUP BY 1,2,3
+) as clw ON clw.rec_date = imp.rec_date AND clw.campaign_id = imp.campaign_id AND clw.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and (event_type like 'link%') and NOT event_type in ('link.Website','link.Action')
+	GROUP BY 1,2,3
+) as cl ON cl.rec_date = imp.rec_date AND cl.campaign_id = imp.campaign_id AND cl.card_id = imp.card_id
+LEFT JOIN (
+	SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events
+	FROM fct.campaign_activity_by_device
+	WHERE rec_ts::date between $P{start_date} AND $P{end_date} and $X{IN,campaign_id, list_active_selfie_campaign_ids} and (event_type like 'share%')
+	GROUP BY 1,2,3
+) as cs ON cs.rec_date = imp.rec_date AND cs.campaign_id = imp.campaign_id AND cs.card_id = imp.card_id
+where cm.end_ts = dim.sp_end_of_time() and cm.status <> 'deleted' and cm.$X{IN,campaign_id, list_active_selfie_campaign_ids} --AND cm.application  = 'selfie' 
+ORDER BY 4,5,6,1]]>
+	</queryString>
+	<field name="rec_date" class="java.sql.Date"/>
+	<field name="campaign_id" class="java.lang.String"/>
+	<field name="card_id" class="java.lang.String"/>
+	<field name="sponsor" class="java.lang.String"/>
+	<field name="campaign" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="video_duration" class="java.lang.Integer"/>
+	<field name="min_view_time" class="java.lang.Integer"/>
+	<field name="video_duration_min" class="java.lang.Double"/>
+	<field name="video_duration_25" class="java.lang.Double"/>
+	<field name="video_duration_50" class="java.lang.Double"/>
+	<field name="video_duration_75" class="java.lang.Double"/>
+	<field name="video_duration_100" class="java.lang.Double"/>
+	<field name="video_source" class="java.lang.String"/>
+	<field name="campaign_start_date" class="java.sql.Timestamp"/>
+	<field name="campaign_end_date" class="java.sql.Timestamp"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="impressions" class="java.lang.Integer"/>
+	<field name="plays" class="java.lang.Integer"/>
+	<field name="q1" class="java.lang.Integer"/>
+	<field name="q2" class="java.lang.Integer"/>
+	<field name="q3" class="java.lang.Integer"/>
+	<field name="q4" class="java.lang.Integer"/>
+	<field name="views" class="java.lang.Integer"/>
+	<field name="spend" class="java.math.BigDecimal"/>
+	<field name="call_to_action_clicks" class="java.lang.Integer"/>
+	<field name="website_clicks" class="java.lang.Integer"/>
+	<field name="link_clicks" class="java.lang.Integer"/>
+	<field name="share_clicks" class="java.lang.Integer"/>
+	<variable name="campaign_total_views" class="java.lang.Long" resetType="Group" resetGroup="Campaign" calculation="Sum">
+		<variableExpression><![CDATA[$F{views}]]></variableExpression>
+	</variable>
+	<variable name="campaign_total_spend" class="java.math.BigDecimal" resetType="Group" resetGroup="Campaign" calculation="Sum">
+		<variableExpression><![CDATA[$F{spend}]]></variableExpression>
+	</variable>
+	<variable name="card_total_impressions" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{impressions}]]></variableExpression>
+	</variable>
+	<variable name="card_total_plays" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{plays}]]></variableExpression>
+	</variable>
+	<variable name="card_total_views" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{views}]]></variableExpression>
+	</variable>
+	<variable name="card_total_q1" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{q1}]]></variableExpression>
+	</variable>
+	<variable name="card_total_q2" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{q2}]]></variableExpression>
+	</variable>
+	<variable name="card_total_q3" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{q3}]]></variableExpression>
+	</variable>
+	<variable name="card_total_q4" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{q4}]]></variableExpression>
+	</variable>
+	<variable name="card_total_spend" class="java.math.BigDecimal" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{spend}]]></variableExpression>
+	</variable>
+	<variable name="card_total_action_clicks" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{call_to_action_clicks}]]></variableExpression>
+	</variable>
+	<variable name="card_total_web_clicks" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{website_clicks}]]></variableExpression>
+	</variable>
+	<variable name="card_total_link_clicks" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{link_clicks}]]></variableExpression>
+	</variable>
+	<variable name="card_total_share_clicks" class="java.lang.Long" resetType="Group" resetGroup="Card" calculation="Sum">
+		<variableExpression><![CDATA[$F{share_clicks}]]></variableExpression>
+	</variable>
+	<group name="Campaign" isStartNewPage="true" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{campaign_id}]]></groupExpression>
+		<groupHeader>
+			<band height="75">
+				<textField>
+					<reportElement x="0" y="40" width="757" height="30" uuid="629b074a-07e7-498a-a77e-89b61e22a37a">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="16"/>
+						<paragraph leftIndent="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{sponsor} + ": " + $F{campaign}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="10" width="757" height="30" backcolor="#EDEDED" uuid="5c0ca9c8-f082-436f-8a9a-a9f5ea9e2f61"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="16"/>
+						<paragraph leftIndent="12"/>
+					</textElement>
+					<text><![CDATA[Campaign]]></text>
+				</staticText>
+				<textField evaluationTime="Group" evaluationGroup="Campaign" pattern="#,##0.###">
+					<reportElement x="757" y="40" width="210" height="30" uuid="5d203a2e-38d0-4d00-bbde-f79ce8036ff1"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="16"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{campaign_total_views}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Campaign" pattern="¤#,##0.00;¤-#,##0.00">
+					<reportElement x="967" y="40" width="210" height="30" uuid="b18a678c-7b9e-41f4-bf53-7dffbe299dc8"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="16"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{campaign_total_spend}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="757" y="10" width="210" height="30" backcolor="#EDEDED" uuid="3411c39b-d349-45e5-8119-d6f6ff30ffae">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="16"/>
+					</textElement>
+					<text><![CDATA[Views]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="967" y="10" width="210" height="30" backcolor="#EDEDED" uuid="2304fdc9-24b2-4483-8274-4f9f189e0174"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="16"/>
+					</textElement>
+					<text><![CDATA[Spend]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="Card" isStartNewPage="true" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{card_id}]]></groupExpression>
+		<groupHeader>
+			<band height="189">
+				<textField>
+					<reportElement x="190" y="40" width="260" height="20" uuid="4a8e937e-3676-459c-a788-3be020cdee9a">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{title}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="450" y="40" width="180" height="20" uuid="c8790a76-1ccb-4571-bab7-c79b395398b5"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[(($F{campaign_start_date} == null) ? "" : (DATEFORMAT($F{campaign_start_date},"MM/dd/yy") + " - ")) + (($F{campaign_end_date} == null) ? "Open" : DATEFORMAT($F{campaign_end_date},"MM/dd/yy"))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="157" width="60" height="30" uuid="bf5ddd1b-c5d4-43a3-9557-f0ccd0291a86"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Date]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="80" y="157" width="60" height="30" uuid="e0088a20-1401-454f-a790-be404e3997df"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Impression]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="140" y="157" width="60" height="30" uuid="a7efe57b-b67d-4e88-b10e-71fa98427be5"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Play]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="400" y="157" width="60" height="30" uuid="4a1ea6ca-0738-4ef5-a330-f29673ea1c3f"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[75%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="460" y="157" width="60" height="30" uuid="db994983-dbfb-4262-8862-5993ff4d6954"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[100%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="200" y="157" width="60" height="30" uuid="d29bb801-6f37-4f70-a976-b25562fd06ca"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[View]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1060" y="157" width="60" height="30" uuid="fb53edb3-30eb-4f2c-b992-08be854a8786">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Spend]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="280" y="157" width="60" height="30" uuid="507f4873-bc0c-40f6-8170-db4edaacdbd4"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[25%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="340" y="157" width="60" height="30" uuid="da1618b6-bcbf-4308-a47c-c18c80f36471"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[50%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="659" y="157" width="60" height="30" uuid="9cc00e4f-63c2-4dee-8715-ce2a65c55386"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Link]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="719" y="157" width="60" height="30" uuid="c0ab02e7-cb69-40d1-94d8-d9e09ce5852b"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Share]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="600" y="157" width="60" height="30" uuid="712950a9-9502-477f-899b-e6d7ccad121f"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Website]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="540" y="157" width="60" height="30" uuid="1531f974-0c3a-4fda-9415-8d92f8218ade">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Action]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="860" y="157" width="60" height="30" uuid="430be5c1-2bf3-462e-b3fc-5690faab5f4c"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[View Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="800" y="157" width="60" height="30" uuid="a66c817c-273f-430f-9da4-9179b81b664f"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Play Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="980" y="157" width="60" height="30" uuid="28e4365f-d7a0-40f4-b097-ffd202fb84bb"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Engage
+Rate]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="740" y="40" width="80" height="20" uuid="aa166446-eff6-4458-a615-5c09f8952d78"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{video_duration_100} == null ? "Unknown" : TEXT( $F{video_duration_100}, "#,##0")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="190" y="20" width="260" height="20" uuid="e2ce1f63-4178-435c-aa3f-60f1b8b1049a">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Card]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="450" y="20" width="180" height="20" uuid="6fa26d80-db39-46f8-9ec4-b34543739587"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Flight Dates]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="740" y="20" width="80" height="20" uuid="621ea1ef-147a-4b4d-ae14-4932409e6884"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Video Length]]></text>
+				</staticText>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="38" y="110" width="72" height="24" uuid="8f74d32a-ae94-4c76-bbce-f1c931ca0207">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_impressions}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="110" y="110" width="72" height="24" uuid="321a28f0-d7db-4e35-b888-2c7f782ecec3">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_plays}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="182" y="110" width="72" height="24" uuid="416e83c2-4245-4484-b1a2-3272143de1a2">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_views}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="254" y="110" width="72" height="24" uuid="93ebed5a-b4d0-4d76-ad89-8893fa473b8f">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_q1}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="326" y="110" width="72" height="24" uuid="0bc98bca-44b8-4ede-b0d9-81f972d00c5e">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_q2}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="398" y="110" width="72" height="24" uuid="dcec02b4-6b79-407f-a8fb-d1decb3f2209">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_q3}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="470" y="110" width="72" height="24" uuid="1439903b-12a8-466c-81a5-7a374840a591">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_q4}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="¤#,##0.00;¤-#,##0.00">
+					<reportElement x="1070" y="110" width="72" height="24" uuid="91e79625-a029-4845-be40-57a2b3ed1d29">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_spend}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="542" y="110" width="72" height="24" uuid="5a1566d7-aae4-4f6f-aa38-a4bca992db41">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_action_clicks}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="614" y="110" width="72" height="24" uuid="b754e4c4-cab9-48ae-883e-a15d388b86ee">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_web_clicks}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="686" y="110" width="72" height="24" uuid="5c7e67b6-bfd6-4505-a0af-b149d0cee144">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_link_clicks}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.###">
+					<reportElement x="758" y="110" width="72" height="24" uuid="bc929172-8a86-45d7-9271-166cc069ef0a">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{card_total_share_clicks}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="38" y="80" width="72" height="30" uuid="801b84bc-27bd-485e-9053-2c4aa946183c">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<leftPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Impressions]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="110" y="80" width="72" height="30" uuid="f8605d34-0027-4446-b9ed-f21f4bc7154a"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Plays]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="254" y="80" width="72" height="30" uuid="d7540d59-900f-498b-8166-623ecc8e89d5"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[25%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="326" y="80" width="72" height="30" uuid="6f40a8b3-3f30-4deb-978c-c55313c25bde"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[50%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="398" y="80" width="72" height="30" uuid="de0a226c-77d4-444e-aa8e-2dedfc52ce3d"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[75%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="470" y="80" width="72" height="30" uuid="451a3eb4-94a5-4bf1-8c28-7490eb07eccc"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[100%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="182" y="80" width="72" height="30" uuid="1efbbc74-c3d8-4db5-b83d-b957611b919e"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Views]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1070" y="80" width="72" height="30" uuid="97b4b9d7-3d78-4610-ad67-1dbc783ae936"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Spend]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="542" y="80" width="72" height="30" uuid="34ede278-36e2-4aca-a45c-a49d68af31b3"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Action]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="614" y="80" width="72" height="30" uuid="6175d3ac-8707-44ac-b858-78124327b583"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Website]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="686" y="80" width="72" height="30" uuid="84d360a1-5797-4ca0-b34d-5826816d46a6"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Links]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="758" y="80" width="72" height="30" uuid="f65a8aac-208a-44dc-b13d-4d3f82e40f82">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Shares]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="920" y="157" width="60" height="30" uuid="653c2b7b-79f3-4bc4-85f9-074f55dca451"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<text><![CDATA[Complete
+Rate]]></text>
+				</staticText>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.0%">
+					<reportElement x="830" y="110" width="60" height="24" uuid="81cb581b-daae-4067-a6bf-ae34daf3e1d1">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[($V{card_total_impressions}.doubleValue() > 0) ? $V{card_total_plays}.doubleValue() / $V{card_total_impressions}.doubleValue() : null]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.0%">
+					<reportElement x="890" y="110" width="60" height="24" uuid="f70e9392-b32e-43a7-b02a-ea0bd0ddddd7">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[($V{card_total_plays}.doubleValue() > 0) ? $V{card_total_views}.doubleValue() / $V{card_total_plays}.doubleValue() : null]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.0%">
+					<reportElement x="950" y="110" width="60" height="24" uuid="15cd2ec2-81c6-4aa1-9ce7-53e680faa0fd">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[($V{card_total_plays}.doubleValue() > 0) ? $V{card_total_q1}.doubleValue() / $V{card_total_plays}.doubleValue() : null]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0.0%">
+					<reportElement x="1010" y="110" width="60" height="24" uuid="6071e6c0-7adc-482f-bf61-0221f47bcc76">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[($V{card_total_views}.doubleValue() > 0) ? ($V{card_total_action_clicks}.doubleValue() + $V{card_total_web_clicks}.doubleValue() + $V{card_total_link_clicks}.doubleValue()  + $V{card_total_share_clicks}.doubleValue()) / $V{card_total_views}.doubleValue() : null]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="830" y="80" width="60" height="30" uuid="55c1f9c7-b0b3-4d22-8627-3238cf70794d"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Play
+Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="890" y="80" width="60" height="30" uuid="f319cd6c-5c19-4ea3-b406-452ecede1610"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[View
+Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="950" y="80" width="60" height="30" uuid="f2a118d8-da17-43e1-9e11-c54875dc2f1b"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Complete
+Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1010" y="80" width="60" height="30" uuid="85248a58-2bd7-41ce-9c55-069405113cc0"/>
+					<box>
+						<topPen lineWidth="1.0"/>
+						<bottomPen lineWidth="1.0"/>
+						<rightPen lineWidth="1.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Engage
+Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="630" y="20" width="110" height="20" uuid="3d2155f1-0c4a-416b-8cd8-bee70caba747">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Video Source]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="630" y="40" width="110" height="20" uuid="fbeada4d-f679-44f4-b7a5-97b10a69bd0c">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{video_source}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="Card" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="900" y="40" width="80" height="20" uuid="35fe2ffa-0641-4bf3-acbd-bc992cb813ca">
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{video_duration_min} == null || $V{card_total_plays} < 1 ? null : ((
+(
+($F{video_duration_min} >= $F{video_duration_100}) ? 
+($V{card_total_views} * $F{video_duration_100})  +
+(ABS($V{card_total_q3} - $V{card_total_views}).doubleValue() * $F{video_duration_75})
+:
+($V{card_total_q4} * $F{video_duration_100}) +
+(ABS($V{card_total_q3} - $V{card_total_q4}).doubleValue() * $F{video_duration_75})
+)  +	
+(ABS($V{card_total_q2} - $V{card_total_q3}).doubleValue() * $F{video_duration_50}) +
+(ABS($V{card_total_q1} - $V{card_total_q2}).doubleValue() * $F{video_duration_25}) +
+
+(
+($F{video_duration_min} < $F{video_duration_25}) ? 
+(ABS($V{card_total_views} - $V{card_total_q1}).doubleValue() * $F{video_duration_min})
+:
+0
+)
+) / $V{card_total_plays}.doubleValue())]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="820" y="40" width="80" height="20" uuid="ffd484aa-b37a-4853-bc2a-89f4be7296ec"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{min_view_time} == null ? "Unknown" : IF($F{min_view_time} == -1,"Full Video",TEXT($F{min_view_time} ,"#,##0"))]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="820" y="20" width="80" height="20" uuid="8ba01d2a-b1c8-49e9-ac54-d247926ccd2b"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Min View Req.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="900" y="20" width="80" height="20" uuid="b464e5be-e849-4b2e-bbd9-a3697f447bc5"/>
+					<box>
+						<topPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="1.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Avg. View Len.]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<detail>
+		<band height="21" splitType="Stretch">
+			<textField pattern="M/d/yy">
+				<reportElement x="2" y="0" width="60" height="19" uuid="f5179dcf-9e38-404f-878b-0c6d2c15cdf9"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{rec_date}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="80" y="0" width="60" height="19" uuid="d9b4d20b-3425-48e4-9496-1515d79d6476">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{impressions}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="140" y="0" width="60" height="19" uuid="bf4255ce-528d-40b2-9f86-ae906b569a6c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{plays}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="280" y="0" width="60" height="19" uuid="51b83e22-7705-44c5-a520-efc140984d47"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{q1}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="340" y="0" width="60" height="19" uuid="12bed40f-7190-4c84-83da-daea6938d158"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{q2}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="400" y="0" width="60" height="19" uuid="6b641b4c-c400-4ad0-ba0d-56511b4a3e0c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{q3}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="460" y="0" width="60" height="19" uuid="074fd786-e280-41a1-ab56-52bb1826a2d0"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{q4}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="200" y="0" width="60" height="19" uuid="cd993155-6212-43a7-9fba-e8124bf3b71a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
+			</textField>
+			<textField pattern="¤#,##0.00;¤-#,##0.00">
+				<reportElement x="1060" y="1" width="60" height="19" uuid="5a3f6493-c53e-475f-8418-622e91480a74"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{spend}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="542" y="1" width="60" height="19" uuid="8ad46da7-9a51-4b2b-a24e-a7c13646dce4"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{call_to_action_clicks}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="602" y="1" width="60" height="19" uuid="24386678-1799-4732-aa32-cb71b08612c6"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{website_clicks}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="661" y="1" width="60" height="19" uuid="5a187556-f443-4225-88f4-0fcdcef96aab"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_clicks}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###">
+				<reportElement x="721" y="1" width="60" height="19" uuid="d5d5c3b5-41e5-4b10-8ce2-900f74c4078a"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{share_clicks}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0%" isBlankWhenNull="true">
+				<reportElement x="860" y="1" width="60" height="19" uuid="dab8e897-fab3-4c8b-a159-21dd8fbda6ef"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{plays}.doubleValue() > 0) ? $F{views}.doubleValue() / $F{plays}.doubleValue() : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0%" isBlankWhenNull="true">
+				<reportElement x="800" y="1" width="60" height="19" uuid="07fa6901-5214-4594-9a3e-98a5d0c1f465"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{impressions}.doubleValue() > 0) ? $F{plays}.doubleValue() / $F{impressions}.doubleValue() : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0%" isBlankWhenNull="true">
+				<reportElement x="980" y="1" width="60" height="19" uuid="5831a72c-4ee8-4642-9040-4559458e57b5"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{views}.doubleValue() > 0) ? ($F{call_to_action_clicks}.doubleValue() + $F{website_clicks}.doubleValue() + $F{link_clicks}.doubleValue()  + $F{share_clicks}.doubleValue()) / $F{views}.doubleValue() : null]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.0%" isBlankWhenNull="true">
+				<reportElement x="920" y="0" width="60" height="19" uuid="3076dacd-fbfc-43d6-85e4-8c487fcf8f0c"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[($F{plays}.doubleValue() > 0) ? $F{q4}.doubleValue() / $F{plays}.doubleValue() : null]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
