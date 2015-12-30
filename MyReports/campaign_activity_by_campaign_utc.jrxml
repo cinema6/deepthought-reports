@@ -1,12 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-11-24T19:06:06 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_site_utc_period" pageWidth="612" pageHeight="792" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="32f3947b-4b6f-40cf-a568-8716c8480ba8">
+<!-- 2015-12-30T16:22:59 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_site_utc_period" pageWidth="792" pageHeight="1224" columnWidth="752" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="32f3947b-4b6f-40cf-a568-8716c8480ba8">
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/CampaignActivityByCampaignUTC_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/CampaignActivityByCampaignUTC"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="ireport.jasperserver.user" value="howard"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<parameter name="start_date" class="java.util.Date">
 		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 	</parameter>
@@ -16,23 +25,34 @@
 	<parameter name="campaign_list" class="java.util.List">
 		<parameterDescription><![CDATA[Select campaign(s).]]></parameterDescription>
 	</parameter>
+	<parameter name="timezone" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA["UTC"]]></defaultValueExpression>
+	</parameter>
 	<queryString language="SQL">
-		<![CDATA[select i.site_name,c.campaign,sum(i.crd_count) as cards, sum(i.cardviews) as cardviews, sum(i.plays) as plays, sum(i.adcounts) as adcounts, sum(spend_est) as spend_est
+		<![CDATA[select i.site_name,i.campaign,sum(i.crd_count)::int4 as cards, sum(i.cardviews)::int4 as cardviews, sum(i.plays)::int4 as plays, sum(i.adcounts)::int4 as adcounts, sum(i.completions)::int4 as completions, sum(spend_est) as spend_est
 from (
-	select campaign_id,card_id,site_name,sum(cardviews) as cardviews, sum(play) as plays, sum(adcount) as adcounts, sum(spend_est) as spend_est, 1 as crd_count
-	from (
-		select a.campaign_id,a.card_id,s.site_name,a.cardviews, a.play,a.adcount,a.adcount * cp.cost_per as spend_est
-		from rpt.sponsored_card_activity a
-		LEFT JOIN dim.campaign_pricing cp ON a.campaign_id = cp.campaign_id AND a.rec_ts between cp.start_ts and cp.end_ts
-		LEFT join rpt.hostname_to_site s ON a.hostname = s.hostname AND a.container = s.container
-		where  a.rec_ts::date BETWEEN $P{start_date} AND $P{end_date} and s.site_name is not null
-	) f
-	group by campaign_id,card_id,site_name
+	SELECT c.name as campaign,cv.campaign_id,cv.card_id,coalesce(s.site_name,cv.container) as site_name,
+	cv.events as cardviews,coalesce(p.events,0) as plays,coalesce(v.events,0) as adcounts,coalesce(q4.events,0) as completions,cast (coalesce(v.spend,0) as numeric(12,4) ) as spend_est, 1::int4 as crd_count
+	FROM (
+		SELECT campaign_id,card_id,container,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'cardView' AND rec_ts >= ($P{start_date}::timestamp at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
+	) cv
+	LEFT JOIN (
+		SELECT campaign_id,card_id,container,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'play' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')  GROUP BY 1,2,3
+	) p ON 	cv.campaign_id = p.campaign_id AND cv.card_id = p.card_id AND cv.container = p.container
+	LEFT JOIN (
+		SELECT campaign_id,card_id,container,sum(events) as events, sum(event_cost) as spend FROM fct.campaign_activity_by_device WHERE event_type = 'completedView' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')  GROUP BY 1,2,3
+	) v ON 	cv.campaign_id = v.campaign_id AND cv.card_id = v.card_id AND cv.container = v.container
+	LEFT JOIN (
+		SELECT campaign_id,card_id,container,sum(events) as events, sum(event_cost) as spend FROM fct.campaign_activity_by_device WHERE event_type = 'q4' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')  GROUP BY 1,2,3
+	) q4 ON cv.campaign_id = q4.campaign_id AND cv.card_id = q4.card_id AND cv.container = q4.container
+	LEFT JOIN rpt.hostname_to_site s ON  cv.container = s.container and s.hostname = 'platform.reelcontent.com'
+	INNER JOIN dim.campaign c ON cv.campaign_id = c.campaign_id AND c.end_ts = dim.sp_end_of_time()
+	WHERE NOT cv.container in ('embed','standalone') AND $X{IN,c.name,campaign_list}
 ) i
-inner join dim.v_sponsored_card c ON i.campaign_id = c.campaign_id AND i.card_id = c.card_id
-where $X{IN,campaign,campaign_list}
-group by i.site_name,c.campaign
-order by c.campaign, i.site_name;]]>
+group by i.site_name,i.campaign
+order by i.campaign,i.site_name
+]]>
 	</queryString>
 	<field name="site_name" class="java.lang.String"/>
 	<field name="campaign" class="java.lang.String"/>
@@ -40,6 +60,7 @@ order by c.campaign, i.site_name;]]>
 	<field name="cardviews" class="java.lang.Long"/>
 	<field name="plays" class="java.lang.Long"/>
 	<field name="adcounts" class="java.lang.Long"/>
+	<field name="completions" class="java.lang.Long"/>
 	<field name="spend_est" class="java.math.BigDecimal"/>
 	<variable name="totalPlays" class="java.lang.Long" resetType="Group" resetGroup="campaign" calculation="Sum">
 		<variableExpression><![CDATA[$F{plays}]]></variableExpression>
@@ -56,12 +77,18 @@ order by c.campaign, i.site_name;]]>
 	<variable name="totalSpend" class="java.math.BigDecimal" resetType="Group" resetGroup="campaign" calculation="Sum">
 		<variableExpression><![CDATA[$F{spend_est}]]></variableExpression>
 	</variable>
+	<variable name="totalCompletes" class="java.lang.Long" resetType="Group" resetGroup="campaign" calculation="Sum">
+		<variableExpression><![CDATA[$F{completions}]]></variableExpression>
+	</variable>
+	<variable name="totalTotalSpend" class="java.math.BigDecimal" calculation="Sum">
+		<variableExpression><![CDATA[$F{spend_est}]]></variableExpression>
+	</variable>
 	<group name="campaign" keepTogether="true">
 		<groupExpression><![CDATA[$F{campaign}]]></groupExpression>
 		<groupHeader>
 			<band height="50">
 				<textField>
-					<reportElement mode="Opaque" x="11" y="10" width="560" height="20" backcolor="#F7F5F5" uuid="9818848a-a2c4-4de9-9f75-7001a20badf4"/>
+					<reportElement mode="Opaque" x="11" y="10" width="730" height="20" backcolor="#F7F5F5" uuid="9818848a-a2c4-4de9-9f75-7001a20badf4"/>
 					<box>
 						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -77,15 +104,15 @@ order by c.campaign, i.site_name;]]>
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="33">
+			<band height="36">
 				<line>
-					<reportElement x="150" y="0" width="420" height="1" uuid="9cfcd96f-7211-44ab-9119-acfcddf3ab00">
+					<reportElement x="150" y="0" width="580" height="1" uuid="9cfcd96f-7211-44ab-9119-acfcddf3ab00">
 						<property name="local_mesure_unitheight" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
 				</line>
 				<textField pattern="#,###" isBlankWhenNull="true">
-					<reportElement x="330" y="11" width="80" height="20" uuid="b10dbe4e-ebdd-4111-953c-25d1a8d9cc8b">
+					<reportElement x="360" y="11" width="60" height="20" uuid="b10dbe4e-ebdd-4111-953c-25d1a8d9cc8b">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -93,20 +120,19 @@ order by c.campaign, i.site_name;]]>
 					<textFieldExpression><![CDATA[$V{totalAdCounts}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0.##%" isBlankWhenNull="true">
-					<reportElement x="410" y="11" width="70" height="20" uuid="ccea4cdc-d7d9-4d0c-8ec6-49bad47f2ca7"/>
+					<reportElement x="420" y="11" width="70" height="20" uuid="ccea4cdc-d7d9-4d0c-8ec6-49bad47f2ca7"/>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
-					<textFieldExpression><![CDATA[(double)$V{totalAdCounts}/(double)$V{totalCardViews}]]></textFieldExpression>
+					<textFieldExpression><![CDATA[(double)$V{totalAdCounts}/(double)$V{totalPlays}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,###">
-					<reportElement x="170" y="11" width="80" height="20" uuid="87672c39-2f0f-402d-8bbb-c6414e15de6e">
+					<reportElement x="170" y="11" width="60" height="20" uuid="87672c39-2f0f-402d-8bbb-c6414e15de6e">
 						<property name="local_mesure_unitwidth" value="pixel"/>
-						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{totalCardViews}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,###" isBlankWhenNull="true">
-					<reportElement x="250" y="11" width="80" height="20" uuid="5007378f-2f1b-4c70-b332-b00103363915">
+					<reportElement x="230" y="11" width="60" height="20" uuid="5007378f-2f1b-4c70-b332-b00103363915">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					</reportElement>
@@ -114,12 +140,30 @@ order by c.campaign, i.site_name;]]>
 					<textFieldExpression><![CDATA[$V{totalPlays}]]></textFieldExpression>
 				</textField>
 				<textField pattern="¤#,##0.00;¤-#,##0.00" isBlankWhenNull="true">
-					<reportElement x="480" y="11" width="90" height="20" uuid="4cfec5d7-d633-46f2-9c43-b73e0238364c">
+					<reportElement x="640" y="11" width="90" height="20" uuid="4cfec5d7-d633-46f2-9c43-b73e0238364c">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					</reportElement>
 					<textElement textAlignment="Right" verticalAlignment="Middle"/>
 					<textFieldExpression><![CDATA[$V{totalSpend}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.##%" isBlankWhenNull="true">
+					<reportElement x="290" y="11" width="70" height="20" uuid="331c47f3-2f8b-4529-b8ee-a0489cf4d490"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[(double)$V{totalPlays}/(double)$V{totalCardViews}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,###" isBlankWhenNull="true">
+					<reportElement x="490" y="11" width="60" height="20" uuid="afe587f6-af24-4f35-af3e-de11b4b9cda2">
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$V{totalCompletes}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.##%" isBlankWhenNull="true">
+					<reportElement x="550" y="11" width="70" height="20" uuid="14546691-0f30-4bf7-9ecf-c3823f007947"/>
+					<textElement textAlignment="Right" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[(double)$V{totalCompletes}/(double)$V{totalPlays}]]></textFieldExpression>
 				</textField>
 			</band>
 		</groupFooter>
@@ -136,24 +180,34 @@ order by c.campaign, i.site_name;]]>
 				<textElement>
 					<font size="18"/>
 				</textElement>
-				<text><![CDATA[Campaign Activity by Campaign (UTC)]]></text>
+				<text><![CDATA[Campaign Activity by Campaign]]></text>
 			</staticText>
+			<staticText>
+				<reportElement x="635" y="10" width="95" height="20" uuid="aba811b3-4d97-44cd-9389-98a9608851ac"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<text><![CDATA[Total Est. Revenue]]></text>
+			</staticText>
+			<textField evaluationTime="Report" pattern="¤#,##0.00;¤-#,##0.00">
+				<reportElement x="635" y="30" width="95" height="20" uuid="77a924a4-9337-44a9-adbf-ce84bfbf35f6"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{totalTotalSpend}]]></textFieldExpression>
+			</textField>
 			<textField>
-				<reportElement x="11" y="30" width="320" height="20" uuid="407f0754-f565-4ea2-849e-bbe954632d88">
+				<reportElement x="10" y="30" width="290" height="20" uuid="9838763c-8fab-4ebf-a682-c7dfec3d01e0">
 					<property name="local_mesure_unitheight" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.height" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Left" verticalAlignment="Middle">
 					<font size="10"/>
 				</textElement>
-				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"M/d/yyyy" ) + " - " + DATEFORMAT($P{end_date},"M/d/yyyy")]]></textFieldExpression>
+				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"M/d/yyyy" ) + " - " + DATEFORMAT($P{end_date},"M/d/yyyy") + " (" + $P{timezone} + ")"]]></textFieldExpression>
 			</textField>
 		</band>
 	</title>
 	<columnHeader>
-		<band height="36" splitType="Stretch">
+		<band height="38" splitType="Stretch">
 			<staticText>
-				<reportElement x="330" y="0" width="80" height="33" uuid="a9669ad3-1fca-4c42-9fab-e127f6094c05">
+				<reportElement x="360" y="0" width="60" height="33" uuid="a9669ad3-1fca-4c42-9fab-e127f6094c05">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -163,7 +217,7 @@ order by c.campaign, i.site_name;]]>
 				<text><![CDATA[AdCounts]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="250" y="0" width="80" height="33" uuid="7d676b80-9b9d-4eaa-941a-dea0ff788e4b">
+				<reportElement x="230" y="0" width="60" height="33" uuid="7d676b80-9b9d-4eaa-941a-dea0ff788e4b">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -183,19 +237,18 @@ order by c.campaign, i.site_name;]]>
 				<text><![CDATA[Cards]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="410" y="0" width="70" height="33" uuid="f84fab4a-d38f-4965-bfea-f0977fc9dbc8">
+				<reportElement x="420" y="0" width="70" height="33" uuid="f84fab4a-d38f-4965-bfea-f0977fc9dbc8">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Bottom">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[CPCV Rate*]]></text>
+				<text><![CDATA[AC Rate**]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="170" y="0" width="80" height="33" uuid="79527eb3-1aa0-4927-821c-52b649568658">
+				<reportElement x="170" y="0" width="60" height="33" uuid="79527eb3-1aa0-4927-821c-52b649568658">
 					<property name="local_mesure_unitwidth" value="pixel"/>
-					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Bottom">
 					<font isBold="true"/>
@@ -203,7 +256,7 @@ order by c.campaign, i.site_name;]]>
 				<text><![CDATA[Card Views]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="480" y="0" width="90" height="33" uuid="e8263df0-65ea-4adc-9a4b-044e895f3333">
+				<reportElement x="640" y="0" width="90" height="33" uuid="e8263df0-65ea-4adc-9a4b-044e895f3333">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -212,10 +265,40 @@ order by c.campaign, i.site_name;]]>
 				</textElement>
 				<text><![CDATA[Est. Revenue]]></text>
 			</staticText>
+			<staticText>
+				<reportElement x="290" y="0" width="70" height="33" uuid="cd53c2b3-e356-45ba-8789-0ba318a7e42d">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Play Rate*]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="490" y="0" width="60" height="33" uuid="49ec9f33-35d4-4cba-aafe-3f57a483df1d">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Completes]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="550" y="0" width="70" height="33" uuid="b905b313-314f-4bbb-b32c-b698c2c97b99">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Bottom">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[CPV Rate***]]></text>
+			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
-		<band height="22" splitType="Stretch">
+		<band height="25" splitType="Stretch">
 			<property name="local_mesure_unitheight" value="pixel"/>
 			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField pattern="#,###" isBlankWhenNull="true">
@@ -234,7 +317,7 @@ order by c.campaign, i.site_name;]]>
 				<textFieldExpression><![CDATA[$F{site_name}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement x="250" y="0" width="80" height="20" uuid="1dd512ae-806d-40e5-a83c-e649a5fbf17d">
+				<reportElement x="230" y="0" width="60" height="20" uuid="1dd512ae-806d-40e5-a83c-e649a5fbf17d">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -242,12 +325,12 @@ order by c.campaign, i.site_name;]]>
 				<textFieldExpression><![CDATA[$F{plays}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.##%" isBlankWhenNull="true">
-				<reportElement x="410" y="0" width="70" height="20" uuid="677968ce-4f17-460d-9448-c5e4da752dd7"/>
+				<reportElement x="420" y="0" width="70" height="20" uuid="677968ce-4f17-460d-9448-c5e4da752dd7"/>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[(double)$F{adcounts}/(double)$F{cardviews}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[(double)$F{adcounts}/(double)$F{plays}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement x="170" y="0" width="80" height="20" uuid="b037a2ff-34e4-4309-a79d-94d7296fcd1b">
+				<reportElement x="170" y="0" width="60" height="20" uuid="b037a2ff-34e4-4309-a79d-94d7296fcd1b">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -255,7 +338,7 @@ order by c.campaign, i.site_name;]]>
 				<textFieldExpression><![CDATA[$F{cardviews}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,###" isBlankWhenNull="true">
-				<reportElement x="330" y="0" width="80" height="20" uuid="6ab1f071-f5c2-4101-9411-5c567f0b86f0">
+				<reportElement x="360" y="0" width="60" height="20" uuid="6ab1f071-f5c2-4101-9411-5c567f0b86f0">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 				</reportElement>
@@ -263,12 +346,30 @@ order by c.campaign, i.site_name;]]>
 				<textFieldExpression><![CDATA[$F{adcounts}]]></textFieldExpression>
 			</textField>
 			<textField pattern="¤#,##0.00;¤-#,##0.00" isBlankWhenNull="true">
-				<reportElement x="480" y="0" width="90" height="20" uuid="930525c9-1070-4445-815d-a8cdb970108b">
+				<reportElement x="640" y="0" width="90" height="20" uuid="930525c9-1070-4445-815d-a8cdb970108b">
 					<property name="local_mesure_unitwidth" value="pixel"/>
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{spend_est}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="290" y="0" width="70" height="20" uuid="6c348508-ef64-458c-ab2c-23291f6452a1"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[(double)$F{plays}/(double)$F{cardviews}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,###" isBlankWhenNull="true">
+				<reportElement x="490" y="0" width="60" height="20" uuid="eb55e9fb-5e21-4d28-bfbe-2e28fb99f534">
+					<property name="local_mesure_unitwidth" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{completions}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.##%" isBlankWhenNull="true">
+				<reportElement x="550" y="0" width="70" height="20" uuid="a96468af-f163-4eba-ab39-d3b0b62d0c61"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[(double)$F{completions}/(double)$F{plays}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
@@ -279,7 +380,9 @@ order by c.campaign, i.site_name;]]>
 				<textElement>
 					<font size="8"/>
 				</textElement>
-				<text><![CDATA[* CPCV Rate is the ratio of AdCounts to Card Views (views of the sponsored card).  It does not account for failed MiniReel Loads, or MiniReel Loads that failed to load the Sponsored Card.  Those failures may signifcantly alter the CPCV Rate from the perspective of the publisher.]]></text>
+				<text><![CDATA[*Play Rate is the ratio of Card Views (user saw Sponsored Card) to the Video Starting.
+**AC Rate is the ratio of AdCounts to Plays.
+***CPV Rate is the ration of Completed Views (user reached 4th quartile of video) to Plays.]]></text>
 			</staticText>
 		</band>
 	</pageFooter>
