@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-22T17:32:23 -->
+<!-- 2016-01-05T12:16:07 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="908" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
@@ -163,45 +163,6 @@
 			<rightPen lineWidth="0.5" lineColor="#000000"/>
 		</box>
 	</style>
-	<subDataset name="campaign_data_agg" uuid="20ee7cb1-001f-41e6-b806-8612d174d7ff">
-		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
-		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
-		<parameter name="card_id" class="java.lang.String"/>
-		<parameter name="sponsor" class="java.lang.String">
-			<parameterDescription><![CDATA[]]></parameterDescription>
-		</parameter>
-		<parameter name="end_date" class="java.util.Date">
-			<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
-		</parameter>
-		<parameter name="start_date" class="java.util.Date">
-			<parameterDescription><![CDATA[]]></parameterDescription>
-			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
-		</parameter>
-		<parameter name="campaign_name" class="java.lang.String"/>
-		<parameter name="campaign_id" class="java.lang.String"/>
-		<queryString language="SQL">
-			<![CDATA[select sc.sponsor,sc.card_id,$P{campaign_name} as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
-from dim.v_sponsored_card sc
-inner join rpt.sponsored_card_activity sa on sc.campaign_id = sa.campaign_id AND sc.card_id = sa.card_id
-inner join dim.dates d ON sa.date_key = d.date_key
-where d.date between $P{start_date} AND $P{end_date} AND sc.card_id = $P{card_id} and sc.campaign_id = $P{campaign_id}
-group by sc.sponsor,sc.card_id,campaign_name]]>
-		</queryString>
-		<field name="sponsor" class="java.lang.String">
-			<fieldDescription><![CDATA[Sponsor of card.]]></fieldDescription>
-		</field>
-		<field name="card_id" class="java.lang.String">
-			<fieldDescription><![CDATA[Id for related entity in ad server.]]></fieldDescription>
-		</field>
-		<field name="campaign_name" class="java.lang.String"/>
-		<field name="video_loads" class="java.lang.Long"/>
-		<field name="video_plays" class="java.lang.Long"/>
-		<field name="q1" class="java.lang.Long"/>
-		<field name="q2" class="java.lang.Long"/>
-		<field name="q3" class="java.lang.Long"/>
-		<field name="q4" class="java.lang.Long"/>
-		<field name="adcount" class="java.lang.Long"/>
-	</subDataset>
 	<subDataset name="campaign_card_links" uuid="4fbaecf8-6d16-4ee6-9d51-94818769b45b">
 		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -270,15 +231,35 @@ order by 1]]>
 	</parameter>
 	<parameter name="campaign_id_list" class="java.util.ArrayList"/>
 	<queryString language="SQL">
-		<![CDATA[select d.date,sc.sponsor,sc.card_id,sc.campaign_id,coalesce(sc.reporting_id,sc.campaign) as campaign_name,sum(sa.cardviews) as video_loads,sum(sa.play)as video_plays,sum(sa.q1) as q1,sum(sa.q2) as q2,sum(sa.q3) as q3,sum(sa.q4) as q4,sum(sa.adcount) as adcount
-from dim.v_sponsored_card sc
-inner join rpt.sponsored_card_activity sa on sc.campaign_id = sa.campaign_id AND sc.card_id = sa.card_id
-inner join dim.dates d ON sa.date_key = d.date_key
-where sc.sponsor = $P{sponsor}
-AND $X{IN,sc.campaign_id, campaign_id_list} 
-and d.date between $P{start_date} AND $P{end_date}
-group by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name
-order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
+		<![CDATA[SELECT *
+FROM (
+	SELECT cv.rec_date as "date",c.sponsor,cv.card_id,cv.campaign_id,coalesce(c.reporting_id,c.campaign) as campaign_name,
+	cv.events as video_loads,coalesce(p.events,0)::int4 as video_plays,coalesce(q1.events,0)::int4 as q1,coalesce(q2.events,0)::int4 as q2,coalesce(q3.events,0)::int4 as q3,coalesce(q4.events,0)::int4 as q4,coalesce(v.events,0)::int4 as adcount
+	FROM (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'cardView' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ( $P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) cv
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'play' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) p ON 	cv.rec_date = p.rec_date AND cv.campaign_id = p.campaign_id AND cv.card_id = p.card_id 
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'completedView' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) v ON 	cv.rec_date = v.rec_date AND cv.campaign_id = v.campaign_id AND cv.card_id = v.card_id 
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q1' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) q1 ON cv.rec_date = q1.rec_date AND cv.campaign_id = q1.campaign_id AND cv.card_id = q1.card_id 
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q2' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) q2 ON cv.rec_date = q2.rec_date AND cv.campaign_id = q2.campaign_id AND cv.card_id = q2.card_id 	
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q3' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) q3 ON cv.rec_date = q3.rec_date AND cv.campaign_id = q3.campaign_id AND cv.card_id = q3.card_id 
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q4' AND rec_ts >=  ($P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+	) q4 ON cv.rec_date = q4.rec_date AND cv.campaign_id = q4.campaign_id AND cv.card_id = q4.card_id 	
+	inner join dim.v_sponsored_card c ON cv.campaign_id = c.campaign_id AND cv.card_id = c.card_id
+) i
+where i.sponsor = $P{sponsor} and $X{IN,i.campaign_id, campaign_id_list} 
+order by i.sponsor,i.campaign_name, i.date]]>
 	</queryString>
 	<field name="date" class="java.sql.Date"/>
 	<field name="sponsor" class="java.lang.String"/>
@@ -314,11 +295,11 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 		<variableExpression><![CDATA[$F{adcount}]]></variableExpression>
 	</variable>
 	<group name="card_id,campaign_id" isStartNewPage="true">
-		<groupExpression><![CDATA[$F{card_id}+$F{campaign_name}]]></groupExpression>
+		<groupExpression><![CDATA[$F{campaign_id} + $F{card_id}]]></groupExpression>
 		<groupHeader>
-			<band height="255">
+			<band height="260">
 				<staticText>
-					<reportElement x="0" y="225" width="114" height="30" uuid="b963166e-fb6f-47f4-b486-c1e73d49c886">
+					<reportElement x="0" y="230" width="114" height="30" uuid="b963166e-fb6f-47f4-b486-c1e73d49c886">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
@@ -331,7 +312,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<text><![CDATA[Date]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="114" y="225" width="114" height="30" uuid="4342d6a2-47cd-4adc-96a8-ba648a8ff30c">
+					<reportElement x="114" y="230" width="114" height="30" uuid="4342d6a2-47cd-4adc-96a8-ba648a8ff30c">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
 					<box>
@@ -344,7 +325,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<text><![CDATA[Video Loads]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="228" y="225" width="80" height="30" uuid="1bc80298-eaa8-466f-ba76-f937e8980d88">
+					<reportElement x="228" y="230" width="80" height="30" uuid="1bc80298-eaa8-466f-ba76-f937e8980d88">
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -359,7 +340,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<text><![CDATA[25%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="308" y="225" width="80" height="30" uuid="69bca9e8-3688-4574-89ae-b4fbd1dc4cca">
+					<reportElement x="308" y="230" width="80" height="30" uuid="69bca9e8-3688-4574-89ae-b4fbd1dc4cca">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="local_mesure_unitheight" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -374,7 +355,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<text><![CDATA[50%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="388" y="225" width="80" height="30" uuid="2b0e5ef1-89d0-4ed4-b305-9a6da7102257">
+					<reportElement x="388" y="230" width="80" height="30" uuid="2b0e5ef1-89d0-4ed4-b305-9a6da7102257">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
@@ -388,7 +369,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<text><![CDATA[75%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="468" y="225" width="80" height="30" uuid="477f5b38-b38c-4868-be35-64b2aae4c02a">
+					<reportElement x="468" y="230" width="80" height="30" uuid="477f5b38-b38c-4868-be35-64b2aae4c02a">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
@@ -410,7 +391,7 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<text><![CDATA[Reelcontent Campaign Report]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="548" y="225" width="114" height="30" uuid="2041d808-110e-48f6-b997-48486d0337ad">
+					<reportElement x="548" y="230" width="114" height="30" uuid="2041d808-110e-48f6-b997-48486d0337ad">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
 					<box>
@@ -472,322 +453,8 @@ order by d.date,sc.sponsor,sc.card_id,sc.campaign_id,campaign_name]]>
 					<reportElement x="0" y="0" width="100" height="100" uuid="cede7e84-ad6a-488c-9a8d-4f6c76f4210f"/>
 					<imageExpression><![CDATA["/Workspace/Images/logo.png"]]></imageExpression>
 				</image>
-				<componentElement>
-					<reportElement x="0" y="130" width="890" height="60" uuid="12d759c5-6736-4fba-bf70-f5b63164b2b3"/>
-					<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
-						<datasetRun subDataset="campaign_data_agg" uuid="d17a4a05-44b2-4f49-9549-cc508b232350">
-							<datasetParameter name="end_date">
-								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="sponsor">
-								<datasetParameterExpression><![CDATA[$F{sponsor}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="start_date">
-								<datasetParameterExpression><![CDATA[$P{start_date}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="campaign_name">
-								<datasetParameterExpression><![CDATA[$F{campaign_name}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="card_id">
-								<datasetParameterExpression><![CDATA[$F{card_id}]]></datasetParameterExpression>
-							</datasetParameter>
-							<datasetParameter name="campaign_id">
-								<datasetParameterExpression><![CDATA[$F{campaign_id}]]></datasetParameterExpression>
-							</datasetParameter>
-							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
-						</datasetRun>
-						<jr:column width="114" uuid="e55fab3b-26fe-4d2c-9c3e-1d5367073013">
-							<property name="local_mesure_unitwidth" value="pixel"/>
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="9d697d7e-65ec-4a54-9fb8-b23a1e664dab"/>
-									<box>
-										<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-										<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-										<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-										<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									</box>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[Placement]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="3f649f14-ecd5-4eb1-b67e-0eb3c0f3a45f"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{campaign_name}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="114" uuid="b266cdbd-89dc-4d78-be55-2bd440c72ab3">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="9189101c-4d8c-4bcd-a54e-f0e7e9f7705d"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[Video Loads]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="15db8606-be70-4fcd-b336-05ec4ad8cb31"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{video_plays}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="80" uuid="52597089-7a4e-48e6-98b9-d1e0f651491b">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="30" uuid="5780c387-3a26-42c9-b262-743c2b2dea1d"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[25%]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="30" uuid="3f40e4f3-4a96-4ac3-b46c-36c97cccf9a3"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{q1}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="80" uuid="2e4ac57a-dd2d-41a4-b982-137ebb4d2c5a">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="30" uuid="cc908c00-d07d-42d3-ae87-199d5263fef5"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[50%]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="30" uuid="9d19b313-3a5a-494d-b5c5-3ba16fc58eb4"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{q2}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="80" uuid="e444e6b3-fa22-46b7-bc84-058e059a63de">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="30" uuid="dda63833-f4f1-4ee3-80d4-8be60ba3871c"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[75%]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="30" uuid="ddedfcaf-9621-444b-9cf2-2038875624c3"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{q3}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="80" uuid="893ff76b-cd95-48fb-8b23-6a840f49cd62">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="80" height="30" uuid="220615af-66d8-4682-88df-a0c757c69bf4"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[100%]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="80" height="30" uuid="c28f5c2f-39a2-439e-b29f-1b3bd21ea05c"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{q4}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="114" uuid="8283ec20-76b5-4595-a489-52c200fc1f8e">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="02b1033a-9b2e-4fd2-9f3c-69349c39c93b"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[Completion Rate]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-									<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
-									<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-								</box>
-								<textField pattern="#,##0%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="c3c4beb6-5a41-4aad-a7e7-3a0e8b00a1d1"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[IF($F{video_loads} > 0,(double)$F{q4}/(double)$F{video_loads},null)]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="114" uuid="704f6c06-3c99-49e0-b5c3-524e5eb6f3b4">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0"/>
-									<bottomPen lineWidth="0.5"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="1ea8a0ac-f2b2-4984-b086-f08d4ba427c2"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[Ad Counts]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<bottomPen lineWidth="0.0"/>
-								</box>
-								<textField pattern="#,##0" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="c50c5a6a-9b24-4c96-b16a-bfee2b8295eb"/>
-									<textElement textAlignment="Right" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[$F{adcount}]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-						<jr:column width="114" uuid="0c07e9ca-6962-4265-b313-8516bb753eb2">
-							<jr:columnHeader style="Table_CH" height="30">
-								<box>
-									<topPen lineWidth="0.0"/>
-									<bottomPen lineWidth="0.5"/>
-									<rightPen lineWidth="0.0"/>
-								</box>
-								<staticText>
-									<reportElement x="0" y="0" width="114" height="30" uuid="0bbc6ca2-48d8-4b13-a902-ffb5ce708c80"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<font isBold="true"/>
-									</textElement>
-									<text><![CDATA[Ad Counts
-Completion Rate]]></text>
-								</staticText>
-							</jr:columnHeader>
-							<jr:detailCell style="Table_TD" height="30">
-								<box>
-									<bottomPen lineWidth="0.0"/>
-									<rightPen lineWidth="0.0"/>
-								</box>
-								<textField pattern="#,##0%" isBlankWhenNull="true">
-									<reportElement x="0" y="0" width="114" height="30" uuid="f1204946-a0d3-445b-8344-8a550f261a4a"/>
-									<textElement textAlignment="Center" verticalAlignment="Middle">
-										<paragraph leftIndent="8" rightIndent="8"/>
-									</textElement>
-									<textFieldExpression><![CDATA[IF($F{video_loads} > 0,(double)$F{adcount}/(double)$F{video_loads},null)]]></textFieldExpression>
-								</textField>
-							</jr:detailCell>
-						</jr:column>
-					</jr:table>
-				</componentElement>
 				<staticText>
-					<reportElement x="662" y="225" width="114" height="30" uuid="782e519f-4ab3-4e50-af59-55c4a628a936">
+					<reportElement x="662" y="230" width="114" height="30" uuid="782e519f-4ab3-4e50-af59-55c4a628a936">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -803,7 +470,7 @@ Completion Rate]]></text>
 					<text><![CDATA[Ad Counts]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="776" y="225" width="114" height="30" uuid="447995d6-d970-41a2-b14a-97440cebffbf">
+					<reportElement x="776" y="230" width="114" height="30" uuid="447995d6-d970-41a2-b14a-97440cebffbf">
 						<property name="local_mesure_unitheight" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
@@ -817,10 +484,242 @@ Completion Rate]]></text>
 					<text><![CDATA[Ad Counts
 Completion Rate]]></text>
 				</staticText>
+				<staticText>
+					<reportElement x="0" y="140" width="114" height="30" uuid="7aa3b19a-0826-43b9-9386-a360bea2943b">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Placement]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="114" y="140" width="114" height="30" uuid="953c6969-199b-4e86-8110-d02f8151878e">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Video Loads]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="228" y="140" width="80" height="30" uuid="2b57bd42-3883-4b27-8234-09a692271bf2">
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[25%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="308" y="140" width="80" height="30" uuid="fc28e914-33cd-4fbb-b192-cc748ae8d00c">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[50%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="388" y="140" width="80" height="30" uuid="8d1f87d6-e63a-40ef-89ab-87d3e485ebf1">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[75%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="468" y="140" width="80" height="30" uuid="6595be56-844d-4d6e-935c-c55bf12242b7">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[100%]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="548" y="140" width="114" height="30" uuid="4fa774f1-e547-48b5-8612-aacd46572ac8">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Completion Rate]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="662" y="140" width="114" height="30" uuid="25566bf7-3782-4e60-a255-15fec2660e69">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="local_mesure_unitwidth" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Ad Counts]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="776" y="140" width="114" height="30" uuid="afeb664c-0897-4baa-87d2-0048370c3677">
+						<property name="local_mesure_unitheight" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Ad Counts
+Completion Rate]]></text>
+				</staticText>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="" isBlankWhenNull="true">
+					<reportElement x="0" y="169" width="114" height="31" uuid="223ec16a-cb01-45d0-b2ce-a47f5ea45d71">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					</reportElement>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{campaign_name}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="114" y="169" width="114" height="31" uuid="136d8744-3fd0-4623-9195-add2e22b8c9c"/>
+					<box>
+						<leftPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_plays}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="228" y="169" width="80" height="31" uuid="412b1069-b8cf-45d4-8980-c903f9059a63">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_q1}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="308" y="169" width="80" height="31" uuid="26cd6cc9-9a3e-42be-bfbf-5b629528f81e">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_q2}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="388" y="169" width="80" height="31" uuid="2ac477ae-b384-4801-8110-992e7dcb46d6">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_q3}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="468" y="169" width="80" height="31" uuid="c7bd0b98-d547-4baa-8f5a-992698361862">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_q4}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0%" isBlankWhenNull="true">
+					<reportElement x="548" y="169" width="114" height="31" uuid="e9015010-8353-4968-a3a6-0e400f397733"/>
+					<box>
+						<leftPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_q4}/(double)$V{total_plays},null)]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="662" y="169" width="114" height="31" uuid="85721abe-7a23-4c37-ac54-56cd062193e2">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="local_mesure_unitwidth" value="pixel"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_adcount}]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0%" isBlankWhenNull="true">
+					<reportElement x="776" y="170" width="114" height="30" uuid="f0f596ec-5dda-44f4-a694-a39806010410"/>
+					<box>
+						<leftPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_adcount}/(double)$V{total_plays},null)]]></textFieldExpression>
+				</textField>
 			</band>
 		</groupHeader>
 		<groupFooter>
-			<band height="344">
+			<band height="344" splitType="Prevent">
 				<staticText>
 					<reportElement x="0" y="8" width="114" height="20" uuid="8a45475e-d5ee-40fd-bdf3-88838cfccc40">
 						<property name="local_mesure_unity" value="pixel"/>
@@ -1145,7 +1044,7 @@ Completion Rate]]></text>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[IF($F{video_loads} > 0,(double)$F{q4}/(double)$F{video_loads},null)]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{video_plays} > 0,(double)$F{q4}/(double)$F{video_plays},null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
 				<reportElement x="662" y="0" width="114" height="20" uuid="fc84b6e2-43b8-42f5-859a-7bac1e557129">
@@ -1169,7 +1068,7 @@ Completion Rate]]></text>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
-				<textFieldExpression><![CDATA[IF($F{video_loads} > 0,(double)$F{adcount}/(double)$F{video_loads},null)]]></textFieldExpression>
+				<textFieldExpression><![CDATA[IF($F{video_plays} > 0,(double)$F{adcount}/(double)$F{video_plays},null)]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
