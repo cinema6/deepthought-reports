@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2015-12-01T15:27:24 -->
+<!-- 2016-01-28T08:54:56 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="selfie_users" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="3df7bac9-35eb-4e32-9a26-f551d8c08b83">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -22,7 +22,7 @@
 created_ts at time zone 'America/New_York' as created_ts, 
 updated_ts at time zone 'America/New_York' as last_updated_ts, status
 from dim.user
-where end_ts = dim.sp_end_of_time() and self_serve = 't'
+where end_ts = dim.sp_end_of_time() and self_serve = 't' and  status in ('active','new')
 order by created_ts desc;]]>
 	</queryString>
 	<field name="user_name" class="java.lang.String"/>
