@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-01-05T12:16:07 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="908" orientation="Landscape" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
+<!-- 2016-02-16T09:19:06 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="1680" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
@@ -10,6 +10,14 @@
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="ireport.jasperserver.user" value="howard"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<style name="Table_TH" mode="Opaque" backcolor="#FFFFFF">
 		<box>
 			<pen lineWidth="0.5" lineColor="#000000"/>
@@ -175,12 +183,12 @@
 			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 		</parameter>
 		<parameter name="campaign_id" class="java.lang.String"/>
+		<parameter name="timezone" class="java.lang.String"/>
 		<queryString>
 			<![CDATA[select initcap(regexp_replace(a.event_type,'^\w+\.','')) as link_name,sum(events)::int4 as click_count
 from fct.campaign_activity_by_device a
 inner join  dim.v_sponsored_card sc on a.campaign_id = sc.campaign_id and a.card_id = sc.card_id
-inner join dim.dates d ON a.date_key = d.date_key
-where d.date between $P{start_date} AND $P{end_date} AND a.campaign_id =$P{campaign_id} and a.card_id = $P{card_id}
+where a.rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND a.rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')  AND a.campaign_id =$P{campaign_id} and a.card_id = $P{card_id}
  and event_type like 'link.%' 
 group by 1
 order by 1]]>
@@ -203,12 +211,12 @@ order by 1]]>
 			<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
 		</parameter>
 		<parameter name="campaign_id" class="java.lang.String"/>
+		<parameter name="timezone" class="java.lang.String"/>
 		<queryString>
 			<![CDATA[select initcap(regexp_replace(a.event_type,'^\w+\.','')) as link_name,sum(events)::int4 as click_count
 from fct.campaign_activity_by_device a
 inner join  dim.v_sponsored_card sc on a.campaign_id = sc.campaign_id and a.card_id = sc.card_id
-inner join dim.dates d ON a.date_key = d.date_key
-where d.date between $P{start_date} AND $P{end_date} AND a.campaign_id =$P{campaign_id} and a.card_id = $P{card_id}
+where a.rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND a.rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day') AND a.campaign_id =$P{campaign_id} and a.card_id = $P{card_id}
  and event_type like 'shareLink.%' 
 group by 1
 order by 1]]>
@@ -230,31 +238,35 @@ order by 1]]>
 		<parameterDescription><![CDATA[]]></parameterDescription>
 	</parameter>
 	<parameter name="campaign_id_list" class="java.util.ArrayList"/>
+	<parameter name="timezone" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA["America/New_York"]]></defaultValueExpression>
+	</parameter>
 	<queryString language="SQL">
 		<![CDATA[SELECT *
 FROM (
 	SELECT cv.rec_date as "date",c.sponsor,cv.card_id,cv.campaign_id,coalesce(c.reporting_id,c.campaign) as campaign_name,
 	cv.events as video_loads,coalesce(p.events,0)::int4 as video_plays,coalesce(q1.events,0)::int4 as q1,coalesce(q2.events,0)::int4 as q2,coalesce(q3.events,0)::int4 as q3,coalesce(q4.events,0)::int4 as q4,coalesce(v.events,0)::int4 as adcount
 	FROM (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'cardView' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ( $P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'cardView' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) cv
 	LEFT JOIN (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'play' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'play' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) p ON 	cv.rec_date = p.rec_date AND cv.campaign_id = p.campaign_id AND cv.card_id = p.card_id 
 	LEFT JOIN (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'completedView' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'completedView' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) v ON 	cv.rec_date = v.rec_date AND cv.campaign_id = v.campaign_id AND cv.card_id = v.card_id 
 	LEFT JOIN (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q1' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q1' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) q1 ON cv.rec_date = q1.rec_date AND cv.campaign_id = q1.campaign_id AND cv.card_id = q1.card_id 
 	LEFT JOIN (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q2' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q2' AND rec_ts >= ( $P{start_date}::timestamp at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) q2 ON cv.rec_date = q2.rec_date AND cv.campaign_id = q2.campaign_id AND cv.card_id = q2.card_id 	
 	LEFT JOIN (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q3' AND rec_ts >= ( $P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q3' AND rec_ts >= ( $P{start_date}::timestamp at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) q3 ON cv.rec_date = q3.rec_date AND cv.campaign_id = q3.campaign_id AND cv.card_id = q3.card_id 
 	LEFT JOIN (
-		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q4' AND rec_ts >=  ($P{start_date}::timestamp at time zone 'UTC') AND rec_ts < ($P{end_date}::timestamp at time zone 'UTC' + interval '1 day') GROUP BY 1,2,3
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q4' AND rec_ts >=  ($P{start_date}::timestamp at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) q4 ON cv.rec_date = q4.rec_date AND cv.campaign_id = q4.campaign_id AND cv.card_id = q4.card_id 	
 	inner join dim.v_sponsored_card c ON cv.campaign_id = c.campaign_id AND cv.card_id = c.card_id
 ) i
@@ -845,6 +857,9 @@ Completion Rate]]></text>
 							<datasetParameter name="end_date">
 								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
 							</datasetParameter>
+							<datasetParameter name="timezone">
+								<datasetParameterExpression><![CDATA[$P{timezone}]]></datasetParameterExpression>
+							</datasetParameter>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
 						<jr:column width="100" uuid="9ed2db1e-9f37-4302-b714-f388e17c86dc">
@@ -909,6 +924,9 @@ Completion Rate]]></text>
 							</datasetParameter>
 							<datasetParameter name="end_date">
 								<datasetParameterExpression><![CDATA[$P{end_date}]]></datasetParameterExpression>
+							</datasetParameter>
+							<datasetParameter name="timezone">
+								<datasetParameterExpression><![CDATA[$P{timezone}]]></datasetParameterExpression>
 							</datasetParameter>
 							<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
 						</datasetRun>
