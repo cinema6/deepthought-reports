@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-02-14T19:22:40 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="experiments" pageWidth="1224" pageHeight="792" orientation="Landscape" columnWidth="1184" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="e646c523-fe30-4cb4-8698-e760cf462106">
+<!-- 2016-02-16T17:20:16 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="experiments" pageWidth="1224" pageHeight="792" orientation="Landscape" columnWidth="1184" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="e646c523-fe30-4cb4-8698-e760cf462106">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
 	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
@@ -28,59 +28,60 @@
 		<defaultValueExpression><![CDATA["UTC"]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<![CDATA[select l.experiment,l.variant,c.name as campaign,coalesce(c.advertiser_display_name,a.name) as advertiser,l.container as platform,l.inventory_source,
+		<![CDATA[select l.experiment,l.variant,c.name as campaign,coalesce(c.advertiser_display_name,a.name) as advertiser,l.container as platform, l.inventory_source,
 	l.events::int4 as launches, coalesce(p.events,0)::int4 as plays, coalesce(i.events,0)::int4 as impressions,
 	coalesce(mv.events,0)::int4 as min_views, coalesce(cv.events,0)::int4 as completed_views, coalesce(en.events,0)::int4 as engagements
 from (
-	select campaign_id,experiment,variant,container,inventory_source,sum(events) as events
+	select campaign_id,experiment,variant,container,coalesce(inventory_source,'unspecified') as inventory_source,sum(events) as events
 	from fct.campaign_activity_by_device 
-	where event_type = 'cardView' AND experiment <> '' AND NOT experiment is null AND inventory_source <> '{{INVENTORY_SOURCE}}' 
+	where event_type = 'cardView' AND experiment <> '' AND NOT experiment is null AND (inventory_source is null OR inventory_source <> '{{INVENTORY_SOURCE}}' )
 	AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')
 	group by 1,2,3,4,5
 	order by 1,2,3,4,5
 ) l
 left join (
-	select campaign_id,experiment,variant,container,inventory_source,sum(events) as events
+	select campaign_id,experiment,variant,container,coalesce(inventory_source,'unspecified') as inventory_source,sum(events) as events
 	from fct.campaign_activity_by_device 
-	where event_type = 'play' AND experiment <> '' AND NOT experiment is null AND inventory_source <> '{{INVENTORY_SOURCE}}' 
+	where event_type = 'play' AND experiment <> '' AND NOT experiment is null AND (inventory_source is null OR inventory_source <> '{{INVENTORY_SOURCE}}' ) 
 	AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')
 	group by 1,2,3,4,5
 	order by 1,2,3,4,5
 ) p ON l.campaign_id = p.campaign_id AND l.experiment = p.experiment AND l.variant = p.variant AND l.container = p.container AND l.inventory_source = p.inventory_source
 left join (
-	select campaign_id,experiment,variant,container,inventory_source,sum(events) as events
+	select campaign_id,experiment,variant,container,coalesce(inventory_source,'unspecified') as inventory_source,sum(events) as events
 	from fct.campaign_activity_by_device 
-	where event_type = 'impression' AND experiment <> '' AND NOT experiment is null AND inventory_source <> '{{INVENTORY_SOURCE}}' 
+	where event_type = 'impression' AND experiment <> '' AND NOT experiment is null AND (inventory_source is null OR inventory_source <> '{{INVENTORY_SOURCE}}' )
 	AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')
 	group by 1,2,3,4,5
 	order by 1,2,3,4,5
 ) i ON l.campaign_id = i.campaign_id AND l.experiment = i.experiment AND l.variant = i.variant AND l.container = i.container AND l.inventory_source = i.inventory_source
 left join (
-	select campaign_id,experiment,variant,container,inventory_source,sum(events) as events
+	select campaign_id,experiment,variant,container,coalesce(inventory_source,'unspecified') as inventory_source,sum(events) as events
 	from fct.campaign_activity_by_device 
-	where event_type = 'q4' AND experiment <> '' AND NOT experiment is null AND inventory_source <> '{{INVENTORY_SOURCE}}' 
+	where event_type = 'q4' AND experiment <> '' AND NOT experiment is null AND (inventory_source is null OR inventory_source <> '{{INVENTORY_SOURCE}}' ) 
 	AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')
 	group by 1,2,3,4,5
 	order by 1,2,3,4,5
 ) cv ON l.campaign_id = cv.campaign_id AND l.experiment = cv.experiment AND l.variant = cv.variant AND l.container = cv.container AND l.inventory_source = cv.inventory_source
 left join (
-	select campaign_id,experiment,variant,container,inventory_source,sum(events) as events
+	select campaign_id,experiment,variant,container,coalesce(inventory_source,'unspecified') as inventory_source,sum(events) as events
 	from fct.campaign_activity_by_device 
-	where event_type = 'completedView' AND experiment <> '' AND NOT experiment is null AND inventory_source <> '{{INVENTORY_SOURCE}}' 
+	where event_type = 'completedView' AND experiment <> '' AND NOT experiment is null AND (inventory_source is null OR inventory_source <> '{{INVENTORY_SOURCE}}' )
 	AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')
 	group by 1,2,3,4,5
 	order by 1,2,3,4,5
 ) mv ON l.campaign_id = mv.campaign_id AND l.experiment = mv.experiment AND l.variant = mv.variant AND l.container = mv.container AND l.inventory_source = mv.inventory_source
 left join (
-	select campaign_id,experiment,variant,container,inventory_source,sum(events) as events
+	select campaign_id,experiment,variant,container,coalesce(inventory_source,'unspecified') as inventory_source,sum(events) as events
 	from fct.campaign_activity_by_device 
-	where (event_type like 'link.%' OR event_type like 'share.%') AND experiment <> '' AND NOT experiment is null AND inventory_source <> '{{INVENTORY_SOURCE}}' 
+	where (event_type like 'link.%' OR event_type like 'share.%') AND experiment <> '' AND NOT experiment is null AND (inventory_source is null OR inventory_source <> '{{INVENTORY_SOURCE}}' ) 
 	AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day')
 	group by 1,2,3,4,5
 	order by 1,2,3,4,5
 ) en ON l.campaign_id = en.campaign_id AND l.experiment = en.experiment AND l.variant = en.variant AND l.container = en.container AND l.inventory_source = en.inventory_source
 inner join dim.campaign c ON c.campaign_id = l.campaign_id AND c.end_ts = dim.sp_end_of_time()
-inner join dim.advertiser a ON a.advertiser_id = c.advertiser_id AND a.end_ts = dim.sp_end_of_time()]]>
+inner join dim.advertiser a ON a.advertiser_id = c.advertiser_id AND a.end_ts = dim.sp_end_of_time()
+order by 1,2,5]]>
 	</queryString>
 	<field name="experiment" class="java.lang.String"/>
 	<field name="variant" class="java.lang.String"/>
