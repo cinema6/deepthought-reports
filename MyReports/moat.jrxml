@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2016-02-24T16:05:15 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="moat" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="9e39e095-803a-4f2a-b71e-fb045859352a">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="howard"/>
+	<property name="ireport.jasperserver.report.resource" value="/Reports/Moat_Analytics_files/main_jrxml"/>
+	<property name="ireport.jasperserver.reportUnit" value="/Reports/Moat_Analytics"/>
+	<parameter name="start_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="end_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+	</parameter>
+	<parameter name="moat_campaign_list" class="java.util.List">
+		<parameterDescription><![CDATA[Select campaign(s).]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[select c.name as campaign, 
+m.rec_date_local as rec_date, 
+m.slicer2_id as container, 
+sum(coalesce(m.impressions_analyzed,0)) as impressions_analyzed, 
+sum(coalesce(m.measurable_impressions,0)) as measurable_impressions, 
+sum(coalesce(m.susp_human,0)) as human_impressions, 
+sum(coalesce(m.human_and_inview_3sec_cumulative,0)) as human_and_inview_3sec
+from fct.moat_analytics m
+inner join dim.campaign c ON m.level2_id = c.campaign_id AND c.end_ts = dim.sp_end_of_time()
+where slicer2_id NOT in ('standalone','embed','Other','demo') 
+	and $X{IN,c.name,moat_campaign_list}
+	and m.rec_date_local between $P{start_date} AND $P{end_date}
+group by 1,2,3
+order by 1,3,2]]>
+	</queryString>
+	<field name="campaign" class="java.lang.String"/>
+	<field name="rec_date" class="java.sql.Date"/>
+	<field name="container" class="java.lang.String"/>
+	<field name="impressions_analyzed" class="java.lang.Long"/>
+	<field name="measurable_impressions" class="java.lang.Long"/>
+	<field name="human_impressions" class="java.lang.Long"/>
+	<field name="human_and_inview_3sec" class="java.lang.Long"/>
+	<variable name="totalImpressions" class="java.lang.Long" resetType="Group" resetGroup="container" incrementType="Group" incrementGroup="container" calculation="Sum">
+		<variableExpression><![CDATA[$F{impressions_analyzed}]]></variableExpression>
+	</variable>
+	<group name="campaign" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{campaign}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement x="0" y="0" width="550" height="40" uuid="c9400f7b-3890-4124-be4a-c3d86ee374f2"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{campaign}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="container" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{container}]]></groupExpression>
+		<groupHeader>
+			<band height="20">
+				<textField>
+					<reportElement x="30" y="0" width="130" height="20" uuid="d479a1ae-0b3f-4ea5-91ae-60a305abd3ec">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<textElement textAlignment="Left" verticalAlignment="Middle"/>
+					<textFieldExpression><![CDATA[$F{container}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="82" splitType="Stretch">
+			<staticText>
+				<reportElement x="0" y="0" width="170" height="30" uuid="c7c798af-22cb-43d8-9f66-03c3136afd5f"/>
+				<textElement verticalAlignment="Middle">
+					<font size="20" isBold="true"/>
+				</textElement>
+				<text><![CDATA[MOAT Analytics]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="0" y="30" width="290" height="20" uuid="76df5a37-48d1-418f-96f8-572f700f4534">
+					<property name="local_mesure_unitheight" value="pixel"/>
+					<property name="com.jaspersoft.studio.unit.height" value="px"/>
+				</reportElement>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[DATEFORMAT($P{start_date},"M/d/yyyy" ) + " - " + DATEFORMAT($P{end_date},"M/d/yyyy")]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="30" splitType="Stretch">
+			<staticText>
+				<reportElement x="180" y="0" width="80" height="30" uuid="f8b3ed62-9974-4304-a512-9a3c6a0f7d9a">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[Measurable Impressions]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="260" y="0" width="80" height="30" uuid="aaa18a7a-9fdb-4ab9-b08d-4d68f4a66fb9"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[Human]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="340" y="0" width="93" height="30" uuid="ca242083-4ff0-4093-89ff-8d685b458434"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font isBold="true" isUnderline="true"/>
+				</textElement>
+				<text><![CDATA[Human & In View
+3 Seconds]]></text>
+			</staticText>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField pattern="#,###">
+				<reportElement x="180" y="0" width="80" height="20" uuid="4bb038ba-340f-4bc8-8793-3f42682c2817">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{measurable_impressions}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00%">
+				<reportElement x="260" y="0" width="80" height="20" uuid="c3db18d3-6cc8-46e8-8b6d-4b71c4be715f"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{measurable_impressions} > 0 ? (double)$F{human_impressions} / (double)$F{measurable_impressions} : (double)0]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00%">
+				<reportElement x="340" y="0" width="80" height="20" uuid="817bc8c1-7905-4f62-ab12-4b70de7087cf"/>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{measurable_impressions} > 0 ? (double)$F{human_and_inview_3sec} / (double)$F{measurable_impressions} : (double)0]]></textFieldExpression>
+			</textField>
+			<textField pattern="MM/dd/yyyy">
+				<reportElement x="100" y="0" width="80" height="20" uuid="b1987525-1dbd-4cff-b3d9-aa5b65e4dc32"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{rec_date}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>
