@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-02-16T09:19:06 -->
+<!-- 2016-03-22T10:56:22 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="client_campaign" pageWidth="1008" pageHeight="1680" columnWidth="968" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7c7dc106-13c8-41b7-b0ab-4182d3fc1327">
 	<property name="net.sf.jasperreports.export.xls.one.page.per.sheet" value="true"/>
 	<property name="net.sf.jasperreports.export.xls.white.page.background" value="true"/>
@@ -246,7 +246,7 @@ order by 1]]>
 		<![CDATA[SELECT *
 FROM (
 	SELECT cv.rec_date as "date",c.sponsor,cv.card_id,cv.campaign_id,coalesce(c.reporting_id,c.campaign) as campaign_name,
-	cv.events as video_loads,coalesce(p.events,0)::int4 as video_plays,coalesce(q1.events,0)::int4 as q1,coalesce(q2.events,0)::int4 as q2,coalesce(q3.events,0)::int4 as q3,coalesce(q4.events,0)::int4 as q4,coalesce(v.events,0)::int4 as adcount
+	cv.events as video_loads,coalesce(p.events,0)::int4 as video_plays,coalesce(q1.events,0)::int4 as q1,coalesce(q2.events,0)::int4 as q2,coalesce(q3.events,0)::int4 as q3,coalesce(q4.events,0)::int4 as q4,coalesce(v.events,0)::int4 as adcount,coalesce(ck.events,0)::int4 as clicks
 	FROM (
 		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'cardView' AND rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) cv
@@ -268,6 +268,9 @@ FROM (
 	LEFT JOIN (
 		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE event_type = 'q4' AND rec_ts >=  ($P{start_date}::timestamp at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
 	) q4 ON cv.rec_date = q4.rec_date AND cv.campaign_id = q4.campaign_id AND cv.card_id = q4.card_id 	
+	LEFT JOIN (
+		SELECT rec_ts::date as rec_date,campaign_id,card_id,sum(events) as events FROM fct.campaign_activity_by_device WHERE (event_type like 'link%' OR event_type like 'share%') AND rec_ts >=  ($P{start_date}::timestamp at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp at time zone $P{timezone} + interval '1 day') GROUP BY 1,2,3
+	) ck ON cv.rec_date = ck.rec_date AND cv.campaign_id = ck.campaign_id AND cv.card_id = ck.card_id 	
 	inner join dim.v_sponsored_card c ON cv.campaign_id = c.campaign_id AND cv.card_id = c.card_id
 ) i
 where i.sponsor = $P{sponsor} and $X{IN,i.campaign_id, campaign_id_list} 
@@ -285,6 +288,7 @@ order by i.sponsor,i.campaign_name, i.date]]>
 	<field name="q3" class="java.lang.Long"/>
 	<field name="q4" class="java.lang.Long"/>
 	<field name="adcount" class="java.lang.Long"/>
+	<field name="clicks" class="java.lang.Long"/>
 	<sortField name="sponsor"/>
 	<sortField name="campaign_name"/>
 	<sortField name="date"/>
@@ -305,6 +309,9 @@ order by i.sponsor,i.campaign_name, i.date]]>
 	</variable>
 	<variable name="total_adcount" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
 		<variableExpression><![CDATA[$F{adcount}]]></variableExpression>
+	</variable>
+	<variable name="total_clicks" class="java.lang.Long" resetType="Group" resetGroup="card_id,campaign_id" calculation="Sum">
+		<variableExpression><![CDATA[$F{clicks}]]></variableExpression>
 	</variable>
 	<group name="card_id,campaign_id" isStartNewPage="true">
 		<groupExpression><![CDATA[$F{campaign_id} + $F{card_id}]]></groupExpression>
@@ -403,7 +410,7 @@ order by i.sponsor,i.campaign_name, i.date]]>
 					<text><![CDATA[Reelcontent Campaign Report]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="548" y="230" width="114" height="30" uuid="2041d808-110e-48f6-b997-48486d0337ad">
+					<reportElement x="548" y="230" width="100" height="30" uuid="2041d808-110e-48f6-b997-48486d0337ad">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
 					<box>
@@ -466,7 +473,7 @@ order by i.sponsor,i.campaign_name, i.date]]>
 					<imageExpression><![CDATA["/Workspace/Images/logo.png"]]></imageExpression>
 				</image>
 				<staticText>
-					<reportElement x="662" y="230" width="114" height="30" uuid="782e519f-4ab3-4e50-af59-55c4a628a936">
+					<reportElement x="648" y="230" width="100" height="30" uuid="782e519f-4ab3-4e50-af59-55c4a628a936">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -482,7 +489,7 @@ order by i.sponsor,i.campaign_name, i.date]]>
 					<text><![CDATA[Ad Counts]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="776" y="230" width="114" height="30" uuid="447995d6-d970-41a2-b14a-97440cebffbf">
+					<reportElement x="748" y="230" width="100" height="30" uuid="447995d6-d970-41a2-b14a-97440cebffbf">
 						<property name="local_mesure_unitheight" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
@@ -582,8 +589,9 @@ Completion Rate]]></text>
 					<text><![CDATA[100%]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="548" y="140" width="114" height="30" uuid="4fa774f1-e547-48b5-8612-aacd46572ac8">
+					<reportElement x="548" y="140" width="100" height="30" uuid="4fa774f1-e547-48b5-8612-aacd46572ac8">
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 					</reportElement>
 					<box>
 						<leftPen lineWidth="0.5"/>
@@ -595,7 +603,7 @@ Completion Rate]]></text>
 					<text><![CDATA[Completion Rate]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="662" y="140" width="114" height="30" uuid="25566bf7-3782-4e60-a255-15fec2660e69">
+					<reportElement x="648" y="140" width="100" height="30" uuid="25566bf7-3782-4e60-a255-15fec2660e69">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="local_mesure_unitwidth" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
@@ -611,7 +619,7 @@ Completion Rate]]></text>
 					<text><![CDATA[Ad Counts]]></text>
 				</staticText>
 				<staticText>
-					<reportElement x="776" y="140" width="114" height="30" uuid="afeb664c-0897-4baa-87d2-0048370c3677">
+					<reportElement x="748" y="140" width="100" height="30" uuid="afeb664c-0897-4baa-87d2-0048370c3677">
 						<property name="local_mesure_unitheight" value="pixel"/>
 						<property name="com.jaspersoft.studio.unit.height" value="px"/>
 					</reportElement>
@@ -695,7 +703,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[$V{total_q4}]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0%" isBlankWhenNull="true">
-					<reportElement x="548" y="169" width="114" height="31" uuid="e9015010-8353-4968-a3a6-0e400f397733"/>
+					<reportElement x="548" y="169" width="100" height="31" uuid="e9015010-8353-4968-a3a6-0e400f397733"/>
 					<box>
 						<leftPen lineWidth="0.5"/>
 					</box>
@@ -705,7 +713,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_q4}/(double)$V{total_plays},null)]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="662" y="169" width="114" height="31" uuid="85721abe-7a23-4c37-ac54-56cd062193e2">
+					<reportElement x="648" y="169" width="100" height="31" uuid="85721abe-7a23-4c37-ac54-56cd062193e2">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="local_mesure_unitwidth" value="pixel"/>
 					</reportElement>
@@ -719,7 +727,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[$V{total_adcount}]]></textFieldExpression>
 				</textField>
 				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0%" isBlankWhenNull="true">
-					<reportElement x="776" y="170" width="114" height="30" uuid="f0f596ec-5dda-44f4-a694-a39806010410"/>
+					<reportElement x="748" y="170" width="100" height="30" uuid="f0f596ec-5dda-44f4-a694-a39806010410"/>
 					<box>
 						<leftPen lineWidth="0.5"/>
 					</box>
@@ -728,6 +736,48 @@ Completion Rate]]></text>
 					</textElement>
 					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_adcount}/(double)$V{total_plays},null)]]></textFieldExpression>
 				</textField>
+				<staticText>
+					<reportElement x="848" y="230" width="80" height="30" uuid="b3bc411d-7184-4f2b-b5b0-7e919c95e98f">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Clicks]]></text>
+				</staticText>
+				<textField evaluationTime="Group" evaluationGroup="card_id,campaign_id" pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="848" y="170" width="80" height="31" uuid="40748ed7-3b23-4a6c-b036-b7cb39554f15">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_clicks}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="848" y="140" width="80" height="30" uuid="2565fea1-2654-4a29-ae4b-cdd93b928cbb">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Clicks]]></text>
+				</staticText>
 			</band>
 		</groupHeader>
 		<groupFooter>
@@ -795,7 +845,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[$V{total_q3}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="662" y="8" width="114" height="20" uuid="85420d0b-9f8a-47c1-afa9-5ea602a1ed67">
+					<reportElement x="648" y="8" width="100" height="20" uuid="85420d0b-9f8a-47c1-afa9-5ea602a1ed67">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 						<property name="local_mesure_unitwidth" value="pixel"/>
@@ -807,7 +857,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[$V{total_adcount}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0%" isBlankWhenNull="true">
-					<reportElement x="776" y="8" width="114" height="20" uuid="420de911-0603-411d-b2c5-08f4de5d70f0">
+					<reportElement x="748" y="8" width="100" height="20" uuid="420de911-0603-411d-b2c5-08f4de5d70f0">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					</reportElement>
@@ -818,7 +868,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[IF($V{total_plays} > 0,(double)$V{total_adcount}/(double)$V{total_plays},null)]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0" isBlankWhenNull="true">
-					<reportElement x="470" y="8" width="80" height="20" uuid="a7a2cfa7-d06d-44e7-a58a-9f0c45916aa7">
+					<reportElement x="468" y="8" width="80" height="20" uuid="a7a2cfa7-d06d-44e7-a58a-9f0c45916aa7">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					</reportElement>
@@ -829,7 +879,7 @@ Completion Rate]]></text>
 					<textFieldExpression><![CDATA[$V{total_q4}]]></textFieldExpression>
 				</textField>
 				<textField pattern="#,##0%" isBlankWhenNull="true">
-					<reportElement x="550" y="8" width="114" height="20" uuid="2f535115-978f-493e-87eb-8799539047a9">
+					<reportElement x="548" y="8" width="100" height="20" uuid="2f535115-978f-493e-87eb-8799539047a9">
 						<property name="com.jaspersoft.studio.unit.width" value="px"/>
 						<property name="com.jaspersoft.studio.unit.y" value="px"/>
 					</reportElement>
@@ -973,6 +1023,17 @@ Completion Rate]]></text>
 						</jr:column>
 					</jr:table>
 				</componentElement>
+				<textField pattern="#,##0" isBlankWhenNull="true">
+					<reportElement x="848" y="8" width="80" height="20" uuid="92870859-acf0-4662-87ff-95b591ff044a">
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.y" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font isBold="true"/>
+						<paragraph leftIndent="8" rightIndent="8"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_clicks}]]></textFieldExpression>
+				</textField>
 			</band>
 		</groupFooter>
 	</group>
@@ -985,7 +1046,6 @@ Completion Rate]]></text>
 	<detail>
 		<band height="20" splitType="Stretch">
 			<property name="local_mesure_unitheight" value="pixel"/>
-			<property name="com.jaspersoft.studio.unit.height" value="px"/>
 			<textField pattern="M/d/yy" isBlankWhenNull="true">
 				<reportElement x="0" y="0" width="114" height="20" uuid="b0aa2b39-5008-4624-b9eb-2107b8461440">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
@@ -1055,7 +1115,7 @@ Completion Rate]]></text>
 				<textFieldExpression><![CDATA[$F{q4}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="548" y="0" width="114" height="20" uuid="4cf35b2a-b829-4099-bbc2-789e89f03355"/>
+				<reportElement x="548" y="0" width="100" height="20" uuid="4cf35b2a-b829-4099-bbc2-789e89f03355"/>
 				<box>
 					<leftPen lineWidth="0.5"/>
 				</box>
@@ -1065,7 +1125,7 @@ Completion Rate]]></text>
 				<textFieldExpression><![CDATA[IF($F{video_plays} > 0,(double)$F{q4}/(double)$F{video_plays},null)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
-				<reportElement x="662" y="0" width="114" height="20" uuid="fc84b6e2-43b8-42f5-859a-7bac1e557129">
+				<reportElement x="648" y="0" width="100" height="20" uuid="fc84b6e2-43b8-42f5-859a-7bac1e557129">
 					<property name="com.jaspersoft.studio.unit.width" value="px"/>
 					<property name="local_mesure_unitwidth" value="pixel"/>
 				</reportElement>
@@ -1079,7 +1139,7 @@ Completion Rate]]></text>
 				<textFieldExpression><![CDATA[$F{adcount}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0%" isBlankWhenNull="true">
-				<reportElement x="776" y="0" width="114" height="20" uuid="28e4a549-d37e-478f-8346-b6789ffd9c3e"/>
+				<reportElement x="748" y="0" width="100" height="20" uuid="28e4a549-d37e-478f-8346-b6789ffd9c3e"/>
 				<box>
 					<leftPen lineWidth="0.5"/>
 				</box>
@@ -1087,6 +1147,18 @@ Completion Rate]]></text>
 					<paragraph leftIndent="8" rightIndent="8"/>
 				</textElement>
 				<textFieldExpression><![CDATA[IF($F{video_plays} > 0,(double)$F{adcount}/(double)$F{video_plays},null)]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0" isBlankWhenNull="true">
+				<reportElement x="848" y="0" width="80" height="20" uuid="0f3cad4c-1015-4f0b-8af4-e5e3ddd24c3d">
+					<property name="com.jaspersoft.studio.unit.width" value="px"/>
+				</reportElement>
+				<box>
+					<leftPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<paragraph leftIndent="8" rightIndent="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{clicks}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
