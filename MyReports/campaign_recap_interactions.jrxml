@@ -1,0 +1,572 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
+<!-- 2016-03-31T11:55:13 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="campaign_recap_interactions" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="cb6ab37b-ad5d-4266-bf5b-f076c44d03aa">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
+	<property name="com.jaspersoft.studio.unit." value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
+	<parameter name="start_date" class="java.util.Date">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA[DATE(  YEAR(TODAY() ), MONTH(TODAY()), 1)]]></defaultValueExpression>
+	</parameter>
+	<parameter name="end_date" class="java.util.Date">
+		<defaultValueExpression><![CDATA[TODAY( )]]></defaultValueExpression>
+	</parameter>
+	<parameter name="timezone" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA["America/New_York"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="campaign_id" class="java.lang.String">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
+	<queryString>
+		<![CDATA[select c.sponsor,c.campaign,c.status,cv.dsp,cv.device_type,cv.inventory_source,
+cv.events as card_views,
+coalesce(l_a.events,0) as link_action,
+coalesce(l_f.events,0) as link_facebook,
+coalesce(l_i.events,0) as link_instagram,
+coalesce(l_p.events,0) as link_pinterest,
+coalesce(l_t.events,0) as link_twitter,
+coalesce(l_w.events,0) as link_website,
+coalesce(l_y.events,0) as link_youtube,
+coalesce(s_f.events,0) as share_facebook,
+coalesce(s_p.events,0) as share_pinterest,
+coalesce(s_t.events,0) as share_twitter
+from (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'cardView')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as cv
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.Action')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_a ON l_a.dsp = cv.dsp AND l_a.device_type = cv.device_type AND l_a.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.Facebook')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_f ON l_f.dsp = cv.dsp AND l_f.device_type = cv.device_type AND l_f.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.Instagram')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_i ON l_i.dsp = cv.dsp AND l_i.device_type = cv.device_type AND l_i.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.Pinterest')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_p ON l_p.dsp = cv.dsp AND l_p.device_type = cv.device_type AND l_p.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.Twitter')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_t ON l_t.dsp = cv.dsp AND l_t.device_type = cv.device_type AND l_t.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.Website')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_w ON l_w.dsp = cv.dsp AND l_w.device_type = cv.device_type AND l_w.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'link.YouTube')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as l_y ON l_y.dsp = cv.dsp AND l_y.device_type = cv.device_type AND l_y.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'shareLink.facebook')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as s_f ON s_f.dsp = cv.dsp AND s_f.device_type = cv.device_type AND s_f.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'shareLink.pinterest')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as s_p ON s_p.dsp = cv.dsp AND s_p.device_type = cv.device_type AND s_p.inventory_source = cv.inventory_source
+LEFT JOIN (
+	select container as dsp,
+	case device_category when 'tablet' then 'mobile' else device_category end as device_type,
+	lower(coalesce(inventory_source,container)) as inventory_source,
+	sum(events) as events
+	from fct.campaign_activity_by_device
+	where campaign_id = $P{campaign_id}
+	and (event_type = 'shareLink.twitter')
+    and  rec_ts >= ($P{start_date}::timestamp  at time zone $P{timezone}) AND rec_ts < ($P{end_date}::timestamp  at time zone $P{timezone} + interval '1 day')
+	group by 1,2,3
+	order by 1,2,3
+) as s_t ON s_t.dsp = cv.dsp AND s_t.device_type = cv.device_type AND s_t.inventory_source = cv.inventory_source
+cross join (
+	select campaign_id,sponsor,campaign,status
+	from dim.v_sponsored_Card
+	where campaign_id = $P{campaign_id}
+	limit 1
+) as c 
+where cv.inventory_source NOT in ('{{inventory_source}}') and cv.events > 1]]>
+	</queryString>
+	<field name="sponsor" class="java.lang.String"/>
+	<field name="campaign" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="dsp" class="java.lang.String"/>
+	<field name="device_type" class="java.lang.String"/>
+	<field name="inventory_source" class="java.lang.String"/>
+	<field name="card_views" class="java.lang.Long"/>
+	<field name="link_action" class="java.lang.Long"/>
+	<field name="link_facebook" class="java.lang.Long"/>
+	<field name="link_instagram" class="java.lang.Long"/>
+	<field name="link_pinterest" class="java.lang.Long"/>
+	<field name="link_twitter" class="java.lang.Long"/>
+	<field name="link_website" class="java.lang.Long"/>
+	<field name="link_youtube" class="java.lang.Long"/>
+	<field name="share_facebook" class="java.lang.Long"/>
+	<field name="share_pinterest" class="java.lang.Long"/>
+	<field name="share_twitter" class="java.lang.Long"/>
+	<group name="dsp">
+		<groupExpression><![CDATA[$F{dsp}]]></groupExpression>
+		<groupHeader>
+			<band height="24">
+				<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				<textField>
+					<reportElement x="-20" y="0" width="130" height="24" uuid="9c8bb1dc-044a-495f-85fa-cae7c7b06a04">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+						<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="14"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{dsp}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="110" y="4" width="66" height="20" uuid="f2ae3086-f33d-40c2-a772-c2d532ab46fa">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Action]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="176" y="4" width="66" height="20" uuid="73471d62-c781-431e-955f-08bb6da06596">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Website]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="242" y="4" width="66" height="20" uuid="479bf666-6806-4afc-a41b-0db829b77ea0">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Facebook]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="308" y="4" width="66" height="20" uuid="e769463e-802d-41e6-b1d0-7c72280e3a0a">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Instagram]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="374" y="4" width="66" height="20" uuid="57fff33a-f1a7-4a0a-a326-2daccc2673af">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Pinterest]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="440" y="4" width="66" height="20" uuid="33d5cf50-9510-43fd-a245-1ae8dacf8a3d">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Twitter]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="506" y="4" width="66" height="20" uuid="6c2cea9c-c936-4019-bab5-38d90319863d">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Youtube]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="572" y="4" width="66" height="20" uuid="622a26bf-c75f-4234-9658-1a0c00932d79">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Facebook]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="638" y="4" width="66" height="20" uuid="22c78d5d-d945-4426-ad53-1a9635a769e1">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Pinterest]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="704" y="4" width="66" height="20" uuid="682dfa7d-6394-4a38-829a-cebf4da30d01">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box leftPadding="4" rightPadding="4">
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isBold="true"/>
+					</textElement>
+					<text><![CDATA[Twitter]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="device_type">
+		<groupExpression><![CDATA[$F{device_type}]]></groupExpression>
+		<groupHeader>
+			<band height="20">
+				<textField>
+					<reportElement mode="Opaque" x="-20" y="0" width="130" height="20" backcolor="#E8E8E8" uuid="61563a6d-b162-4668-8a43-b0dcae7fcfd0">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{device_type}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement mode="Opaque" x="110" y="0" width="462" height="20" backcolor="#E8E8E8" uuid="326d6c49-fcd9-4be7-8877-d469c8376510">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["links"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement mode="Opaque" x="572" y="0" width="198" height="20" backcolor="#E8E8E8" uuid="eb13cb3f-805e-47c1-8ccf-4f268d37dea9">
+						<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font isItalic="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["shares"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="31"/>
+		</groupFooter>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="60">
+			<staticText>
+				<reportElement x="-20" y="15" width="400" height="30" uuid="291783d2-74d8-4e40-a7e7-74ebdc14a7a0"/>
+				<textElement verticalAlignment="Middle">
+					<font size="18"/>
+				</textElement>
+				<text><![CDATA[Interaction Breakout]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="20" splitType="Stretch">
+			<textField pattern="#,##0">
+				<reportElement x="110" y="0" width="66" height="20" uuid="597a2e64-12ee-411e-8fa9-e31531fe3252">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_action}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="242" y="0" width="66" height="20" uuid="050c3142-9230-490b-9a81-672a3040ddeb"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_facebook}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="308" y="0" width="66" height="20" uuid="1217400c-08cd-40bd-a405-3512ad78f866"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_instagram}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="374" y="0" width="66" height="20" uuid="e0e4ae7e-c257-41eb-a272-3be1da195a13"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_pinterest}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="440" y="0" width="66" height="20" uuid="5515c653-9887-459f-b049-867ad8402b84"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_twitter}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="176" y="0" width="66" height="20" uuid="fcf28af4-418a-4b13-8888-3db995766018"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_website}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="506" y="0" width="66" height="20" uuid="a0773e14-6efe-4663-8b2b-5bdba6d0d243"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{link_youtube}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="572" y="0" width="66" height="20" uuid="7a5cc0f4-7f7b-4402-9f22-1e1dbaebb2b7"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{share_facebook}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="638" y="0" width="66" height="20" uuid="44e14b95-0dc4-43a0-9261-b110e425e2f1"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{share_pinterest}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0">
+				<reportElement x="704" y="0" width="66" height="20" uuid="361400aa-4ea5-4fe6-bb4e-480c597f55ec"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{share_twitter}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="-20" y="0" width="130" height="20" uuid="7e1a0c6a-3e34-488b-a145-92f1805c84f8">
+					<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{inventory_source}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

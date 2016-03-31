@@ -28,29 +28,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>JasperReportsServer-1449775646521</name>
+			<name>JasperReportsServer-1459365332596</name>
 			<type>2</type>
-			<location>/private/var/folders/b6/bmk9k4vj69l4t_k2xl3dphy00000gn/T/JasperReportsServer-1449775646521</location>
+			<location>/private/var/folders/b6/bmk9k4vj69l4t_k2xl3dphy00000gn/T/JasperReportsServer-1459365332596</location>
 		</link>
 		<link>
-			<name>JasperReportsServer-1449778904565</name>
-			<type>2</type>
-			<location>/private/var/folders/b6/bmk9k4vj69l4t_k2xl3dphy00000gn/T/JasperReportsServer-1449778904565</location>
-		</link>
-		<link>
-			<name>JasperReportsServer-1449781679835</name>
-			<type>2</type>
-			<location>/private/var/folders/b6/bmk9k4vj69l4t_k2xl3dphy00000gn/T/JasperReportsServer-1449781679835</location>
-		</link>
-		<link>
-			<name>JasperReportsServer-1449783508277</name>
-			<type>2</type>
-			<location>/private/var/folders/b6/bmk9k4vj69l4t_k2xl3dphy00000gn/T/JasperReportsServer-1449783508277</location>
-		</link>
-		<link>
-			<name>JasperReportsServer-1450118633487</name>
-			<type>2</type>
-			<location>/private/var/folders/b6/bmk9k4vj69l4t_k2xl3dphy00000gn/T/JasperReportsServer-1450118633487</location>
+			<name>campaign_recap_interactions.jasper</name>
+			<type>1</type>
+			<location>/Users/howard/Repos/cinema6/deepthought-reports/MyReports/campaign_recap_interactions.jasper</location>
 		</link>
 	</linkedResources>
 </projectDescription>
