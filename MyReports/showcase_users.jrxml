@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-06-22T12:24:17 -->
+<!-- 2016-06-23T11:30:03 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_users" pageWidth="2400" pageHeight="500" orientation="Landscape" columnWidth="2360" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -29,16 +29,21 @@ c.src_doc->'product'->>'uri' as store_uri,
 regexp_replace(c.src_doc->'targeting'->'demographics'->>'age','\[|\]|"','','g') as target_age,
 regexp_replace(c.src_doc->'targeting'->'demographics'->>'gender','\[|\]|"','','g') as target_gender,
 regexp_replace(c.src_doc->'targeting'->>'appStoreCategory','\[|\]|"','','g') as target_category,
-ccv.cycle_user_views,
-ccv.latest_Credit_date,
-i.impressions,
-cv.views,
+obs.user_views as cycle_user_views,
+obs.billing_start,
+obs.billing_end,
+obs.period_days,
+obs.view_target,
+obs.days_remaining,
+i.impressions::integer,
+cv.views::integer,
 uu.unique_user_views as user_views,
-cc.clicks,
+cc.clicks::integer,
 uu.first_view_ts at time zone 'America/New_York' as first_view ,
 uu.last_view_ts at time zone 'America/New_York' as latest_view
 from dim.user u
 left join dim.org o on u.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
+left join dim.v_org_showcase_billing_status obs ON u.org_id = obs.org_id
 left join dim.v_user_role ur ON u.user_id = ur.user_id
 left join dim.v_org_promotion op on u.org_id = op.org_id
 left join dim.promotion p on op.promo_id = p.promo_id and p.end_ts = dim.sp_end_of_time()
@@ -63,29 +68,6 @@ left join (
 	where event_type = 'link.Action'
 	group by 1
 ) cc on cc.campaign_id = c.campaign_id
-left join (
-	select campaign_id, latest_credit_date, count(*) as cycle_user_views
-	from (
-		select s.campaign_id,oc.latest_credit_date,s.uuid
-		from fct.showcase_user_views_daily s
-		inner join (
-			select co.campaign_id,co.org_id,oc.latest_credit_date
-			from (
-				select b.org_id,max(b.transaction_ts) as latest_credit_date
-				from fct.billing_transactions b
-				where sign = 1 and description like '%showcase%'
-				group by 1
-			) oc
-			inner join (
-				select campaign_id,org_id
-				from fct.showcase_user_views_daily
-				group by 1,2
-			) co ON oc.org_id = co.org_id
-		) oc ON  s.campaign_id = oc.campaign_id AND s.rec_date >= oc.latest_credit_date::date
-		group by 1,2,3
-	) u
-	group by 1,2
-) ccv ON ccv.campaign_id = c.campaign_id
 where u.end_ts = dim.sp_end_of_time() and u.self_serve = 't' and ur.system_role = 'showcaseUser'
 and u.status <> 'deleted'
 AND not u.email = 'minznerj@kean.edu'
@@ -105,21 +87,31 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 	<field name="target_age" class="java.lang.String"/>
 	<field name="target_gender" class="java.lang.String"/>
 	<field name="target_category" class="java.lang.String"/>
-	<field name="cycle_user_views" class="java.lang.Long"/>
-	<field name="latest_credit_date" class="java.sql.Timestamp"/>
+	<field name="cycle_user_views" class="java.lang.Integer"/>
+	<field name="billing_start" class="java.sql.Date"/>
+	<field name="billing_end" class="java.sql.Date"/>
+	<field name="period_days" class="java.lang.Integer"/>
+	<field name="view_target" class="java.lang.Integer"/>
+	<field name="days_remaining" class="java.lang.Integer"/>
 	<field name="impressions" class="java.lang.Integer"/>
 	<field name="views" class="java.lang.Integer"/>
 	<field name="user_views" class="java.lang.Integer"/>
 	<field name="clicks" class="java.lang.Integer"/>
 	<field name="first_view" class="java.sql.Timestamp"/>
 	<field name="latest_view" class="java.sql.Timestamp"/>
+	<variable name="cycle_days_pct" class="java.lang.Double">
+		<variableExpression><![CDATA[($F{period_days}.doubleValue() > 0 ? ($F{period_days}.doubleValue() - $F{days_remaining}.doubleValue()) / $F{period_days}.doubleValue(): 0)]]></variableExpression>
+	</variable>
+	<variable name="cycle_users_pct" class="java.lang.Double">
+		<variableExpression><![CDATA[$F{view_target}.doubleValue() > 0 ? $F{cycle_user_views}.doubleValue() / $F{view_target}.doubleValue(): 0]]></variableExpression>
+	</variable>
 	<background>
 		<band splitType="Stretch"/>
 	</background>
 	<columnHeader>
-		<band height="50" splitType="Stretch">
+		<band height="73" splitType="Stretch">
 			<staticText>
-				<reportElement x="0" y="20" width="122" height="30" uuid="2f0fd99e-de48-4c75-b1d1-4f48573e5859"/>
+				<reportElement x="0" y="43" width="122" height="30" uuid="2f0fd99e-de48-4c75-b1d1-4f48573e5859"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -132,7 +124,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[User]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="122" y="20" width="158" height="30" uuid="c0788af5-57b3-4745-900e-079a57b10f79"/>
+				<reportElement x="122" y="43" width="158" height="30" uuid="c0788af5-57b3-4745-900e-079a57b10f79"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -145,7 +137,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Email]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="280" y="20" width="76" height="30" uuid="d09fd7cb-a7d6-441e-a8c5-4fa250c5a13d"/>
+				<reportElement x="280" y="43" width="76" height="30" uuid="d09fd7cb-a7d6-441e-a8c5-4fa250c5a13d"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -158,7 +150,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Signed Up]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="356" y="20" width="82" height="30" uuid="5359f08a-a071-431e-a3f7-065120f68fde"/>
+				<reportElement x="356" y="43" width="82" height="30" uuid="5359f08a-a071-431e-a3f7-065120f68fde"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -171,7 +163,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Status]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="438" y="20" width="118" height="30" uuid="b80cf0a6-adbd-4530-a012-0dc4626d8542"/>
+				<reportElement x="438" y="43" width="118" height="30" uuid="b80cf0a6-adbd-4530-a012-0dc4626d8542"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -184,7 +176,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Referred by]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="556" y="20" width="158" height="30" uuid="6649df50-f4e2-4bb1-96e8-53caeac0eb7b"/>
+				<reportElement x="556" y="43" width="158" height="30" uuid="6649df50-f4e2-4bb1-96e8-53caeac0eb7b"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -197,7 +189,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Promotion]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="714" y="20" width="146" height="30" uuid="213195a3-1953-496c-a801-aae1c339cd24"/>
+				<reportElement x="714" y="43" width="146" height="30" uuid="213195a3-1953-496c-a801-aae1c339cd24"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -210,7 +202,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Campaign Id]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1688" y="20" width="70" height="30" uuid="c697cca7-e958-4d43-98b1-59721a4f5b2e"/>
+				<reportElement x="1650" y="43" width="70" height="30" uuid="c697cca7-e958-4d43-98b1-59721a4f5b2e"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -223,33 +215,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Impressions]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1480" y="20" width="104" height="30" uuid="e67b7870-5f3f-4bed-b40f-b1ce7241c70c"/>
-				<box>
-					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font isBold="true"/>
-				</textElement>
-				<text><![CDATA[First View]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="1584" y="20" width="104" height="30" uuid="a05c8911-09bc-4fd4-b67f-8e4b90933a5c"/>
-				<box>
-					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font isBold="true"/>
-				</textElement>
-				<text><![CDATA[Latest View]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="1758" y="20" width="70" height="30" uuid="b7b9c48b-36e3-4a9a-8711-08670a257bf4"/>
+				<reportElement x="1720" y="43" width="70" height="30" uuid="b7b9c48b-36e3-4a9a-8711-08670a257bf4"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -262,7 +228,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Views]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1410" y="20" width="70" height="30" uuid="4fe18723-1893-4120-9e7e-4766699450bb"/>
+				<reportElement x="1580" y="43" width="70" height="30" uuid="4fe18723-1893-4120-9e7e-4766699450bb"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -272,10 +238,10 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Total Users]]></text>
+				<text><![CDATA[Users]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1898" y="20" width="70" height="30" uuid="492853e0-fefd-419b-972a-34819351c4c6"/>
+				<reportElement x="1860" y="43" width="70" height="30" uuid="492853e0-fefd-419b-972a-34819351c4c6"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -288,7 +254,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Clicks]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1968" y="20" width="70" height="30" uuid="d2ac70a6-d3d1-477c-a883-d806a52a8683"/>
+				<reportElement x="1930" y="43" width="70" height="30" uuid="d2ac70a6-d3d1-477c-a883-d806a52a8683"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -301,7 +267,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[CTR]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1828" y="20" width="70" height="30" uuid="8b601341-e9e5-4514-a0b0-4974c5c1166a"/>
+				<reportElement x="1790" y="43" width="70" height="30" uuid="8b601341-e9e5-4514-a0b0-4974c5c1166a"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -314,7 +280,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[View Rate]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="860" y="20" width="190" height="30" uuid="151149da-6791-4aec-be48-a3c22024b82c"/>
+				<reportElement x="860" y="43" width="190" height="30" uuid="151149da-6791-4aec-be48-a3c22024b82c"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -327,7 +293,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Campaign]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1050" y="20" width="80" height="30" uuid="cf696849-fed2-4391-8de7-719b840bd7b9"/>
+				<reportElement x="2000" y="43" width="80" height="30" uuid="cf696849-fed2-4391-8de7-719b840bd7b9"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -340,7 +306,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Demo Age]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1130" y="20" width="80" height="30" uuid="40112222-dfd9-44fc-97c8-ec70eb5daf90"/>
+				<reportElement x="2080" y="43" width="80" height="30" uuid="40112222-dfd9-44fc-97c8-ec70eb5daf90"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -353,7 +319,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<text><![CDATA[Demo Gender]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1210" y="20" width="200" height="30" uuid="0cab6c75-a6d5-43f5-a4ba-576a9f21e44c"/>
+				<reportElement x="1342" y="43" width="70" height="30" uuid="83ff5bb7-bd19-46be-8ba8-77279c549c8b"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -363,23 +329,10 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Categories]]></text>
+				<text><![CDATA[User Views]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="2114" y="20" width="70" height="30" uuid="83ff5bb7-bd19-46be-8ba8-77279c549c8b"/>
-				<box>
-					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle">
-					<font isBold="true"/>
-				</textElement>
-				<text><![CDATA[Cycle Users]]></text>
-			</staticText>
-			<staticText>
-				<reportElement x="2038" y="20" width="76" height="30" uuid="a11b4c47-9229-42ce-a997-eae96a2e7c71">
+				<reportElement x="1050" y="43" width="76" height="30" uuid="a11b4c47-9229-42ce-a997-eae96a2e7c71">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box>
@@ -391,13 +344,146 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle">
 					<font isBold="true"/>
 				</textElement>
-				<text><![CDATA[Cycle Start]]></text>
+				<text><![CDATA[Start]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1126" y="43" width="76" height="30" uuid="a5fef8b6-4ca0-4a77-b153-6b0f3614d1a7">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[End]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1202" y="43" width="70" height="30" uuid="92c2e567-6352-43c9-a4ca-9dec10acdaea"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Days]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1272" y="43" width="70" height="30" uuid="0d048540-82ac-4444-99b7-f34307911e9e"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Target Users]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1412" y="43" width="70" height="30" uuid="0c920497-8f09-4662-b0e7-b846a265500f"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Cycle %]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1482" y="43" width="70" height="30" uuid="a59d09f2-fd14-4c1f-a923-4a2b933e919c"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Users %]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1050" y="23" width="530" height="20" uuid="086f913a-b381-422c-91d4-303aed4736c4"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Billing Cycle]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1580" y="23" width="420" height="20" uuid="3cfedaf1-c4f1-486a-812b-ae9fec8def61">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Lifetime]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="1552" y="43" width="28" height="30" uuid="a3c92ccd-b7cf-4cc9-8c9b-72568f8a8e55"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[C]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="2000" y="23" width="360" height="20" uuid="01fb1f9b-67ea-4258-8735-7c25083301d2"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Targeting]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="2160" y="43" width="200" height="30" uuid="6b9145c9-ec91-4237-bcf9-cd3eec567c1b"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Categories]]></text>
 			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
 		<band height="30" splitType="Stretch">
-			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<textField>
 				<reportElement x="0" y="0" width="122" height="30" uuid="e9a5f35d-8b80-425e-b62c-021f72bc991d"/>
 				<box leftPadding="4" rightPadding="4">
@@ -480,34 +566,8 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{campaign}]]></textFieldExpression>
 				<hyperlinkReferenceExpression><![CDATA[$F{store_uri}]]></hyperlinkReferenceExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="1480" y="0" width="104" height="30" uuid="db211ca0-252c-462e-812b-25dc64136f5b">
-					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4">
-					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{first_view}]]></textFieldExpression>
-			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="1584" y="0" width="104" height="30" uuid="05144df3-28db-481f-ba64-dc17f8c1a963">
-					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4">
-					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{latest_view}]]></textFieldExpression>
-			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1688" y="0" width="70" height="30" uuid="529910ca-b390-44ee-812d-a2b11438e0ab"/>
+				<reportElement x="1650" y="0" width="70" height="30" uuid="529910ca-b390-44ee-812d-a2b11438e0ab"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -518,7 +578,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{impressions}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1758" y="0" width="70" height="30" uuid="fba2700c-9b09-414b-892e-7d568ee6cdc1"/>
+				<reportElement x="1720" y="0" width="70" height="30" uuid="fba2700c-9b09-414b-892e-7d568ee6cdc1"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -529,7 +589,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1410" y="0" width="70" height="30" uuid="fe1f8c21-2e45-4849-9ea8-d2e33d7f3d1f"/>
+				<reportElement x="1580" y="0" width="70" height="30" uuid="fe1f8c21-2e45-4849-9ea8-d2e33d7f3d1f"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -540,7 +600,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{user_views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1898" y="0" width="70" height="30" uuid="03acb481-aa26-48d3-8d4d-e218f62e0843"/>
+				<reportElement x="1860" y="0" width="70" height="30" uuid="03acb481-aa26-48d3-8d4d-e218f62e0843"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -551,7 +611,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{clicks}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="1968" y="0" width="70" height="30" uuid="699cbaa6-30a8-4840-80ef-b99dbd726b0a"/>
+				<reportElement x="1930" y="0" width="70" height="30" uuid="699cbaa6-30a8-4840-80ef-b99dbd726b0a"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -562,7 +622,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[IF((double)$F{views} > 0,(double)$F{clicks} / (double)$F{views},0)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="1828" y="0" width="70" height="30" uuid="06d3c0bb-f918-4493-941b-5c5731c478e8"/>
+				<reportElement x="1790" y="0" width="70" height="30" uuid="06d3c0bb-f918-4493-941b-5c5731c478e8"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -586,7 +646,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{campaign_id}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="1050" y="0" width="80" height="30" uuid="80bb5c6c-ac96-4460-a8eb-135bdb9b643b">
+				<reportElement x="2000" y="0" width="80" height="30" uuid="80bb5c6c-ac96-4460-a8eb-135bdb9b643b">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box leftPadding="4" rightPadding="4">
@@ -599,7 +659,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{target_age}]]></textFieldExpression>
 			</textField>
 			<textField isBlankWhenNull="true">
-				<reportElement x="1130" y="0" width="80" height="30" uuid="4014696e-0599-461d-959f-6ac0ad6a103e">
+				<reportElement x="2080" y="0" width="80" height="30" uuid="4014696e-0599-461d-959f-6ac0ad6a103e">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box leftPadding="4" rightPadding="4">
@@ -611,21 +671,8 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$F{target_gender}]]></textFieldExpression>
 			</textField>
-			<textField isBlankWhenNull="true">
-				<reportElement x="1210" y="0" width="200" height="30" uuid="24012db2-84d4-4f82-8b10-32d442dfaccf">
-					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
-				</reportElement>
-				<box leftPadding="4" rightPadding="4">
-					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
-				</box>
-				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{target_category}]]></textFieldExpression>
-			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="2114" y="0" width="70" height="30" uuid="e022fe3b-41a1-46e7-b875-d28c75b4c2c3"/>
+				<reportElement x="1342" y="0" width="70" height="30" uuid="e022fe3b-41a1-46e7-b875-d28c75b4c2c3"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -636,7 +683,7 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 				<textFieldExpression><![CDATA[$F{cycle_user_views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="M/d/yy" isBlankWhenNull="true">
-				<reportElement x="2038" y="0" width="76" height="30" uuid="95f0ac60-4057-4cb6-97d4-f5fe4e89cb1b">
+				<reportElement x="1050" y="0" width="76" height="30" uuid="95f0ac60-4057-4cb6-97d4-f5fe4e89cb1b">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box leftPadding="4" rightPadding="4">
@@ -646,7 +693,88 @@ order by coalesce(uu.unique_user_views,0) desc,coalesce(i.impressions,0) desc]]>
 					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Center" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$F{latest_credit_date}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$F{billing_start}]]></textFieldExpression>
+			</textField>
+			<textField pattern="M/d/yy" isBlankWhenNull="true">
+				<reportElement x="1126" y="0" width="76" height="30" uuid="1e67820d-2f36-4a51-a539-08ed1ca093a4">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{billing_end}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
+				<reportElement x="1202" y="0" width="70" height="30" uuid="b404a2b1-8259-48b8-ba71-f6dc13e03229"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{period_days}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.###" isBlankWhenNull="true">
+				<reportElement x="1272" y="0" width="70" height="30" uuid="4e03e3cf-737b-4d14-91b2-ace7705fb13b"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{view_target}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00%" isBlankWhenNull="true">
+				<reportElement x="1412" y="0" width="70" height="30" uuid="7a759479-0a49-4acc-b10f-48f15ade0dda"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{cycle_days_pct}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00%" isBlankWhenNull="true">
+				<reportElement x="1482" y="0" width="70" height="30" uuid="7acc1ad7-36f9-46c7-8cc0-745f05beb08b"/>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$V{cycle_users_pct}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement mode="Opaque" x="1552" y="0" width="28" height="30" forecolor="#FA480C" uuid="4461455f-1f7e-42a3-94e8-424f981d0f37"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($V{cycle_days_pct} - $V{cycle_users_pct}) > 0.01 ? "X" : ""]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="2160" y="0" width="200" height="30" uuid="19ed129b-3b73-4748-855f-a0edf009b379"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{target_category}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>

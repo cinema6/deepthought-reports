@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-06-22T22:15:11 -->
+<!-- 2016-06-23T10:45:24 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_apps_campaign" pageWidth="595" pageHeight="1640" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="e7c2c27c-869b-48e8-bdf3-2b3a596ff614">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="ireport.jasperserver.url" value="http://jasper:8080/jasperserver/"/>
@@ -165,110 +165,17 @@ LEFT JOIN (
 		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 		<parameter name="campaign_id" class="java.lang.String"/>
 		<queryString>
-			<![CDATA[SELECT bs.billing_start, be.billing_end,
-	i.events::integer as impressions, 
-	coalesce(uv.events,0)::integer as users, 
-	coalesce(v.events,0)::integer as views, 
-	coalesce(c.events,0)::integer as clicks, 
-	coalesce(n.events,0)::integer as installs, 
-	coalesce(l.events,0)::integer as launches
-from (
-	SELECT sum(events) as events
-	FROM rpt.campaign_summary_hourly
-	WHERE  event_type = 'impression'
-	    AND campaign_id = $P{campaign_id} 
-	    AND rec_ts >= (
-		    select max(b.transaction_ts)::date
-		    from fct.billing_transactions b
-		    inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-		    where sign = 1 and c.campaign_id = $P{campaign_id} 
-	    )
-) i
-LEFT JOIN (
-	SELECT sum(events) as events
-	FROM rpt.campaign_summary_hourly
-	WHERE  event_type = 'completedView'
-	    AND campaign_id = $P{campaign_id} 
-	    AND rec_ts >= (
-		    select max(b.transaction_ts)::date
-		    from fct.billing_transactions b
-		    inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-		    where sign = 1 and c.campaign_id =$P{campaign_id} 
-	    )	    
-) v ON 1 = 1
-LEFT JOIN (
-	SELECT sum(events) as events
-	FROM rpt.campaign_summary_hourly
-	WHERE  event_type = 'link.Action'
-	    AND campaign_id = $P{campaign_id} 
-	    AND rec_ts >= (
-		    select max(b.transaction_ts)::date
-		    from fct.billing_transactions b
-		    inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-		    where sign = 1 and c.campaign_id = $P{campaign_id} 
-	    )	    
-) c ON 1 = 1
-LEFT JOIN (
-	SELECT sum(events) as events
-	FROM rpt.campaign_summary_hourly
-	WHERE  event_type = 'appInstall'
-	    AND campaign_id = $P{campaign_id} 
-	    AND rec_ts >= (
-		    select max(b.transaction_ts)::date
-		    from fct.billing_transactions b
-		    inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-		    where sign = 1 and c.campaign_id = $P{campaign_id} 
-	    )	    
-) n ON 1 = 1
-LEFT JOIN (
-	SELECT sum(events) as events
-	FROM rpt.campaign_summary_hourly
-	WHERE  event_type = 'appLaunch'
-	    AND campaign_id = $P{campaign_id} 
-	    AND rec_ts >= (
-		    select max(b.transaction_ts)::date
-		    from fct.billing_transactions b
-		    inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-		    where sign = 1 and c.campaign_id = $P{campaign_id} 
-	    )	    
-) l  ON 1 = 1
-LEFT JOIN (
-	SELECT COUNT(*) as events
-	FROM (
-		SELECT uuid
-		FROM fct.showcase_user_views_daily
-		WHERE
-		    campaign_id = $P{campaign_id} 
-		    AND rec_date >= (
-			    select max(b.transaction_ts)::date
-			    from fct.billing_transactions b
-			    inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-			    where sign = 1 and c.campaign_id = $P{campaign_id} 
-		    )	
-		GROUP BY 1    
-	) f	    
-) uv ON 1 = 1
-LEFT JOIN (
-	select max(b.transaction_ts)::date as billing_start
-	from fct.billing_transactions b
-	inner join dim.campaign c ON b.org_id = c.org_id AND c.end_ts = dim.sp_end_of_time()
-	where sign = 1 and c.campaign_id = $P{campaign_id} 
-) bs on 1 = 1
-LEFT JOIN (
-	select (o.src_doc->>'nextPaymentDate')::date as billing_end
-	from dim.campaign c
-	inner join dim.org o on c.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
-	where c.campaign_id = $P{campaign_id} AND c.end_ts = dim.sp_end_of_time()
-) be on 1 = 1]]>
+			<![CDATA[SELECT os.billing_start, os.billing_end, os.period_days, os.days_remaining, os.view_target, os.user_views as users
+FROM dim.v_org_showcase_billing_status os
+INNER JOIN dim.campaign c ON c.org_id = os.org_id AND c.end_ts = dim.sp_end_of_time()
+WHERE c.campaign_id = $P{campaign_id} ]]>
 		</queryString>
 		<field name="billing_start" class="java.sql.Date"/>
 		<field name="billing_end" class="java.sql.Date"/>
-		<field name="impressions" class="java.lang.Integer"/>
+		<field name="period_days" class="java.lang.Integer"/>
+		<field name="days_remaining" class="java.lang.Integer"/>
+		<field name="view_target" class="java.lang.Integer"/>
 		<field name="users" class="java.lang.Integer"/>
-		<field name="views" class="java.lang.Integer"/>
-		<field name="clicks" class="java.lang.Integer"/>
-		<field name="installs" class="java.lang.Integer"/>
-		<field name="launches" class="java.lang.Integer"/>
 	</subDataset>
 	<subDataset name="today" uuid="d8b125ec-74d5-415f-a13e-5e1e8dc08997">
 		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
@@ -473,7 +380,7 @@ order by i.rec_date]]>
 		<band height="734" splitType="Stretch">
 			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<componentElement>
-				<reportElement x="0" y="150" width="240" height="60" uuid="aeb55295-b44c-4c44-8731-b962f6f1d103">
+				<reportElement x="0" y="150" width="479" height="60" uuid="aeb55295-b44c-4c44-8731-b962f6f1d103">
 					<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.VerticalRowLayout"/>
 				</reportElement>
 				<jr:table xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
@@ -524,13 +431,31 @@ order by i.rec_date]]>
 							</textField>
 						</jr:detailCell>
 					</jr:column>
-					<jr:column width="72" uuid="6c004028-8a18-41f6-be52-99a952b02306">
+					<jr:column width="40" uuid="3c6c149c-9cc9-4bcd-ad5e-9186695fb84f">
 						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column3"/>
+						<jr:columnHeader style="Table_CH" height="30">
+							<staticText>
+								<reportElement x="0" y="0" width="40" height="30" uuid="059041d8-e792-4d59-9a3e-30d6e1ac06a8"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Days]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table 2_TD" height="30">
+							<textField pattern="#,##0.###;(#,##0.###-)" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="40" height="30" uuid="82c8075d-88d4-4af0-9f08-94a11ea494c8"/>
+								<box leftPadding="4" rightPadding="4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{period_days}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="72" uuid="6c004028-8a18-41f6-be52-99a952b02306">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column4"/>
 						<jr:columnHeader style="Table_CH" height="30">
 							<staticText>
 								<reportElement x="0" y="0" width="72" height="30" uuid="e345790f-0878-4397-a769-079fa1fdff9f"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
-								<text><![CDATA[Users]]></text>
+								<text><![CDATA[Target Users]]></text>
 							</staticText>
 						</jr:columnHeader>
 						<jr:detailCell style="Table 2_TD" height="30">
@@ -538,7 +463,66 @@ order by i.rec_date]]>
 								<reportElement x="0" y="0" width="72" height="30" uuid="75e4070e-e5a5-4122-b9ca-570f70194b23"/>
 								<box leftPadding="4" rightPadding="4"/>
 								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{view_target}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="72" uuid="8d1b7533-132e-4d81-91d8-3c0a5ecaeddf">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column5"/>
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<jr:columnHeader style="Table_CH" height="30">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="72" height="30" uuid="9b10c012-9c92-4717-b467-53ba32dcb8a9"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Users]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table 2_TD" height="30">
+							<textField pattern="#,##0.###;(#,##0.###-)" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="72" height="30" uuid="5c906fa6-d7bd-4319-8912-5c487b7d70f6"/>
+								<box leftPadding="4" rightPadding="4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
 								<textFieldExpression><![CDATA[$F{users}]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="60" uuid="e877ba22-7b4c-4ba2-a141-95630f82efcb">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column6"/>
+						<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+						<jr:columnHeader style="Table_CH" height="30">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="60" height="30" uuid="1862084f-80fb-4109-a611-d26076235591"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Cycle %]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table 2_TD" height="30">
+							<textField pattern="#,##0.0#%;(#,##0.0#" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="60" height="30" uuid="c27affdd-595e-49b1-8305-5060716803f9"/>
+								<box leftPadding="4" rightPadding="4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{period_days}.doubleValue() > 0 ? ($F{period_days}.doubleValue() - $F{days_remaining}.doubleValue()) / $F{period_days}.doubleValue(): 0]]></textFieldExpression>
+							</textField>
+						</jr:detailCell>
+					</jr:column>
+					<jr:column width="60" uuid="82cb0010-486a-417a-a859-0b5c7c168e9f">
+						<property name="com.jaspersoft.studio.components.table.model.column.name" value="Column7"/>
+						<jr:columnHeader style="Table_CH" height="30">
+							<property name="com.jaspersoft.studio.unit.width" value="px"/>
+							<staticText>
+								<reportElement x="0" y="0" width="60" height="30" uuid="94e3ca2b-fb51-46bf-b1e8-b55746aa643b"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<text><![CDATA[Users %]]></text>
+							</staticText>
+						</jr:columnHeader>
+						<jr:detailCell style="Table 2_TD" height="30">
+							<textField pattern="#,##0.0#%;(#,##0.0#" isBlankWhenNull="true">
+								<reportElement x="0" y="0" width="60" height="30" uuid="47aca8d1-d772-4c78-8fd8-4c9b15ab8df8"/>
+								<box leftPadding="4" rightPadding="4"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle"/>
+								<textFieldExpression><![CDATA[$F{view_target}.doubleValue() > 0 ? $F{users}.doubleValue() / $F{view_target}.doubleValue(): 0]]></textFieldExpression>
 							</textField>
 						</jr:detailCell>
 					</jr:column>
@@ -774,7 +758,7 @@ order by i.rec_date]]>
 						<seriesColor seriesOrder="0" color="#93BAA0"/>
 					</plot>
 					<categoryAxisFormat>
-						<axisFormat tickLabelMask=""/>
+						<axisFormat/>
 					</categoryAxisFormat>
 					<valueAxisFormat>
 						<axisFormat tickLabelMask="#,##0%"/>
