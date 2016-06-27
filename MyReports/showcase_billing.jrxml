@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-06-24T16:06:43 -->
+<!-- 2016-06-27T10:49:55 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_billing" pageWidth="2000" pageHeight="500" orientation="Landscape" columnWidth="1960" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
@@ -24,6 +24,8 @@ obs.billing_end,
 obs.period_days,
 obs.view_target,
 obs.days_remaining,
+(obs.period_days * 24)::integer as period_hours,
+(EXTRACT(EPOCH FROM (obs.billing_end + '1 day'::interval)::date - date_trunc('hour',current_timestamp))/3600)::integer as hours_remaining,
 obs.est_impressions,
 coalesce(ci.cycle_impressions,0)::integer as cycle_impressions,
 coalesce(ai.avg_impressions_three_day,0)::integer as avg_impressions_three_day,
@@ -118,6 +120,8 @@ order by obs.billing_end]]>
 	<field name="period_days" class="java.lang.Integer"/>
 	<field name="view_target" class="java.lang.Integer"/>
 	<field name="days_remaining" class="java.lang.Integer"/>
+	<field name="period_hours" class="java.lang.Integer"/>
+	<field name="hours_remaining" class="java.lang.Integer"/>
 	<field name="est_impressions" class="java.lang.Integer"/>
 	<field name="cycle_impressions" class="java.lang.Integer"/>
 	<field name="avg_impressions_three_day" class="java.lang.Integer"/>
@@ -148,6 +152,9 @@ order by obs.billing_end]]>
 	</variable>
 	<variable name="campaign_warnings" class="java.lang.String">
 		<variableExpression><![CDATA[((($V{cycle_days_pct} > 0.5) && ($V{cycle_days_pct} - $V{cycle_users_pct}) >= 0.05) ? "U" : "") + ($V{cycle_imps_pct} > 0.80 ? "I" : "")]]></variableExpression>
+	</variable>
+	<variable name="cycle_hours_pct" class="java.lang.Double">
+		<variableExpression><![CDATA[($F{period_hours}.doubleValue() > 0 ? ($F{period_hours}.doubleValue() - $F{hours_remaining}.doubleValue()) / $F{period_hours}.doubleValue(): 0)]]></variableExpression>
 	</variable>
 	<background>
 		<band splitType="Stretch"/>
@@ -709,7 +716,7 @@ Requird]]></text>
 					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[$V{cycle_users_pct}]]></textFieldExpression>
+				<textFieldExpression><![CDATA[$V{cycle_imps_pct}]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
