@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-06-27T10:49:55 -->
-<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_billing" pageWidth="2000" pageHeight="500" orientation="Landscape" columnWidth="1960" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
+<!-- 2016-07-08T09:32:13 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_billing" pageWidth="2200" pageHeight="500" orientation="Landscape" columnWidth="2160" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -9,12 +9,23 @@
 	<property name="ireport.jasperserver.user" value="howard"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/showcase_apps_billing_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/showcase_apps_billing"/>
+	<property name="com.jaspersoft.studio.unit.pageHeight" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.pageWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.topMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.bottomMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.leftMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.rightMargin" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnWidth" value="pixel"/>
+	<property name="com.jaspersoft.studio.unit.columnSpacing" value="pixel"/>
 	<queryString>
 		<![CDATA[select initcap(u.fname) || ' ' || initcap(u.lname) as "user", u.email, coalesce(u.src_doc->>'company',o.name) as company ,
 (u.created_ts at time zone 'America/New_York')::date as signed_up_date, 
 case u.status when 'new' then 'Unconfirmed' when 'active' then 'Activated' else u.status end as status, 
 c.campaign_id,
 c.name as campaign,
+c.status as campaign_status,
+case coalesce(o.src_doc->>'braintreeCustomer','') when '' then false else true end as has_payment_method,
+c.updated_ts as campaign_status_time,
 coalesce(a.src_doc->'beeswaxIds'->>'advertiser','') as beeswax_advertiser_id,
 coalesce(c.src_doc->'externalCampaigns'->'beeswax'->>'externalId','') as beeswax_campaign_id,
 c.src_doc->'product'->>'uri' as store_uri,
@@ -40,7 +51,7 @@ from dim.user u
 left join dim.org o on u.org_id = o.org_id AND o.end_ts = dim.sp_end_of_time()
 left join dim.v_org_showcase_billing_status obs ON u.org_id = obs.org_id
 left join dim.v_user_role ur ON u.user_id = ur.user_id
-left join dim.campaign c on c.user_id = u.user_id AND c.end_ts = dim.sp_end_of_time() and c.status = 'active'
+left join dim.campaign c on c.user_id = u.user_id AND c.end_ts = dim.sp_end_of_time() --and c.status = 'active'
 left join dim.advertiser a ON c.advertiser_id = a.advertiser_id AND  a.end_ts = dim.sp_end_of_time()
 left join (
    select campaign_id,(sum(events) / 3)::integer as avg_impressions_three_day
@@ -102,6 +113,7 @@ where u.end_ts = dim.sp_end_of_time() and u.self_serve = 't' and ur.system_role 
 and u.status <> 'deleted'
 AND not u.email in ('minznerj@kean.edu', 'jason@cinema6.com','info@mediasolu.com')
 AND NOT c.campaign_id is null
+AND obs.days_remaining >= -3 AND obs.days_remaining <= 45
 order by obs.billing_end]]>
 	</queryString>
 	<field name="user" class="java.lang.String"/>
@@ -111,6 +123,9 @@ order by obs.billing_end]]>
 	<field name="status" class="java.lang.String"/>
 	<field name="campaign_id" class="java.lang.String"/>
 	<field name="campaign" class="java.lang.String"/>
+	<field name="campaign_status" class="java.lang.String"/>
+	<field name="has_payment_method" class="java.lang.Boolean"/>
+	<field name="campaign_status_time" class="java.sql.Timestamp"/>
 	<field name="beeswax_advertiser_id" class="java.lang.String"/>
 	<field name="beeswax_campaign_id" class="java.lang.String"/>
 	<field name="store_uri" class="java.lang.String"/>
@@ -132,14 +147,14 @@ order by obs.billing_end]]>
 	<field name="clicks" class="java.lang.Integer"/>
 	<field name="avg_userview_rate_3_day" class="java.lang.Double"/>
 	<field name="avg_userview_rate_lifetime" class="java.lang.Double"/>
-	<sortField name="campaign_warnings" order="Descending" type="Variable"/>
 	<sortField name="billing_end"/>
+	<sortField name="campaign_warnings" order="Descending" type="Variable"/>
 	<sortField name="cycle_users_pct" order="Descending" type="Variable"/>
 	<variable name="cycle_days_pct" class="java.lang.Double">
 		<variableExpression><![CDATA[($F{period_days}.doubleValue() > 0 ? ($F{period_days}.doubleValue() - $F{days_remaining}.doubleValue()) / $F{period_days}.doubleValue(): 0)]]></variableExpression>
 	</variable>
 	<variable name="cycle_users_pct" class="java.lang.Double">
-		<variableExpression><![CDATA[$F{view_target}.doubleValue() > 0 ? $F{cycle_user_views}.doubleValue() / $F{view_target}.doubleValue(): 0]]></variableExpression>
+		<variableExpression><![CDATA[((Number)(IF($F{view_target} > 0,$F{view_target},$F{cycle_user_views}))).doubleValue() > 0 ? $F{cycle_user_views}.doubleValue() / ((Number)(IF($F{view_target} > 0,$F{view_target},$F{cycle_user_views}))).doubleValue(): 0]]></variableExpression>
 	</variable>
 	<variable name="avg_userview_rate_lifetime" class="java.lang.Double">
 		<variableExpression><![CDATA[IF((double)$F{impressions} > 0,(double)$F{user_views} / (double)$F{impressions},0)]]></variableExpression>
@@ -151,7 +166,7 @@ order by obs.billing_end]]>
 		<variableExpression><![CDATA[$F{est_impressions}.doubleValue() > 0 ? $F{cycle_impressions}.doubleValue() / $F{est_impressions}.doubleValue(): 0]]></variableExpression>
 	</variable>
 	<variable name="campaign_warnings" class="java.lang.String">
-		<variableExpression><![CDATA[((($V{cycle_days_pct} > 0.5) && ($V{cycle_days_pct} - $V{cycle_users_pct}) >= 0.05) ? "U" : "") + ($V{cycle_imps_pct} > 0.80 ? "I" : "")]]></variableExpression>
+		<variableExpression><![CDATA[($F{days_remaining} < 0) ? "" : ((($V{cycle_days_pct} > 0.5) && ($V{cycle_days_pct} - $V{cycle_users_pct}) >= 0.05) ? "U" : "") + ($V{cycle_imps_pct} > 0.80 ? "I" : "")]]></variableExpression>
 	</variable>
 	<variable name="cycle_hours_pct" class="java.lang.Double">
 		<variableExpression><![CDATA[($F{period_hours}.doubleValue() > 0 ? ($F{period_hours}.doubleValue() - $F{hours_remaining}.doubleValue()) / $F{period_hours}.doubleValue(): 0)]]></variableExpression>
@@ -161,7 +176,6 @@ order by obs.billing_end]]>
 	</background>
 	<columnHeader>
 		<band height="30" splitType="Stretch">
-			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<staticText>
 				<reportElement x="28" y="0" width="122" height="30" uuid="2f0fd99e-de48-4c75-b1d1-4f48573e5859"/>
 				<box>
@@ -215,7 +229,7 @@ order by obs.billing_end]]>
 				<text><![CDATA[Campaign]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1386" y="0" width="70" height="30" uuid="83ff5bb7-bd19-46be-8ba8-77279c549c8b"/>
+				<reportElement x="1602" y="0" width="70" height="30" uuid="83ff5bb7-bd19-46be-8ba8-77279c549c8b"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -229,7 +243,7 @@ order by obs.billing_end]]>
 Served]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="924" y="0" width="76" height="30" uuid="a11b4c47-9229-42ce-a997-eae96a2e7c71">
+				<reportElement x="1140" y="0" width="76" height="30" uuid="a11b4c47-9229-42ce-a997-eae96a2e7c71">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box>
@@ -244,7 +258,7 @@ Served]]></text>
 				<text><![CDATA[Start]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1000" y="0" width="76" height="30" uuid="a5fef8b6-4ca0-4a77-b153-6b0f3614d1a7">
+				<reportElement x="1216" y="0" width="76" height="30" uuid="a5fef8b6-4ca0-4a77-b153-6b0f3614d1a7">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box>
@@ -259,7 +273,7 @@ Served]]></text>
 				<text><![CDATA[End]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1076" y="0" width="50" height="30" uuid="92c2e567-6352-43c9-a4ca-9dec10acdaea"/>
+				<reportElement x="1292" y="0" width="50" height="30" uuid="92c2e567-6352-43c9-a4ca-9dec10acdaea"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -272,7 +286,7 @@ Served]]></text>
 				<text><![CDATA[Days]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1316" y="0" width="70" height="30" uuid="0d048540-82ac-4444-99b7-f34307911e9e"/>
+				<reportElement x="1532" y="0" width="70" height="30" uuid="0d048540-82ac-4444-99b7-f34307911e9e"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -286,7 +300,7 @@ Served]]></text>
 Target]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="644" y="0" width="70" height="30" uuid="0c920497-8f09-4662-b0e7-b846a265500f"/>
+				<reportElement x="860" y="0" width="70" height="30" uuid="0c920497-8f09-4662-b0e7-b846a265500f"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -299,7 +313,7 @@ Target]]></text>
 				<text><![CDATA[Cycle %]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="714" y="0" width="70" height="30" uuid="a59d09f2-fd14-4c1f-a923-4a2b933e919c"/>
+				<reportElement x="930" y="0" width="70" height="30" uuid="a59d09f2-fd14-4c1f-a923-4a2b933e919c"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -328,7 +342,7 @@ Target]]></text>
 				<text><![CDATA[W]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1126" y="0" width="50" height="30" uuid="44586e13-226d-4d6f-9f94-7b2b6d11dd76"/>
+				<reportElement x="1342" y="0" width="50" height="30" uuid="44586e13-226d-4d6f-9f94-7b2b6d11dd76"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -342,7 +356,7 @@ Target]]></text>
 Left]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1456" y="0" width="70" height="30" uuid="fe1b5df9-dbc7-49ea-9910-19000fefc9e9"/>
+				<reportElement x="1672" y="0" width="70" height="30" uuid="fe1b5df9-dbc7-49ea-9910-19000fefc9e9"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -356,7 +370,7 @@ Left]]></text>
 Requird]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1526" y="0" width="70" height="30" uuid="d9977dc2-1c31-4b98-8340-8078e8bd8480"/>
+				<reportElement x="1742" y="0" width="70" height="30" uuid="d9977dc2-1c31-4b98-8340-8078e8bd8480"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -369,7 +383,7 @@ Requird]]></text>
 				<text><![CDATA[3 Day Avg. Impress.]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1596" y="0" width="70" height="30" uuid="f3f937b5-0245-40b2-99e4-3fe1f6726545"/>
+				<reportElement x="1812" y="0" width="70" height="30" uuid="f3f937b5-0245-40b2-99e4-3fe1f6726545"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -382,7 +396,7 @@ Requird]]></text>
 				<text><![CDATA[3 Day Avg. Users]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1666" y="0" width="70" height="30" uuid="5c51d7ab-6e30-4edc-bb25-88139a9fdbc8"/>
+				<reportElement x="1882" y="0" width="70" height="30" uuid="5c51d7ab-6e30-4edc-bb25-88139a9fdbc8"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -395,7 +409,7 @@ Requird]]></text>
 				<text><![CDATA[3 Day User View Rate]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1736" y="0" width="70" height="30" uuid="169398db-de78-499b-9213-5f93f39ca605"/>
+				<reportElement x="1952" y="0" width="70" height="30" uuid="169398db-de78-499b-9213-5f93f39ca605"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -408,7 +422,7 @@ Requird]]></text>
 				<text><![CDATA[Overall User View Rate]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="854" y="0" width="70" height="30" uuid="0862f7bd-fc43-4593-9b48-d700e9d50bcf"/>
+				<reportElement x="1070" y="0" width="70" height="30" uuid="0862f7bd-fc43-4593-9b48-d700e9d50bcf"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -421,7 +435,7 @@ Requird]]></text>
 				<text><![CDATA[Recc. Daily Imp. Target]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1176" y="0" width="70" height="30" uuid="4750663f-7971-48e9-bf33-d23e7193f9cd"/>
+				<reportElement x="1392" y="0" width="70" height="30" uuid="4750663f-7971-48e9-bf33-d23e7193f9cd"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -434,7 +448,7 @@ Requird]]></text>
 				<text><![CDATA[Impress. Target]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="1246" y="0" width="70" height="30" uuid="b436696d-772f-4356-8233-c5e7839fef93"/>
+				<reportElement x="1462" y="0" width="70" height="30" uuid="b436696d-772f-4356-8233-c5e7839fef93"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -447,7 +461,7 @@ Requird]]></text>
 				<text><![CDATA[Impress. Served]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="784" y="0" width="70" height="30" uuid="53b0f956-2229-4792-b905-db07a3b156fc"/>
+				<reportElement x="1000" y="0" width="70" height="30" uuid="53b0f956-2229-4792-b905-db07a3b156fc"/>
 				<box>
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -459,11 +473,36 @@ Requird]]></text>
 				</textElement>
 				<text><![CDATA[Impres.%]]></text>
 			</staticText>
+			<staticText>
+				<reportElement x="644" y="0" width="156" height="30" uuid="294131d1-9621-4991-b733-caf3955d5fb6"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[Campaign Status]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="800" y="0" width="60" height="30" uuid="cd4d5504-ba50-4c6b-a248-b840f1a18ccb"/>
+				<box>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isBold="true"/>
+				</textElement>
+				<text><![CDATA[CC]]></text>
+			</staticText>
 		</band>
 	</columnHeader>
 	<detail>
 		<band height="30" splitType="Stretch">
-			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
 			<textField>
 				<reportElement x="28" y="0" width="122" height="30" uuid="e9a5f35d-8b80-425e-b62c-021f72bc991d"/>
 				<box leftPadding="4" rightPadding="4">
@@ -512,7 +551,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{campaign_id}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1386" y="0" width="70" height="30" uuid="e022fe3b-41a1-46e7-b875-d28c75b4c2c3"/>
+				<reportElement x="1602" y="0" width="70" height="30" uuid="e022fe3b-41a1-46e7-b875-d28c75b4c2c3"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -523,7 +562,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{cycle_user_views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="M/d/yy" isBlankWhenNull="true">
-				<reportElement x="924" y="0" width="76" height="30" uuid="95f0ac60-4057-4cb6-97d4-f5fe4e89cb1b">
+				<reportElement x="1140" y="0" width="76" height="30" uuid="95f0ac60-4057-4cb6-97d4-f5fe4e89cb1b">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box leftPadding="4" rightPadding="4">
@@ -536,7 +575,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{billing_start}]]></textFieldExpression>
 			</textField>
 			<textField pattern="M/d/yy" isBlankWhenNull="true">
-				<reportElement x="1000" y="0" width="76" height="30" uuid="1e67820d-2f36-4a51-a539-08ed1ca093a4">
+				<reportElement x="1216" y="0" width="76" height="30" uuid="1e67820d-2f36-4a51-a539-08ed1ca093a4">
 					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
 				</reportElement>
 				<box leftPadding="4" rightPadding="4">
@@ -549,7 +588,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{billing_end}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1076" y="0" width="50" height="30" uuid="b404a2b1-8259-48b8-ba71-f6dc13e03229"/>
+				<reportElement x="1292" y="0" width="50" height="30" uuid="b404a2b1-8259-48b8-ba71-f6dc13e03229"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -560,7 +599,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{period_days}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1316" y="0" width="70" height="30" uuid="4e03e3cf-737b-4d14-91b2-ace7705fb13b"/>
+				<reportElement x="1532" y="0" width="70" height="30" uuid="4e03e3cf-737b-4d14-91b2-ace7705fb13b"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -571,7 +610,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{view_target}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="644" y="0" width="70" height="30" uuid="7a759479-0a49-4acc-b10f-48f15ade0dda"/>
+				<reportElement x="860" y="0" width="70" height="30" uuid="7a759479-0a49-4acc-b10f-48f15ade0dda"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -582,7 +621,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$V{cycle_days_pct}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="714" y="0" width="70" height="30" uuid="7acc1ad7-36f9-46c7-8cc0-745f05beb08b"/>
+				<reportElement x="930" y="0" width="70" height="30" uuid="7acc1ad7-36f9-46c7-8cc0-745f05beb08b"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -609,7 +648,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$V{campaign_warnings}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1126" y="0" width="50" height="30" uuid="339fc2be-8d36-4f7c-bd1e-973f7db31802"/>
+				<reportElement x="1342" y="0" width="50" height="30" uuid="339fc2be-8d36-4f7c-bd1e-973f7db31802"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -620,7 +659,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{days_remaining}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1456" y="0" width="70" height="30" uuid="b73cd0c1-fe73-4977-9e0c-6cfcb89fbd54"/>
+				<reportElement x="1672" y="0" width="70" height="30" uuid="b73cd0c1-fe73-4977-9e0c-6cfcb89fbd54"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -631,7 +670,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{view_target} - $F{cycle_user_views}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1526" y="0" width="70" height="30" uuid="fe119095-c0fd-4f13-a281-1be2c1247208"/>
+				<reportElement x="1742" y="0" width="70" height="30" uuid="fe119095-c0fd-4f13-a281-1be2c1247208"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -642,7 +681,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{avg_impressions_three_day}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1596" y="0" width="70" height="30" uuid="10b8550d-648c-47fe-8f60-c87eb19b1169"/>
+				<reportElement x="1812" y="0" width="70" height="30" uuid="10b8550d-648c-47fe-8f60-c87eb19b1169"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -653,7 +692,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{avg_users_three_day}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="1736" y="0" width="70" height="30" uuid="8b944f4f-8701-4aef-8f95-922a04b7015f"/>
+				<reportElement x="1952" y="0" width="70" height="30" uuid="8b944f4f-8701-4aef-8f95-922a04b7015f"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -664,7 +703,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{avg_userview_rate_lifetime}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="1666" y="0" width="70" height="30" uuid="5c8de95f-f0d5-4a8e-b1d9-85aae712a9cf"/>
+				<reportElement x="1882" y="0" width="70" height="30" uuid="5c8de95f-f0d5-4a8e-b1d9-85aae712a9cf"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -675,7 +714,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{avg_userview_rate_3_day}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0" isBlankWhenNull="true">
-				<reportElement x="854" y="0" width="70" height="30" uuid="840e24b0-97a9-4f68-9ccc-6f4c2e9cb967"/>
+				<reportElement x="1070" y="0" width="70" height="30" uuid="840e24b0-97a9-4f68-9ccc-6f4c2e9cb967"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -683,10 +722,10 @@ Requird]]></text>
 					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
-				<textFieldExpression><![CDATA[((double)($F{view_target} - $F{cycle_user_views}) / MAX($F{days_remaining},1).doubleValue()) / (Double)IF($F{avg_userview_rate_3_day} > 0, $F{avg_userview_rate_3_day},0.70)]]></textFieldExpression>
+				<textFieldExpression><![CDATA[MAX(((double)($F{view_target} - $F{cycle_user_views}) / MAX($F{days_remaining},1).doubleValue()) / (Double)IF($F{avg_userview_rate_3_day} > 0, $F{avg_userview_rate_3_day},0.70),0)]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1176" y="0" width="70" height="30" uuid="9edb3ba7-1ba8-4d2d-8c01-8d2a5a43cda2"/>
+				<reportElement x="1392" y="0" width="70" height="30" uuid="9edb3ba7-1ba8-4d2d-8c01-8d2a5a43cda2"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -697,7 +736,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{est_impressions}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.###" isBlankWhenNull="true">
-				<reportElement x="1246" y="0" width="70" height="30" uuid="e9908829-6c00-48ac-9104-bab0e8debca2"/>
+				<reportElement x="1462" y="0" width="70" height="30" uuid="e9908829-6c00-48ac-9104-bab0e8debca2"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -708,7 +747,7 @@ Requird]]></text>
 				<textFieldExpression><![CDATA[$F{cycle_impressions}]]></textFieldExpression>
 			</textField>
 			<textField pattern="#,##0.00%" isBlankWhenNull="true">
-				<reportElement x="784" y="0" width="70" height="30" uuid="444649c5-ec53-44af-a2bf-0e84bf16c80e"/>
+				<reportElement x="1000" y="0" width="70" height="30" uuid="444649c5-ec53-44af-a2bf-0e84bf16c80e"/>
 				<box leftPadding="4" rightPadding="4">
 					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
 					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
@@ -717,6 +756,45 @@ Requird]]></text>
 				</box>
 				<textElement textAlignment="Right" verticalAlignment="Middle"/>
 				<textFieldExpression><![CDATA[$V{cycle_imps_pct}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="644" y="0" width="80" height="30" uuid="1c5ba2cc-d151-425a-9418-ca6443b70254">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{campaign_status}]]></textFieldExpression>
+			</textField>
+			<textField pattern="M/d/yy" isBlankWhenNull="true">
+				<reportElement x="724" y="0" width="76" height="30" uuid="fc7f81f2-fbfe-4d2a-bfd1-6084e9ca01c3">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{campaign_status_time}]]></textFieldExpression>
+			</textField>
+			<textField pattern="M/d/yy">
+				<reportElement x="800" y="0" width="60" height="30" uuid="995f943b-3a7d-4d4b-ab89-525ed8a4fd76">
+					<property name="com.jaspersoft.studio.unit.width" value="pixel"/>
+				</reportElement>
+				<box leftPadding="4" rightPadding="4">
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[IF($F{has_payment_method},"Y","")]]></textFieldExpression>
 			</textField>
 		</band>
 	</detail>
