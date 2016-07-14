@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-07-12T13:54:02 -->
+<!-- 2016-07-14T13:34:31 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_billing" pageWidth="2300" pageHeight="500" orientation="Landscape" columnWidth="2260" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -37,7 +37,7 @@ obs.view_target,
 obs.days_remaining,
 (obs.period_days * 24)::integer as period_hours,
 (EXTRACT(EPOCH FROM (obs.billing_end + '1 day'::interval)::date - date_trunc('hour',current_timestamp))/3600)::integer as hours_remaining,
-obs.est_impressions,
+coalesce(li.line_item_budget,obs.est_impressions) as est_impressions,
 coalesce(ci.cycle_impressions,0)::integer as cycle_impressions,
 coalesce(ai.avg_impressions_three_day,0)::integer as avg_impressions_three_day,
 coalesce(au.avg_users_three_day,0)::integer as avg_users_three_day,
@@ -126,6 +126,8 @@ left join (
     ) cbs ON sh.campaign_id = cbs.campaign_id AND sh.rec_ts >= cbs.billing_start and sh.event_type = 'impression'
     group by 1	
 ) ci on ci.campaign_id = c.campaign_id
+left join dim.beeswax_line_item li ON (li.bw_campaign_id = (coalesce(c.src_doc->'externalIds'->>'beeswax',c.src_doc->'externalCampaigns'->'beeswax'->>'externalId')::integer ) )
+  AND li.end_ts = dim.sp_end_of_time() AND li.active = true
 where u.end_ts = dim.sp_end_of_time() and u.self_serve = 't' and ur.system_role = 'showcaseUser'
 and u.status <> 'deleted'
 AND not u.email in ('minznerj@kean.edu', 'jason@cinema6.com','info@mediasolu.com')
