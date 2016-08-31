@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-07-25T13:33:51 -->
+<!-- 2016-08-31T10:22:02 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_billing" pageWidth="2300" pageHeight="500" orientation="Landscape" columnWidth="2260" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -8,7 +8,6 @@
 	<property name="ireport.jasperserver.user" value="howard"/>
 	<property name="ireport.jasperserver.report.resource" value="/Reports/showcase_apps_billing_files/main_jrxml"/>
 	<property name="ireport.jasperserver.reportUnit" value="/Reports/showcase_apps_billing"/>
-	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="deepthought"/>
 	<parameter name="days_back" class="java.lang.Integer">
 		<parameterDescription><![CDATA[Days since end of Cycle]]></parameterDescription>
 		<defaultValueExpression><![CDATA[0]]></defaultValueExpression>
@@ -27,8 +26,8 @@ p.src_doc->>'thumbnail' as campaign_logo_url,
 c.status as campaign_status,
 case coalesce(o.src_doc->>'braintreeCustomer','') when '' then false else true end as has_payment_method,
 c.updated_ts as campaign_status_time,
-coalesce(a.src_doc->'beeswaxIds'->>'advertiser','') as beeswax_advertiser_id,
-coalesce(c.src_doc->'externalCampaigns'->'beeswax'->>'externalId','') as beeswax_campaign_id,
+coalesce(a.src_doc->'externalIds'->>'beeswax',a.src_doc->'beeswaxIds'->>'advertiser') as beeswax_advertiser_id,
+coalesce(c.src_doc->'externalIds'->>'beeswax',c.src_doc->'externalCampaigns'->'beeswax'->>'externalId') as beeswax_campaign_id,
 c.src_doc->'product'->>'uri' as store_uri,
 obs.user_views as cycle_user_views,
 obs.billing_start,
@@ -135,7 +134,7 @@ left join (
     group by 1	
 ) ci on ci.campaign_id = c.campaign_id
 left join dim.beeswax_line_item li ON (li.bw_campaign_id = (coalesce(c.src_doc->'externalIds'->>'beeswax',c.src_doc->'externalCampaigns'->'beeswax'->>'externalId')::integer ) )
-  AND li.end_ts = dim.sp_end_of_time() AND li.active = true
+  AND li.end_ts = dim.sp_end_of_time() AND li.active = true AND  li.start_date >=  obs.billing_start
 where u.end_ts = dim.sp_end_of_time() and u.self_serve = 't' and ur.system_role = 'showcaseUser'
 and u.status <> 'deleted'
 AND not u.email in ('minznerj@kean.edu', 'jason@cinema6.com','info@mediasolu.com')
