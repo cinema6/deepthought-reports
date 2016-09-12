@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Created with Jaspersoft Studio version 6.1.1.final using JasperReports Library version 6.1.1  -->
-<!-- 2016-08-31T10:22:02 -->
+<!-- 2016-09-12T16:11:29 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="showcase_billing" pageWidth="2300" pageHeight="500" orientation="Landscape" columnWidth="2260" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" isIgnorePagination="true" uuid="aed7438a-61b5-4356-88d1-08d416e6da1b">
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
 	<property name="com.jaspersoft.studio.unit." value="pixel"/>
@@ -25,6 +25,7 @@ c.name as campaign,
 p.src_doc->>'thumbnail' as campaign_logo_url,
 c.status as campaign_status,
 case coalesce(o.src_doc->>'braintreeCustomer','') when '' then false else true end as has_payment_method,
+case coalesce(o.src_doc->>'nextPaymentPlanId', '') when 'pp-0aZ6Hz0aODGibjFU' then true else false end as has_cancel_plan,
 c.updated_ts as campaign_status_time,
 coalesce(a.src_doc->'externalIds'->>'beeswax',a.src_doc->'beeswaxIds'->>'advertiser') as beeswax_advertiser_id,
 coalesce(c.src_doc->'externalIds'->>'beeswax',c.src_doc->'externalCampaigns'->'beeswax'->>'externalId') as beeswax_campaign_id,
@@ -153,6 +154,7 @@ order by obs.billing_end]]>
 	<field name="campaign_logo_url" class="java.lang.String"/>
 	<field name="campaign_status" class="java.lang.String"/>
 	<field name="has_payment_method" class="java.lang.Boolean"/>
+	<field name="has_cancel_plan" class="java.lang.Boolean"/>
 	<field name="campaign_status_time" class="java.sql.Timestamp"/>
 	<field name="beeswax_advertiser_id" class="java.lang.String"/>
 	<field name="beeswax_campaign_id" class="java.lang.String"/>
@@ -197,7 +199,7 @@ order by obs.billing_end]]>
 		<variableExpression><![CDATA[$F{est_impressions}.doubleValue() > 0 ? $F{cycle_impressions}.doubleValue() / $F{est_impressions}.doubleValue(): 0]]></variableExpression>
 	</variable>
 	<variable name="campaign_warnings" class="java.lang.String">
-		<variableExpression><![CDATA[($F{days_remaining} < 0) ? "" : ((($V{cycle_days_pct} > 0.5) && ($V{cycle_days_pct} - $V{cycle_users_pct}) >= 0.05) ? "U" : "") + ($V{cycle_imps_pct} > 0.80 ? "I" : "")]]></variableExpression>
+		<variableExpression><![CDATA[($F{days_remaining} < 0) ? "" : ((($V{cycle_days_pct} > 0.5) && ($V{cycle_days_pct} - $V{cycle_users_pct}) >= 0.05) ? "U" : "") + ($V{cycle_imps_pct} > 0.80 && ($V{cycle_imps_pct} > $V{cycle_days_pct}) ? "I" : "") + ($F{has_cancel_plan} ? "C" : "")]]></variableExpression>
 	</variable>
 	<variable name="cycle_hours_pct" class="java.lang.Double">
 		<variableExpression><![CDATA[($F{period_hours}.doubleValue() > 0 ? ($F{period_hours}.doubleValue() - $F{hours_remaining}.doubleValue()) / $F{period_hours}.doubleValue(): 0)]]></variableExpression>
@@ -944,20 +946,21 @@ Requird]]></text>
 	<pageFooter>
 		<band height="128">
 			<staticText>
-				<reportElement x="0" y="78" width="100" height="20" uuid="e2576088-0446-444d-ac04-aec49d51517c"/>
+				<reportElement x="0" y="60" width="100" height="20" uuid="e2576088-0446-444d-ac04-aec49d51517c"/>
 				<textElement verticalAlignment="Bottom">
 					<font fontName="Monospaced" isBold="true"/>
 				</textElement>
 				<text><![CDATA[Warning Codes]]></text>
 			</staticText>
 			<staticText>
-				<reportElement x="0" y="98" width="570" height="30" uuid="48039a71-3867-4c26-b377-f4c60f85fd8f"/>
+				<reportElement x="0" y="80" width="570" height="48" uuid="48039a71-3867-4c26-b377-f4c60f85fd8f"/>
 				<textElement verticalAlignment="Middle">
 					<font fontName="Monospaced"/>
 					<paragraph lineSpacing="1_1_2" lineSpacingSize="1.5" spacingAfter="0"/>
 				</textElement>
 				<text><![CDATA[U: The billing cycle is half over and the Users% is more than 5% behind the Cycle%.
-I: 80% or more of the Estimated Impressions for the cycle have been delivered.]]></text>
+I: 80% or more of the Estimated Impressions for the cycle have been delivered.
+C: User has canceled their plan.]]></text>
 			</staticText>
 			<textField>
 				<reportElement x="0" y="20" width="220" height="30" uuid="95962306-e95c-4a71-8af3-b43a13e0d097"/>
